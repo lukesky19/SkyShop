@@ -190,7 +190,7 @@ public class ShopGUI extends InventoryGUI {
                             .setLore(loreList)
                             .setAction(event -> Bukkit.getScheduler().runTaskLater(skyShop, () -> {
                                 event.getWhoClicked().closeInventory(InventoryCloseEvent.Reason.OPEN_NEW);
-                                inventoryManager.openGUI(new MenuGUI(skyShop, menuManager, shopManager, inventoryManager, localeManager, menuManager.getMenuConfiguration().pages().entrySet().stream().toList().get(0), 0), (Player) event.getWhoClicked());
+                                inventoryManager.openGUI(new MenuGUI(skyShop, menuManager, shopManager, inventoryManager, localeManager, menuManager.getMenuConfiguration().pages().entrySet().stream().toList().getFirst(), 0), (Player) event.getWhoClicked());
                             }, 1L))
                             .build());
                 }
@@ -228,6 +228,6 @@ public class ShopGUI extends InventoryGUI {
     */
     public void onClose(InventoryCloseEvent event) {
         if (!event.getReason().equals(InventoryCloseEvent.Reason.OPEN_NEW) && !event.getReason().equals(InventoryCloseEvent.Reason.UNLOADED))
-            Bukkit.getScheduler().runTaskLater(skyShop, () -> inventoryManager.openGUI(new MenuGUI(skyShop, menuManager, shopManager, inventoryManager, localeManager, menuManager.getMenuConfiguration().pages().entrySet().stream().toList().get(0), 0), (Player)event.getPlayer()), 1L);
+            Bukkit.getScheduler().runTaskLater(skyShop, () -> inventoryManager.openGUI(new MenuGUI(skyShop, menuManager, shopManager, inventoryManager, localeManager, menuManager.getMenuConfiguration().pages().entrySet().stream().toList().getFirst(), 0), (Player)event.getPlayer()), 1L);
     }
 }
