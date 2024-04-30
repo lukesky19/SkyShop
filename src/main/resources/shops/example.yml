@@ -1,0 +1,76 @@
+pages:
+  0:
+    size: 27
+    name: "<aqua><bold>Example Shop - Page 1</bold></aqua>"
+    entries:
+      0:
+        type: FILLER
+        item:
+          material: GRAY_STAINED_GLASS_PANE
+          name: " "
+          lore: []
+      1:
+        type: RETURN
+        slot: 22
+        item:
+          material: BARRIER
+          name: "<yellow>Exit the shop.</yellow>"
+          lore: []
+      2:
+        type: NEXT_PAGE
+        slot: 17
+        item:
+          material: ARROW
+          name: "<yellow>Next Page.</yellow>"
+          lore: []
+      3:
+        type: ITEM
+        slot: 0
+        item:
+          material: CRAFTING_TABLE
+          name: "<white>Crafting Table</white>"
+          lore:
+            - "Buy for: <buy_price>"
+            - "Sell for: <sell_price>"
+        prices:
+          buy-price: 100.0
+          sell-price: 10.0
+  1:
+    size: 27
+    name: "<aqua><bold>Example Shop - Page 2</bold></aqua>"
+    items:
+      0:
+        type: FILLER
+        item:
+          material: GRAY_STAINED_GLASS_PANE
+          name: " "
+          lore: []
+      1:
+        type: RETURN
+        slot: 22
+        item:
+          material: BARRIER
+          name: "<yellow>Exit the shop.</yellow>"
+          lore: []
+      2:
+        type: PREVIOUS_PAGE
+        slot: 17
+        item:
+          material: ARROW
+          name: "<yellow>Next Page.</yellow>"
+          lore: []
+      3:
+        type: COMMAND
+        slot: 1
+        item:
+          material: DIAMOND
+          name: "<white>1 Diamond</white>"
+          lore:
+            - "Buy for: <price>"
+        prices:
+          buy-price: 500.0
+          sell-price: -1.0
+        commands:
+          buy-commands:
+            - "give %player_name% diamond 1"
+          sell-commands: []

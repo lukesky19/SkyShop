@@ -1,0 +1,25 @@
+# Prefix is placed in-front of all other messages automatically.
+prefix: "<gray>[</gray><aqua><bold>SkyShop</bold></aqua><gray>]</gray> "
+help:
+  - "<aqua>SkyShop is developed by <white><bold>lukeskywlker19</white></bold>.</aqua>"
+  - "<aqua>Source code is released on GitHub: <click:OPEN_URL:https://github.com/lukesky19><yellow><underlined><bold>https://github.com/lukesky19</click></yellow></underlined></bold></aqua>"
+  - " "
+  - "<aqua><bold>List of Commands:</aqua></bold>"
+  - "<white>/<aqua>skyshop</white>"
+  - "<white>/<aqua>skyshop <yellow>help</yellow></white>"
+  - "<white>/<aqua>skyshop <yellow>reload</yellow></white>"
+  - "<white>/<aqua>skyshop <yellow>sellall</yellow></white>"
+no-permission: "<red>You do not have permission for this command.</red>"
+config-reload: "<aqua>Configuration files have been reloaded.</aqua>"
+not-enough-items: "<red>You do not have enough items to sell.</red>"
+insufficient-funds: "<red>Insufficient funds.</red>"
+# Placeholders: <amount>, <item>, <price>, <bal>
+buy-success: "<white>Purchased <yellow><amount> <item></yellow> for <yellow><price></yellow>. Balance: <yellow><bal></yellow></white>"
+# Placeholders: <amount>, <item>, <price>, <bal>
+sell-success: "<white>Sold <yellow><amount> <item></yellow> for <yellow><price></yellow>. Balance: <yellow><bal></yellow></white>"
+sellall-success: "<white>Successfully sold all items for <yellow><price></yellow>. Updated Balance: <yellow><bal></yellow></white>"
+sellall-unsellable: "<white>One or more items in the sellall GUI was not sellable. It was added back to your inventory or dropped at your feet if full.</white>"
+unbuyable: "<red>This item is not able to be purchased.</red>"
+unsellable: "<red>This item is not able to be sold.</red>"
+in-game-only: "<red>This command can only be ran in-game.</red>"
+unknown-argument: "<red>One or more of the arguments sent is not recognized.</red>"
