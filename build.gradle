@@ -66,6 +66,9 @@ shadowJar {
     archiveClassifier.set(null)
     relocate('org.spongepowered.configurate', 'com.github.lukesky19.skyshop.libs.configurate')
     minimize()
+    manifest {
+        attributes("paperweight-mappings-namespace": "mojang")
+    }
 }
 
 build.dependsOn shadowJar
