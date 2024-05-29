@@ -98,6 +98,12 @@ public class SkyShopCommand implements CommandExecutor, TabCompleter {
                         return true;
                     }
                 } else {
+                    if(!skyShop.isPluginEnabled()) {
+                        skyShop.getComponentLogger().warn(MiniMessage.miniMessage().deserialize("<gray>[</gray> <aqua>SkyShop <gray>]</gray> <red>The plugin has been soft-disabled due to a configuration error.</red>"));
+                        skyShop.getComponentLogger().warn(MiniMessage.miniMessage().deserialize("<gray>[</gray> <aqua>SkyShop</aqua> <gray>]</gray> <red>Please check your server's console for more information.</red>"));
+                        return false;
+                    }
+
                     skyShop.getComponentLogger().info(localeManager.formattedLocale().inGameOnly());
                     return false;
                 }
@@ -120,6 +126,12 @@ public class SkyShopCommand implements CommandExecutor, TabCompleter {
                                 return true;
                             }
                         } else {
+                            if(!skyShop.isPluginEnabled()) {
+                                skyShop.getComponentLogger().warn(MiniMessage.miniMessage().deserialize("<gray>[</gray> <aqua>SkyShop <gray>]</gray> <red>The plugin has been soft-disabled due to a configuration error.</red>"));
+                                skyShop.getComponentLogger().warn(MiniMessage.miniMessage().deserialize("<gray>[</gray> <aqua>SkyShop</aqua> <gray>]</gray> <red>Please check your server's console for more information.</red>"));
+                                return false;
+                            }
+
                             for(Component msg : localeManager.formattedLocale().help()) {
                                 skyShop.getComponentLogger().info(msg);
                             }
@@ -166,14 +178,32 @@ public class SkyShopCommand implements CommandExecutor, TabCompleter {
                                 return true;
                             }
                         } else {
+                            if(!skyShop.isPluginEnabled()) {
+                                skyShop.getComponentLogger().warn(MiniMessage.miniMessage().deserialize("<gray>[</gray> <aqua>SkyShop <gray>]</gray> <red>The plugin has been soft-disabled due to a configuration error.</red>"));
+                                skyShop.getComponentLogger().warn(MiniMessage.miniMessage().deserialize("<gray>[</gray> <aqua>SkyShop</aqua> <gray>]</gray> <red>Please check your server's console for more information.</red>"));
+                                return false;
+                            }
+
                             skyShop.getComponentLogger().info(localeManager.formattedLocale().inGameOnly());
                         }
                     }
 
                     default -> {
                         if(commandSender instanceof Player player) {
+                            if(!skyShop.isPluginEnabled()) {
+                                player.sendMessage(MiniMessage.miniMessage().deserialize("<gray>[</gray> <aqua>SkyShop <gray>]</gray> <red>The plugin is currently is soft-disabled due to a configuration error.</red>"));
+                                player.sendMessage(MiniMessage.miniMessage().deserialize("<gray>[</gray> <aqua>SkyShop</aqua> <gray>]</gray> <red>Please report this to your server's system administrator.</red>"));
+                                return false;
+                            }
+
                             player.sendMessage(localeManager.formattedLocale().unknownArgument());
                         } else {
+                            if(!skyShop.isPluginEnabled()) {
+                                skyShop.getComponentLogger().warn(MiniMessage.miniMessage().deserialize("<gray>[</gray> <aqua>SkyShop <gray>]</gray> <red>The plugin has been soft-disabled due to a configuration error.</red>"));
+                                skyShop.getComponentLogger().warn(MiniMessage.miniMessage().deserialize("<gray>[</gray> <aqua>SkyShop</aqua> <gray>]</gray> <red>Please check your server's console for more information.</red>"));
+                                return false;
+                            }
+
                             skyShop.getComponentLogger().info(localeManager.formattedLocale().unknownArgument());
                         }
                         return false;
@@ -183,8 +213,20 @@ public class SkyShopCommand implements CommandExecutor, TabCompleter {
 
             default -> {
                 if(commandSender instanceof Player player) {
+                    if(!skyShop.isPluginEnabled()) {
+                        player.sendMessage(MiniMessage.miniMessage().deserialize("<gray>[</gray> <aqua>SkyShop <gray>]</gray> <red>The plugin is currently is soft-disabled due to a configuration error.</red>"));
+                        player.sendMessage(MiniMessage.miniMessage().deserialize("<gray>[</gray> <aqua>SkyShop</aqua> <gray>]</gray> <red>Please report this to your server's system administrator.</red>"));
+                        return false;
+                    }
+
                     player.sendMessage(localeManager.formattedLocale().unknownArgument());
                 } else {
+                    if(!skyShop.isPluginEnabled()) {
+                        skyShop.getComponentLogger().warn(MiniMessage.miniMessage().deserialize("<gray>[</gray> <aqua>SkyShop <gray>]</gray> <red>The plugin has been soft-disabled due to a configuration error.</red>"));
+                        skyShop.getComponentLogger().warn(MiniMessage.miniMessage().deserialize("<gray>[</gray> <aqua>SkyShop</aqua> <gray>]</gray> <red>Please check your server's console for more information.</red>"));
+                        return false;
+                    }
+
                     skyShop.getComponentLogger().info(localeManager.formattedLocale().unknownArgument());
                 }
                 return false;
