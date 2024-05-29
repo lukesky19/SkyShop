@@ -13,10 +13,6 @@ repositories {
         url = "https://repo.papermc.io/repository/maven-public/"
     }
     maven {
-        name = "sonatype-oss-snapshots1"
-        url = "https://s01.oss.sonatype.org/content/repositories/snapshots/"
-    }
-    maven {
         name = "jitpack"
         url = "https://jitpack.io"
     }
@@ -27,12 +23,12 @@ repositories {
 }
 
 dependencies {
-    compileOnly "io.papermc.paper:paper-api:1.20.5-R0.1-SNAPSHOT"
+    compileOnly "io.papermc.paper:paper-api:1.20.6-R0.1-SNAPSHOT"
     compileOnly "com.github.MilkBowl:VaultAPI:1.7"
-    compileOnly 'me.clip:placeholderapi:2.11.5'
-    implementation "net.kyori:adventure-api:4.17.0-SNAPSHOT"
+    compileOnly 'me.clip:placeholderapi:2.11.6'
+    implementation "net.kyori:adventure-api:4.17.0"
     implementation "org.spongepowered:configurate-yaml:4.1.2"
-    implementation "net.kyori:adventure-text-minimessage:4.17.0-SNAPSHOT"
+    implementation "net.kyori:adventure-text-minimessage:4.17.0"
 }
 
 def targetJavaVersion = 21
