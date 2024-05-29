@@ -89,16 +89,19 @@ public class SellAllGUI extends InventoryGUI {
         FormattedLocale messages = localeManager.formattedLocale();
         double money = 0.0;
 
-        for (Map.Entry<String, MenuConfiguration.MenuPage> menuPageEntry : menuManager.getMenuConfiguration().pages().entrySet()) {
-            for (Map.Entry<String, MenuConfiguration.MenuEntry> menuEntryEntry : menuPageEntry.getValue().entries().entrySet()) {
-                for (Map.Entry<String, ShopConfiguration.ShopPage> shopPageEntry : shopManager.getShopConfig(menuEntryEntry.getValue().shop()).pages().entrySet()) {
-                    for (Map.Entry<String, ShopConfiguration.ShopEntry> shopEntryEntry : shopPageEntry.getValue().entries().entrySet()) {
-                        for (ItemStack item : event.getInventory().getContents()) {
-                            if (item != null
-                                    && TransactionType.valueOf(shopEntryEntry.getValue().type()).equals(TransactionType.ITEM)
-                                    && item.getType().equals(Material.valueOf(shopEntryEntry.getValue().item().material()))) {
-                                money = money + (shopEntryEntry.getValue().prices().sellPrice() * item.getAmount());
-                                event.getInventory().removeItem(item);
+        for(Map.Entry<String, MenuConfiguration.MenuPage> menuPageEntry : menuManager.getMenuConfiguration().pages().entrySet()) {
+            for(Map.Entry<String, MenuConfiguration.MenuEntry> menuEntryEntry : menuPageEntry.getValue().entries().entrySet()) {
+                if(TransactionType.valueOf(menuEntryEntry.getValue().type()).equals(TransactionType.OPEN_SHOP)) {
+                    for(Map.Entry<String, ShopConfiguration.ShopPage> shopPageEntry : shopManager.getShopConfig(menuEntryEntry.getValue().shop()).pages().entrySet()) {
+                        for(Map.Entry<String, ShopConfiguration.ShopEntry> shopEntryEntry : shopPageEntry.getValue().entries().entrySet()) {
+                            for(ItemStack item : event.getInventory().getContents()) {
+                                if(item != null
+                                        && TransactionType.valueOf(shopEntryEntry.getValue().type()).equals(TransactionType.ITEM)
+                                        && item.getType().equals(Material.valueOf(shopEntryEntry.getValue().item().material()))
+                                        && shopEntryEntry.getValue().prices().sellPrice() != -1) {
+                                    money = money + (shopEntryEntry.getValue().prices().sellPrice() * item.getAmount());
+                                    event.getInventory().removeItem(item);
+                                }
                             }
                         }
                     }
