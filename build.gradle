@@ -4,17 +4,13 @@ plugins {
 }
 
 group = 'com.github.lukesky19'
-version = '1.0.0'
+version = '1.0.1'
 
 repositories {
     mavenCentral()
     maven {
         name = "papermc-repo"
         url = "https://repo.papermc.io/repository/maven-public/"
-    }
-    maven {
-        name = "sonatype"
-        url = "https://oss.sonatype.org/content/groups/public/"
     }
     maven {
         name = "jitpack"
@@ -27,15 +23,15 @@ repositories {
 }
 
 dependencies {
-    compileOnly "io.papermc.paper:paper-api:1.20.4-R0.1-SNAPSHOT"
+    compileOnly "io.papermc.paper:paper-api:1.20.6-R0.1-SNAPSHOT"
     compileOnly "com.github.MilkBowl:VaultAPI:1.7"
-    compileOnly 'me.clip:placeholderapi:2.11.5'
-    implementation "net.kyori:adventure-api:4.16.0"
+    compileOnly 'me.clip:placeholderapi:2.11.6'
+    implementation "net.kyori:adventure-api:4.17.0"
     implementation "org.spongepowered:configurate-yaml:4.1.2"
-    implementation "net.kyori:adventure-text-minimessage:4.16.0"
+    implementation "net.kyori:adventure-text-minimessage:4.17.0"
 }
 
-def targetJavaVersion = 17
+def targetJavaVersion = 21
 java {
     def javaVersion = JavaVersion.toVersion(targetJavaVersion)
     sourceCompatibility = javaVersion
@@ -66,6 +62,9 @@ shadowJar {
     archiveClassifier.set(null)
     relocate('org.spongepowered.configurate', 'com.github.lukesky19.skyshop.libs.configurate')
     minimize()
+    manifest {
+        attributes("paperweight-mappings-namespace": "mojang")
+    }
 }
 
 build.dependsOn shadowJar

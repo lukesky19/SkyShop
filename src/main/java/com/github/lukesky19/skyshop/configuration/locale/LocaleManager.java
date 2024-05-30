@@ -85,10 +85,8 @@ public class LocaleManager {
         if(!localeValidator.isLocaleValid(localeConfiguration, locale)) {
             skyShop.setPluginState(false);
         } else {
+            assert localeConfiguration != null;
             formattedLocale = decorateLocale(localeConfiguration);
-            if(formattedLocale == null) {
-                skyShop.setPluginState(false);
-            }
         }
     }
 
@@ -108,7 +106,6 @@ public class LocaleManager {
      * @return A FormattedLocale object.
      */
     private FormattedLocale decorateLocale(LocaleConfiguration localeConfiguration) {
-        if(localeConfiguration == null) return null;
         MiniMessage mm = MiniMessage.miniMessage();
         List<Component> help = new ArrayList<>();
         for(String msg : localeConfiguration.help()) {

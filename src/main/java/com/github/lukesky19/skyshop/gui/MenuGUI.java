@@ -198,7 +198,7 @@ public class MenuGUI extends InventoryGUI {
                             .setLore(lore)
                             .setAction(event -> Bukkit.getScheduler().runTaskLater(skyShop, () -> {
                                 event.getWhoClicked().closeInventory(InventoryCloseEvent.Reason.OPEN_NEW);
-                                inventoryManager.openGUI(new ShopGUI(skyShop, menuManager, shopManager, inventoryManager, localeManager, shopManager.getShopConfig(itemEntry.shop()).pages().entrySet().stream().toList().get(0), itemEntry.shop(), 0), (Player) event.getWhoClicked());
+                                inventoryManager.openGUI(new ShopGUI(skyShop, menuManager, shopManager, inventoryManager, localeManager, shopManager.getShopConfig(itemEntry.shop()).pages().entrySet().stream().toList().getFirst(), itemEntry.shop(), 0), (Player) event.getWhoClicked());
                             }, 1L))
 
 

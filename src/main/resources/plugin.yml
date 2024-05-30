@@ -1,5 +1,5 @@
 name: SkyShop
-version: '1.0.0'
+version: '1.0.1'
 main: com.github.lukesky19.skyshop.SkyShop
 api-version: '1.20'
 load: STARTUP

@@ -151,14 +151,14 @@ public class ShopValidator {
                 List<Map.Entry<String, ShopConfiguration.ShopPage>> pageList = shopConfiguration.pages().entrySet().stream().toList();
                 switch(entryType) {
                     case NEXT_PAGE -> {
-                        if (pageList.get(pageList.size() - 1).getValue().equals(page)) {
+                        if (pageList.getLast().getValue().equals(page)) {
                             logger.error(MiniMessage.miniMessage().deserialize("<red>The entry for <yellow>" + itemId + "</yellow> for page <yellow>" + pageId + "</yellow> in <yellow>" + shopId + ".yml</yellow> has a NEXT_PAGE button, but this is the last page.</red>"));
                             logger.error(MiniMessage.miniMessage().deserialize("<red>Either add another page after <yellow>" + pageId + "</yellow> or remove entry <yellow>" + itemId + "</yellow>.</red>"));
                             return false;
                         }
                     }
                     case PREVIOUS_PAGE -> {
-                        if (pageList.get(0).getValue().equals(page)) {
+                        if (pageList.getFirst().getValue().equals(page)) {
                             logger.error(MiniMessage.miniMessage().deserialize("<red>The entry for <yellow>" + itemId + "</yellow> for page <yellow>" + pageId + "</yellow> in <yellow>" + shopId + ".yml</yellow> has a PREVIOUS_PAGE button, but this is the first page.</red>"));
                             logger.error(MiniMessage.miniMessage().deserialize("<red>Remove entry <yellow>" + itemId + "</yellow> to fix.</red>"));
                             return false;

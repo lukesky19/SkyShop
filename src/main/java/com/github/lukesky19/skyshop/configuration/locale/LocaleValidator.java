@@ -36,8 +36,9 @@ public class LocaleValidator {
     }
 
     /**
-     * Checks if menu.yml is valid.
+     * Checks if the locale config is valid.
      * @param localeConfiguration The LocaleConfiguration to be validated.
+     * @param locale The name of the locale being validated. Used in error messages.
      * @return true if valid, false if not.
     */
     public boolean isLocaleValid(LocaleConfiguration localeConfiguration, String locale) {

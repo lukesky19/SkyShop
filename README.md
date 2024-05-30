@@ -14,7 +14,7 @@
 ## FAQ
 Q: What versions does this plugin support?
 
-A: Currently only 1.20.4. 1.20.5/6 support is planned.
+A: 1.20.5 and 1.20.6.
 
 Q: Are there any plans to support any other versions?
 
