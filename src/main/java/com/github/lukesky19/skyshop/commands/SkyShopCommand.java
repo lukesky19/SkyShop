@@ -92,7 +92,7 @@ public class SkyShopCommand implements CommandExecutor, TabCompleter {
                         }
 
                         List<Map.Entry<String, MenuConfiguration.MenuPage>> pageList = menuManager.getMenuConfiguration().pages().entrySet().stream().toList();
-                        Map.Entry<String, MenuConfiguration.MenuPage> entry = pageList.getFirst();
+                        Map.Entry<String, MenuConfiguration.MenuPage> entry = pageList.get(0);
 
                         inventoryManager.openGUI(new MenuGUI(skyShop, menuManager, shopManager, inventoryManager, localeManager, entry, 0), player);
                         return true;
