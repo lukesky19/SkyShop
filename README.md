@@ -14,7 +14,7 @@
 ## FAQ
 Q: What versions does this plugin support?
 
-A: 1.20.5 and 1.20.6.
+A: 1.20.4, 1.20.5, 1.20.6, and 1.21. Make sure you download the right jar for your server version.
 
 Q: Are there any plans to support any other versions?
 

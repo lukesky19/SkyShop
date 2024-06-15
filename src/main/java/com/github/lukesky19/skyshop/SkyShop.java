@@ -29,6 +29,7 @@ import com.github.lukesky19.skyshop.configuration.shop.ShopManager;
 import com.github.lukesky19.skyshop.configuration.shop.ShopValidator;
 import com.github.lukesky19.skyshop.util.gui.InventoryListener;
 import com.github.lukesky19.skyshop.util.gui.InventoryManager;
+import me.clip.placeholderapi.metrics.bukkit.Metrics;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.RegisteredServiceProvider;
@@ -67,6 +68,9 @@ public final class SkyShop extends JavaPlugin {
      * Startup logic
     */
     public void onEnable() {
+        int pluginId = 22277;
+        new Metrics(this, pluginId);
+
         setupEconomy();
         setupPlaceholderAPI();
 

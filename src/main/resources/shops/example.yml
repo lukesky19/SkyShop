@@ -38,7 +38,7 @@ pages:
     1:
         size: 27
         name: "<aqua><bold>Example Shop - Page 2</bold></aqua>"
-        items:
+        entries:
             0:
                 type: FILLER
                 item:
@@ -66,7 +66,7 @@ pages:
                     material: DIAMOND
                     name: "<white>1 Diamond</white>"
                     lore:
-                        - "Buy for: <price>"
+                        - "Buy for: <buy_price>"
                 prices:
                     buy-price: 500.0
                     sell-price: -1.0

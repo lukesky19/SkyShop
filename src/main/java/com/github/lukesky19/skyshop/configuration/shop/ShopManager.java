@@ -75,10 +75,6 @@ public class ShopManager {
             return;
         }
 
-        if(settingsManager.getSettingsConfig().firstRun()) {
-            saveExampleShop();
-        }
-
         shopConfigurations = new HashMap<>();
         for (Map.Entry<String, MenuConfiguration.MenuPage> pageEntry : menuManager.getMenuConfiguration().pages().entrySet()) {
             MenuConfiguration.MenuPage page = pageEntry.getValue();
@@ -104,18 +100,6 @@ public class ShopManager {
                     }
                 }
             }
-        }
-    }
-
-    /**
-     * Saves the example shop file if it does not exist.
-     * Only does so if first-run in settings.yml is true.
-    */
-    public void saveExampleShop() {
-        Path path = Path.of(skyShop.getDataFolder() + File.separator + "shops" + File.separator + "example.yml");
-        if(!path.toFile().exists()) {
-            skyShop.saveResource("shops" + File.separator + "example.yml", false);
-            settingsManager.setFirstRunFalse();
         }
     }
 }
