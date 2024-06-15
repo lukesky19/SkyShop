@@ -4,7 +4,7 @@ plugins {
 }
 
 group = 'com.github.lukesky19'
-version = '1.0.1'
+version = '1.0.2'
 
 repositories {
     mavenCentral()
@@ -23,12 +23,13 @@ repositories {
 }
 
 dependencies {
-    compileOnly "io.papermc.paper:paper-api:1.20.6-R0.1-SNAPSHOT"
+    compileOnly "io.papermc.paper:paper-api:1.21-R0.1-SNAPSHOT"
     compileOnly "com.github.MilkBowl:VaultAPI:1.7"
     compileOnly 'me.clip:placeholderapi:2.11.6'
     implementation "net.kyori:adventure-api:4.17.0"
-    implementation "org.spongepowered:configurate-yaml:4.1.2"
     implementation "net.kyori:adventure-text-minimessage:4.17.0"
+    implementation "org.spongepowered:configurate-yaml:4.1.2"
+    implementation "org.bstats:bstats-bukkit:3.0.2"
 }
 
 def targetJavaVersion = 21
@@ -61,6 +62,7 @@ processResources {
 shadowJar {
     archiveClassifier.set(null)
     relocate('org.spongepowered.configurate', 'com.github.lukesky19.skyshop.libs.configurate')
+    relocate('org.bstats', 'com.github.lukesky19.skyshop.libs.bstats')
     minimize()
     manifest {
         attributes("paperweight-mappings-namespace": "mojang")
