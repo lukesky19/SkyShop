@@ -74,6 +74,8 @@ public class SettingsManager {
         if(!settingsValidator.isSettingsValid(settingsConfig)) {
             skyShop.setPluginState(false);
         }
+
+        saveExampleShop();
     }
 
     /**
@@ -92,6 +94,18 @@ public class SettingsManager {
             loader.save(settingsNode);
         } catch (ConfigurateException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Saves the example shop file if it does not exist.
+     * Only does so if first-run in settings.yml is true.
+     */
+    public void saveExampleShop() {
+        Path path = Path.of(skyShop.getDataFolder() + File.separator + "shops" + File.separator + "example.yml");
+        if(!path.toFile().exists()) {
+            skyShop.saveResource("shops" + File.separator + "example.yml", false);
+            setFirstRunFalse();
         }
     }
 }
