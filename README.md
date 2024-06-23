@@ -1,16 +1,29 @@
 # SkyShop
 ## Description
-* This plugin is a simple inventory based shop plugin with page support, error checking, and configuration validation.
-
+* A simple inventory based shop plugin.
 ## Features
-* It's a simple inventory based shop plugin with page support.
+* A simple inventory based shop plugin.
+* Supports multiple pages.
+* Supports buying and selling for items and commands.
 * Features error checking and configuration validation. We're only human right?
-* It has sellall functionality.
-
+* Features a sellall GUI for quick selling of items.
 ## Required Dependencies
-* Vault
 * PlaceholderAPI
-
+* Vault
+## Commands
+- /skyshop - Command to open the shop.
+  - Alias: /shop
+- /skyshop help - Displays the help message.
+- /skyshop reload - Reloads the plugin.
+- /skyshop sellall - Opens the sellall GUI.
+## Permisisons
+- `skyshop.commands.shop` - The permission to access the shop.
+- `skyshop.commands.sellall` - The permission to access the sellall GUI.
+- `skyshop.commands.reload` - The permission to reload the plugin.
+## Issues, Bugs, or Suggestions
+* Please create a new [Github Issue](https://github.com/lukesky19/SkyShop/issues) with your issue, bug, or suggestion.
+* If an issue or bug, please post any relevant logs containing errors related to SkyShop and your configuration files.
+* I will attempt to solve any issues or implement features to the best of my ability.
 ## FAQ
 Q: What versions does this plugin support?
 
@@ -27,11 +40,6 @@ A: This plugin only works with Paper, it makes use of many newer API features th
 Q: Is Folia supported?
 
 A: There is no Folia support at this time. I may look into it in the future though.
-
-## Issues or Bugs
-* Create a new GitHub Issue describing your issue.
-* Please post any relevant logs containing errors related to SkyShop and your configuration files.
-* I will attempt to solve any issues to the best of my ability.
 
 ## Building
 ```./gradlew build```
