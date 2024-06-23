@@ -14,15 +14,15 @@
 ## FAQ
 Q: What versions does this plugin support?
 
-A: 1.20.4, 1.20.5, 1.20.6, and 1.21. Make sure you download the right jar for your server version.
+A: 1.19 through 1.21.
 
 Q: Are there any plans to support any other versions?
 
-A: No.
+A: I will always support newer versions of the game. I have no plans to support any version older than 1.19 as I make use of API features added in 1.19. I may drop older versions if it becomes difficult to support or hinders supporting newer versions.
 
 Q: Does this work on Spigot and Paper?
 
-A: This plugin was only designed with Paper in mind, and I have no plans to support Spigot at this time.
+A: This plugin only works with Paper, it makes use of many newer API features that don't exist in the Spigot API. There are no plans to support Spigot.
 
 Q: Is Folia supported?
 
