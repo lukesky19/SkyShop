@@ -30,6 +30,7 @@ import com.github.lukesky19.skyshop.configuration.shop.ShopValidator;
 import com.github.lukesky19.skyshop.util.gui.InventoryListener;
 import com.github.lukesky19.skyshop.util.gui.InventoryManager;
 import me.clip.placeholderapi.metrics.bukkit.Metrics;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.RegisteredServiceProvider;
@@ -67,14 +68,17 @@ public final class SkyShop extends JavaPlugin {
     /**
      * Startup logic
     */
+    @Override
     public void onEnable() {
-        int pluginId = 22277;
-        new Metrics(this, pluginId);
-
+        // First set up utility classes
+        ConfigurationUtility configurationUtility = new ConfigurationUtility(this);
+        // Set up bstats
+        setupBStats();
+        // Check for and set up dependencies
         setupEconomy();
         setupPlaceholderAPI();
 
-        ConfigurationUtility configurationUtility = new ConfigurationUtility(this);
+        // Set up all other classes
         this.inventoryManager = new InventoryManager(this);
         InventoryListener inventoryListener = new InventoryListener(this.inventoryManager);
         SettingsValidator settingsValidator = new SettingsValidator(this);
@@ -87,13 +91,16 @@ public final class SkyShop extends JavaPlugin {
         this.shopManager = new ShopManager(this, this.settingsManager, this.menuManager, configurationUtility, shopValidator);
         SkyShopCommand skyShopCommand = new SkyShopCommand(this, this.menuManager, this.shopManager, this.localeManager, this.inventoryManager);
 
+        // Register listeners
         Bukkit.getPluginManager().registerEvents(inventoryListener, this);
 
+        // Register commands
         Objects.requireNonNull(Bukkit.getPluginCommand("skyshop")).setExecutor(skyShopCommand);
         Objects.requireNonNull(Bukkit.getPluginCommand("skyshop")).setTabCompleter(skyShopCommand);
         Objects.requireNonNull(Bukkit.getPluginCommand("shop")).setExecutor(skyShopCommand);
         Objects.requireNonNull(Bukkit.getPluginCommand("shop")).setTabCompleter(skyShopCommand);
 
+        // Reload the plugin data
         reload();
     }
 
@@ -119,7 +126,7 @@ public final class SkyShop extends JavaPlugin {
                 this.economy = rsp.getProvider();
             }
         } else {
-            getComponentLogger().error("<red>SkyShop has been disabled due to no Vault dependency found!</red>");
+            getComponentLogger().error(MiniMessage.miniMessage().deserialize("<red>SkyShop has been disabled due to no Vault dependency found!</red>"));
             getServer().getPluginManager().disablePlugin(this);
         }
     }
@@ -129,8 +136,16 @@ public final class SkyShop extends JavaPlugin {
     */
     private void setupPlaceholderAPI() {
         if (getServer().getPluginManager().getPlugin("PlaceholderAPI") == null) {
-            getComponentLogger().error("<red>SkyShop has been disabled due to no PlaceholderAPI dependency found!</red>");
+            getComponentLogger().error(MiniMessage.miniMessage().deserialize("<red>SkyShop has been disabled due to no PlaceholderAPI dependency found!</red>"));
             getServer().getPluginManager().disablePlugin(this);
         }
+    }
+
+    /**
+     * Sets up bstats
+     */
+    private void setupBStats() {
+        int pluginId = 22277;
+        new Metrics(this, pluginId);
     }
 }
