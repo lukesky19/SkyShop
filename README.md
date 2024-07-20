@@ -44,5 +44,22 @@ A: There is no Folia support at this time. I may look into it in the future thou
 ## Building
 ```./gradlew build```
 
+## API
+* First build the plugin using ```./gradlew build publishToMavenLocal```.
+* Then add ```compileOnly com.github.lukesky19:SkyShop:1.2.0``` to your `build.gradle` file.
+* To get the API:
+```java
+    public SkyShopAPI getSkyShopAPI() {
+        if(getServer().getPluginManager().getPlugin("SkyShop") != null) {
+            RegisteredServiceProvider<SkyShopAPI> rsp = getServer().getServicesManager().getRegistration(SkyShopAPI.class);
+            if (rsp != null) {
+              return rsp.getProvider();
+            }
+        }
+        return null;
+    }
+```
+* You may want to assign the API instance to a variable and use a getter or pass it through a constructor.
+
 ## Why AGPL3?
 I wanted a license that will keep my code open source. I believe in open source software and in-case this project goes unmaintained by me, I want it to live on through the work of others. And I want that work to remain open source to prevent a time when a fork can never be continued (i.e., closed-sourced and abandoned).

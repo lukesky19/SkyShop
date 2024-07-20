@@ -1,5 +1,6 @@
 plugins {
     id("io.github.goooler.shadow") version "8.1.7"
+    id("maven-publish")
 }
 
 allprojects {
@@ -69,6 +70,14 @@ shadowJar {
 
     manifest {
         attributes("paperweight-mappings-namespace": "mojang")
+    }
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            from components.java
+        }
     }
 }
 
