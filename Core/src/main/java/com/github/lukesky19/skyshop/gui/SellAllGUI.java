@@ -18,48 +18,27 @@
 package com.github.lukesky19.skyshop.gui;
 
 import com.github.lukesky19.skyshop.SkyShop;
-import com.github.lukesky19.skyshop.configuration.locale.FormattedLocale;
-import com.github.lukesky19.skyshop.configuration.locale.LocaleManager;
-import com.github.lukesky19.skyshop.configuration.menu.MenuConfiguration;
-import com.github.lukesky19.skyshop.configuration.menu.MenuManager;
-import com.github.lukesky19.skyshop.configuration.shop.ShopConfiguration;
-import com.github.lukesky19.skyshop.configuration.shop.ShopManager;
-import com.github.lukesky19.skyshop.util.enums.TransactionType;
+import com.github.lukesky19.skyshop.api.SkyShopAPI;
 import com.github.lukesky19.skyshop.util.gui.InventoryGUI;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
-import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Bukkit;
-import org.bukkit.Material;
-import org.bukkit.OfflinePlayer;
+import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
-import org.bukkit.inventory.ItemStack;
-
-import java.util.Arrays;
-import java.util.Map;
 
 /**
  * This class is called to create a sellall inventory for a player to sell items.
 */
 public class SellAllGUI extends InventoryGUI {
-    final SkyShop skyShop;
-    final LocaleManager localeManager;
-    final MenuManager menuManager;
-    final ShopManager shopManager;
+    final SkyShopAPI skyShopAPI;
 
     /**
      * Constructor
-     * @param skyShop The plugin's instance.
-     * @param menuManager A MenuManager instance.
-     * @param shopManager A ShopManager instance.
-     * @param localeManager A LocaleManager instance.
+     * @param skyShopAPI The plugin's API.
     */
-    public SellAllGUI(SkyShop skyShop, MenuManager menuManager, ShopManager shopManager, LocaleManager localeManager) {
-        this.skyShop = skyShop;
-        this.menuManager = menuManager;
-        this.shopManager = shopManager;
-        this.localeManager = localeManager;
+    public SellAllGUI(SkyShopAPI skyShopAPI) {
+        this.skyShopAPI = skyShopAPI;
 
         createInventory();
     }
@@ -86,52 +65,8 @@ public class SellAllGUI extends InventoryGUI {
      * @param event The InventoryCloseEvent
     */
     public void onClose(InventoryCloseEvent event) {
-        FormattedLocale messages = localeManager.formattedLocale();
-        double money = 0.0;
-
-        for(Map.Entry<String, MenuConfiguration.MenuPage> menuPageEntry : menuManager.getMenuConfiguration().pages().entrySet()) {
-            for(Map.Entry<String, MenuConfiguration.MenuEntry> menuEntryEntry : menuPageEntry.getValue().entries().entrySet()) {
-                if(TransactionType.valueOf(menuEntryEntry.getValue().type()).equals(TransactionType.OPEN_SHOP)) {
-                    for(Map.Entry<String, ShopConfiguration.ShopPage> shopPageEntry : shopManager.getShopConfig(menuEntryEntry.getValue().shop()).pages().entrySet()) {
-                        for(Map.Entry<String, ShopConfiguration.ShopEntry> shopEntryEntry : shopPageEntry.getValue().entries().entrySet()) {
-                            for(ItemStack item : event.getInventory().getContents()) {
-                                if(item != null
-                                        && TransactionType.valueOf(shopEntryEntry.getValue().type()).equals(TransactionType.ITEM)
-                                        && item.getType().equals(Material.valueOf(shopEntryEntry.getValue().item().material()))
-                                        && shopEntryEntry.getValue().prices().sellPrice() != -1) {
-                                    money = money + (shopEntryEntry.getValue().prices().sellPrice() * item.getAmount());
-                                    event.getInventory().removeItem(item);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        if (!Arrays.stream(event.getInventory().getContents()).toList().isEmpty()) {
-            for (ItemStack item : event.getInventory().getContents()) {
-                if (item != null && item.getType() != Material.AIR) {
-                    event.getPlayer().sendMessage(messages.prefix().append(messages.sellallUnsellable()));
-
-                    if (event.getPlayer().getInventory().firstEmpty() != -1) {
-                        event.getPlayer().getInventory().addItem(item);
-                    } else {
-                        event.getPlayer().getWorld().dropItem(event.getPlayer().getLocation(), item);
-                    }
-
-                    event.getInventory().removeItem(item);
-                }
-            }
-        }
-
-        if (money != 0.0) {
-            skyShop.getEconomy().depositPlayer((OfflinePlayer) event.getPlayer(), money);
-            Component sellAllSuccess = MiniMessage.miniMessage().deserialize(messages.sellallSuccess(),
-                    Placeholder.parsed("price", String.valueOf(money)),
-                    Placeholder.parsed("bal", String.valueOf(skyShop.getEconomy().getBalance((OfflinePlayer) event.getPlayer()))));
-            event.getPlayer().sendMessage(messages.prefix().append(sellAllSuccess));
-
+        if(event.getPlayer() instanceof Player player) {
+            skyShopAPI.sell(event.getInventory(), player);
         }
     }
 }

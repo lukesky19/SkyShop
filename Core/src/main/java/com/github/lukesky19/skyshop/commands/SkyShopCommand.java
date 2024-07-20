@@ -18,6 +18,7 @@
 package com.github.lukesky19.skyshop.commands;
 
 import com.github.lukesky19.skyshop.SkyShop;
+import com.github.lukesky19.skyshop.api.SkyShopAPI;
 import com.github.lukesky19.skyshop.configuration.locale.LocaleManager;
 import com.github.lukesky19.skyshop.configuration.menu.MenuConfiguration;
 import com.github.lukesky19.skyshop.configuration.menu.MenuManager;
@@ -45,6 +46,7 @@ import java.util.Map;
 */
 public class SkyShopCommand implements CommandExecutor, TabCompleter {
     final SkyShop skyShop;
+    final SkyShopAPI skyShopAPI;
     final MenuManager menuManager;
     final ShopManager shopManager;
     final LocaleManager localeManager;
@@ -60,11 +62,13 @@ public class SkyShopCommand implements CommandExecutor, TabCompleter {
      */
     public SkyShopCommand(
             SkyShop skyShop,
+            SkyShopAPI skyShopAPI,
             MenuManager menuManager,
             ShopManager shopManager,
             LocaleManager localeManager,
             InventoryManager inventoryManager) {
         this.skyShop = skyShop;
+        this.skyShopAPI = skyShopAPI;
         this.menuManager = menuManager;
         this.shopManager = shopManager;
         this.inventoryManager = inventoryManager;
@@ -174,7 +178,7 @@ public class SkyShopCommand implements CommandExecutor, TabCompleter {
                                     return false;
                                 }
 
-                                inventoryManager.openGUI(new SellAllGUI(skyShop, menuManager, shopManager, localeManager), player);
+                                inventoryManager.openGUI(new SellAllGUI(skyShopAPI), player);
                                 return true;
                             }
                         } else {

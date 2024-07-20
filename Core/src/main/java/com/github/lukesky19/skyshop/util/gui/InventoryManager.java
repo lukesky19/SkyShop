@@ -67,6 +67,10 @@ public class InventoryManager {
         }
     }
 
+    public boolean isInventoryRegistered(Inventory inventory) {
+        return activeInventories.containsKey(inventory);
+    }
+
     public void handleClick(InventoryClickEvent event) {
         InventoryHandler handler = this.activeInventories.get(event.getInventory());
         if(handler != null) {

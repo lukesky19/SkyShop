@@ -17,6 +17,7 @@
 */
 package com.github.lukesky19.skyshop;
 
+import com.github.lukesky19.skyshop.api.SkyShopAPI;
 import com.github.lukesky19.skyshop.commands.SkyShopCommand;
 import com.github.lukesky19.skyshop.configuration.ConfigurationUtility;
 import com.github.lukesky19.skyshop.configuration.locale.LocaleManager;
@@ -34,6 +35,7 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.RegisteredServiceProvider;
+import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.Objects;
@@ -45,6 +47,7 @@ public final class SkyShop extends JavaPlugin {
     LocaleManager localeManager;
     MenuManager menuManager;
     ShopManager shopManager;
+    SkyShopAPI skyShopAPI;
     // The variable that stores the server's economy instance.
     Economy economy;
     // This variable relates to the status of SkyShop, i.e., whether a configuration has failed to load or not.
@@ -89,7 +92,11 @@ public final class SkyShop extends JavaPlugin {
         this.menuManager = new MenuManager(this, menuValidator, configurationUtility);
         ShopValidator shopValidator = new ShopValidator(this);
         this.shopManager = new ShopManager(this, this.settingsManager, this.menuManager, configurationUtility, shopValidator);
-        SkyShopCommand skyShopCommand = new SkyShopCommand(this, this.menuManager, this.shopManager, this.localeManager, this.inventoryManager);
+        this.skyShopAPI = new SkyShopAPI(this, inventoryManager, localeManager, menuManager, shopManager);
+        SkyShopCommand skyShopCommand = new SkyShopCommand(this, skyShopAPI, this.menuManager, this.shopManager, this.localeManager, this.inventoryManager);
+
+        // Register SkyShopAPI
+        this.getServer().getServicesManager().register(SkyShopAPI.class, skyShopAPI, this, ServicePriority.Lowest);
 
         // Register listeners
         Bukkit.getPluginManager().registerEvents(inventoryListener, this);
