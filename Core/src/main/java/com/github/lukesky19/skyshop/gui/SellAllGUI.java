@@ -17,7 +17,6 @@
 */
 package com.github.lukesky19.skyshop.gui;
 
-import com.github.lukesky19.skyshop.SkyShop;
 import com.github.lukesky19.skyshop.api.SkyShopAPI;
 import com.github.lukesky19.skyshop.util.gui.InventoryGUI;
 import net.kyori.adventure.text.Component;
