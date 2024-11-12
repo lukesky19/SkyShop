@@ -1,0 +1,8 @@
+config-version: 2.0.0
+first-run: true
+# This just has to be the name of any file in SkyShop/locale (without the extension, i.e, .yml)
+# Any locales provided by the plugin will always exist.
+# WARNING : If a file does not exist for a custom locale (aka a file), the plugin will not work.
+locale: en_US
+# When true, this will save the number of items bought and sold per Material.
+statistics: false

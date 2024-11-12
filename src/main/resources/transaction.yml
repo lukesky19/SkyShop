@@ -1,0 +1,376 @@
+config-version: 2.0.0
+items:
+  pages:
+    0:
+      size: 54
+      name: "<aqua><bold>Transaction Menu - Page 1</bold></aqua>"
+      entries:
+        0:
+          type: FILLER
+          item:
+            material: GRAY_STAINED_GLASS_PANE
+            name: " "
+            lore: [ ]
+        1:
+          type: RETURN
+          slot: 49
+          item:
+            material: BARRIER
+            name: "<yellow>Return to the previous menu.</yellow>"
+            lore: [ ]
+        2:
+          type: NEXT_PAGE
+          slot: 51
+          item:
+            material: ARROW
+            name: "<yellow>Next Page</yellow>"
+            lore: [ ]
+        3:
+          type: DISPLAY
+          slot: 22
+        4:
+          type: BUY
+          slot: 10
+          amount: 1
+          item:
+            material: RED_STAINED_GLASS_PANE
+            name: "<red>Buy <amount></red>"
+            lore:
+              - "<yellow>Buy Price:</yellow> <white><buy_price></white>"
+        5:
+          type: BUY
+          slot: 11
+          amount: 2
+          item:
+            material: RED_STAINED_GLASS_PANE
+            name: "<red>Buy <amount></red>"
+            lore:
+              - "<yellow>Buy Price:</yellow> <white><buy_price></white>"
+        6:
+          type: BUY
+          slot: 12
+          amount: 4
+          item:
+            material: RED_STAINED_GLASS_PANE
+            name: "<red>Buy <amount></red>"
+            lore:
+              - "<yellow>Buy Price:</yellow> <white><buy_price></white>"
+        7:
+          type: BUY
+          slot: 13
+          amount: 8
+          item:
+            material: RED_STAINED_GLASS_PANE
+            name: "<red>Buy <amount></red>"
+            lore:
+              - "<yellow>Buy Price:</yellow> <white><buy_price></white>"
+        8:
+          type: BUY
+          slot: 14
+          amount: 16
+          item:
+            material: RED_STAINED_GLASS_PANE
+            name: "<red>Buy <amount></red>"
+            lore:
+              - "<yellow>Buy Price:</yellow> <white><buy_price></white>"
+        9:
+          type: BUY
+          slot: 15
+          amount: 32
+          item:
+            material: RED_STAINED_GLASS_PANE
+            name: "<red>Buy <amount></red>"
+            lore:
+              - "<yellow>Buy Price:</yellow> <white><buy_price></white>"
+        10:
+          type: BUY
+          slot: 16
+          amount: 64
+          item:
+            material: RED_STAINED_GLASS_PANE
+            name: "<red>Buy <amount></red>"
+            lore:
+              - "<yellow>Buy Price:</yellow> <white><buy_price></white>"
+        11:
+          type: SELL
+          slot: 28
+          amount: 1
+          item:
+            material: GREEN_STAINED_GLASS_PANE
+            name: "<green>Sell <amount></green>"
+            lore:
+              - "<yellow>Sell Price:</yellow> <white><sell_price></white>"
+        12:
+          type: SELL
+          slot: 29
+          amount: 2
+          item:
+            material: GREEN_STAINED_GLASS_PANE
+            name: "<green>Sell <amount></green>"
+            lore:
+              - "<yellow>Sell Price:</yellow> <white><sell_price></white>"
+        13:
+          type: SELL
+          slot: 30
+          amount: 4
+          item:
+            material: GREEN_STAINED_GLASS_PANE
+            name: "<green>Sell <amount></green>"
+            lore:
+              - "<yellow>Sell Price:</yellow> <white><sell_price></white>"
+        14:
+          type: SELL
+          slot: 31
+          amount: 8
+          item:
+            material: GREEN_STAINED_GLASS_PANE
+            name: "<green>Sell <amount></green>"
+            lore:
+              - "<yellow>Sell Price:</yellow> <white><sell_price></white>"
+        15:
+          type: SELL
+          slot: 32
+          amount: 16
+          item:
+            material: GREEN_STAINED_GLASS_PANE
+            name: "<green>Sell <amount></green>"
+            lore:
+              - "<yellow>Sell Price:</yellow> <white><sell_price></white>"
+        16:
+          type: SELL
+          slot: 33
+          amount: 32
+          item:
+            material: GREEN_STAINED_GLASS_PANE
+            name: "<green>Sell <amount></green>"
+            lore:
+              - "<yellow>Sell Price:</yellow> <white><sell_price></white>"
+        17:
+          type: SELL
+          slot: 34
+          amount: 64
+          item:
+            material: GREEN_STAINED_GLASS_PANE
+            name: "<green>Sell <amount></green>"
+            lore:
+              - "<yellow>Sell Price:</yellow> <white><sell_price></white>"
+    1:
+      size: 54
+      name: "<aqua><bold>Transaction Menu - Page 2</bold></aqua>"
+      entries:
+        0:
+          type: FILLER
+          item:
+            material: GRAY_STAINED_GLASS_PANE
+            name: " "
+            lore: []
+        1:
+          type: RETURN
+          slot: 49
+          item:
+            material: BARRIER
+            name: "<yellow>Return to the previous menu.</yellow>"
+            lore: [ ]
+        2:
+          type: PREVIOUS_PAGE
+          slot: 47
+          item:
+            material: ARROW
+            name: "<yellow>Previous Page</yellow>"
+            lore: [ ]
+        3:
+          type: DISPLAY
+          slot: 22
+        4:
+          type: BUY
+          slot: 9
+          amount: 64
+          item:
+            material: RED_STAINED_GLASS_PANE
+            name: "<red>Buy 1 stack</red>"
+            lore:
+              - "<yellow>Buy Price:</yellow> <white><buy_price></white>"
+        5:
+          type: BUY
+          slot: 10
+          amount: 128
+          item:
+            material: RED_STAINED_GLASS_PANE
+            name: "<red>Buy 2 stacks</red>"
+            lore:
+              - "<yellow>Buy Price:</yellow> <white><buy_price></white>"
+        6:
+          type: BUY
+          slot: 11
+          amount: 192
+          item:
+            material: RED_STAINED_GLASS_PANE
+            name: "<red>Buy 3 stacks</red>"
+            lore:
+              - "<yellow>Buy Price:</yellow> <white><buy_price></white>"
+        7:
+          type: BUY
+          slot: 12
+          amount: 256
+          item:
+            material: RED_STAINED_GLASS_PANE
+            name: "<red>Buy 4 stacks</red>"
+            lore:
+              - "<yellow>Buy Price:</yellow> <white><buy_price></white>"
+        8:
+          type: BUY
+          slot: 13
+          amount: 320
+          item:
+            material: RED_STAINED_GLASS_PANE
+            name: "<red>Buy 5 stacks</red>"
+            lore:
+              - "<yellow>Buy Price:</yellow> <white><buy_price></white>"
+        9:
+          type: BUY
+          slot: 14
+          amount: 384
+          item:
+            material: RED_STAINED_GLASS_PANE
+            name: "<red>Buy 6 stacks</red>"
+            lore:
+              - "<yellow>Buy Price:</yellow> <white><buy_price></white>"
+        10:
+          type: BUY
+          slot: 15
+          amount: 448
+          item:
+            material: RED_STAINED_GLASS_PANE
+            name: "<red>Buy 7 stacks</red>"
+            lore:
+              - "<yellow>Buy Price:</yellow> <white><buy_price></white>"
+        11:
+          type: BUY
+          slot: 16
+          amount: 512
+          item:
+            material: RED_STAINED_GLASS_PANE
+            name: "<red>Buy 8 stacks</red>"
+            lore:
+              - "<yellow>Buy Price:</yellow> <white><buy_price></white>"
+        12:
+          type: BUY
+          slot: 17
+          amount: 576
+          item:
+            material: RED_STAINED_GLASS_PANE
+            name: "<red>Buy 9 stacks</red>"
+            lore:
+              - "<yellow>Buy Price:</yellow> <white><buy_price></white>"
+        13:
+          type: SELL
+          slot: 27
+          amount: 64
+          item:
+            material: GREEN_STAINED_GLASS_PANE
+            name: "<green>Sell 1 stack</green>"
+            lore:
+              - "<yellow>Sell Price:</yellow> <white><sell_price></white>"
+        14:
+          type: SELL
+          slot: 28
+          amount: 128
+          item:
+            material: GREEN_STAINED_GLASS_PANE
+            name: "<green>Sell 2 stacks</green>"
+            lore:
+              - "<yellow>Sell Price:</yellow> <white><sell_price></white>"
+        15:
+          type: SELL
+          slot: 29
+          amount: 192
+          item:
+            material: GREEN_STAINED_GLASS_PANE
+            name: "<green>Sell <amount></green>"
+            lore:
+              - "<yellow>Sell Price:</yellow> <white><sell_price></white>"
+        16:
+          type: SELL
+          slot: 30
+          amount: 256
+          item:
+            material: GREEN_STAINED_GLASS_PANE
+            name: "<green>Sell <amount></green>"
+            lore:
+              - "<yellow>Sell Price:</yellow> <white><sell_price></white>"
+        17:
+          type: SELL
+          slot: 31
+          amount: 320
+          item:
+            material: GREEN_STAINED_GLASS_PANE
+            name: "<green>Sell <amount></green>"
+            lore:
+              - "<yellow>Sell Price:</yellow> <white><sell_price></white>"
+        18:
+          type: SELL
+          slot: 32
+          amount: 384
+          item:
+            material: GREEN_STAINED_GLASS_PANE
+            name: "<green>Sell <amount></green>"
+            lore:
+              - "<yellow>Sell Price:</yellow> <white><sell_price></white>"
+        19:
+          type: SELL
+          slot: 33
+          amount: 448
+          item:
+            material: GREEN_STAINED_GLASS_PANE
+            name: "<green>Sell <amount></green>"
+            lore:
+              - "<yellow>Sell Price:</yellow> <white><sell_price></white>"
+        20:
+          type: SELL
+          slot: 34
+          amount: 512
+          item:
+            material: GREEN_STAINED_GLASS_PANE
+            name: "<green>Sell <amount></green>"
+            lore:
+              - "<yellow>Sell Price:</yellow> <white><sell_price></white>"
+        21:
+          type: SELL
+          slot: 35
+          amount: 576
+          item:
+            material: GREEN_STAINED_GLASS_PANE
+            name: "<green>Sell <amount></green>"
+            lore:
+              - "<yellow>Sell Price:</yellow> <white><sell_price></white>"
+commands:
+  pages:
+    0:
+      size: 54
+      name: "<aqua><bold>Transaction Menu - Page 1</bold></aqua>"
+      entries:
+        0:
+          type: FILLER
+          item:
+            material: GRAY_STAINED_GLASS_PANE
+            name: " "
+            lore: [ ]
+        1:
+          type: RETURN
+          slot: 49
+          item:
+            material: BARRIER
+            name: "<yellow>Return to the previous menu.</yellow>"
+            lore: [ ]
+        3:
+          type: DISPLAY
+          slot: 22
+        4:
+          type: BUY
+          slot: 10
+          amount: 1
+          item:
+            material: RED_STAINED_GLASS_PANE
+            name: "<red>Buy <amount></red>"
+            lore:
+              - "<yellow>Buy Price:</yellow> <white><buy_price></white>"
