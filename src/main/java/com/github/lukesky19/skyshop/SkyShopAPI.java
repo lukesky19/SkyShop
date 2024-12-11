@@ -168,8 +168,9 @@ public class SkyShopAPI {
      * <p>Use {@link #sellInventoryGUI(Inventory, Player)} for GUIs and {@link #sellPlayerInventory(Inventory, Player)} for player inventories.</p>
      * @param inventory The player's inventory containing items.
      * @param player The Player to pay for the items sold.
+     * @return true if at least one item was sold, else false
      */
-    public void sellInventory(Player player, Inventory inventory) {
+    public boolean sellInventory(Player player, Inventory inventory) {
         double money = 0.0;
 
         for(ItemStack item : inventory.getContents()) {
@@ -194,7 +195,10 @@ public class SkyShopAPI {
 
         if(money > 0.0) {
             skyShop.getEconomy().depositPlayer(player, money);
+            return true;
         }
+
+        return false;
     }
 
     /**
