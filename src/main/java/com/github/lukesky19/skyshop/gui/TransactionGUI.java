@@ -29,6 +29,10 @@ import com.github.lukesky19.skyshop.configuration.record.GUI;
 import com.github.lukesky19.skyshop.configuration.record.Locale;
 import com.github.lukesky19.skyshop.configuration.record.Transaction;
 import com.github.lukesky19.skyshop.enums.ActionType;
+import com.github.lukesky19.skyshop.event.CommandPurchasedEvent;
+import com.github.lukesky19.skyshop.event.CommandSoldEvent;
+import com.github.lukesky19.skyshop.event.ItemPurchasedEvent;
+import com.github.lukesky19.skyshop.event.ItemSoldEvent;
 import com.github.lukesky19.skyshop.manager.StatsDatabaseManager;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
@@ -437,26 +441,31 @@ public class TransactionGUI extends InventoryGUI {
         buyItem.setAmount(amount);
 
         if (skyShop.getEconomy().getBalance(player) >= price) {
-            skyShop.getEconomy().withdrawPlayer(player, price);
+            ItemPurchasedEvent itemPurchasedEvent = new ItemPurchasedEvent(buyItem);
+            skyShop.getServer().getPluginManager().callEvent(itemPurchasedEvent);
 
-            PlayerUtil.giveItem(player, buyItem, amount);
+            if (!itemPurchasedEvent.isCancelled()) {
+                skyShop.getEconomy().withdrawPlayer(player, price);
 
-            List<TagResolver.Single> successPlaceholders = new ArrayList<>();
-            successPlaceholders.add(Placeholder.parsed("amount", String.valueOf(amount)));
-            successPlaceholders.add(Placeholder.parsed("item", shopItem.name()));
-            successPlaceholders.add(Placeholder.parsed("price", String.valueOf(price)));
-            successPlaceholders.add(Placeholder.parsed("bal", String.valueOf(skyShop.getEconomy().getBalance(player))));
+                PlayerUtil.giveItem(player, buyItem, amount);
 
-            player.sendMessage(FormatUtil.format(player, locale.prefix() + locale.buySuccess(), successPlaceholders));
+                List<TagResolver.Single> successPlaceholders = new ArrayList<>();
+                successPlaceholders.add(Placeholder.parsed("amount", String.valueOf(amount)));
+                successPlaceholders.add(Placeholder.parsed("item", shopItem.name()));
+                successPlaceholders.add(Placeholder.parsed("price", String.valueOf(price)));
+                successPlaceholders.add(Placeholder.parsed("bal", String.valueOf(skyShop.getEconomy().getBalance(player))));
 
-            if(statsDatabaseManager != null) {
-                skyShop.getServer().getScheduler().runTaskAsynchronously(skyShop, () -> {
-                    try {
-                        statsDatabaseManager.updateMaterial(buyItem.getType().toString(), amount, 0);
-                    } catch (SQLException e) {
-                        throw new RuntimeException(e);
-                    }
-                });
+                player.sendMessage(FormatUtil.format(player, locale.prefix() + locale.buySuccess(), successPlaceholders));
+
+                if (statsDatabaseManager != null) {
+                    skyShop.getServer().getScheduler().runTaskAsynchronously(skyShop, () -> {
+                        try {
+                            statsDatabaseManager.updateMaterial(buyItem.getType().toString(), amount, 0);
+                        } catch (SQLException e) {
+                            throw new RuntimeException(e);
+                        }
+                    });
+                }
             }
         } else {
             player.sendMessage(FormatUtil.format(player, locale.prefix() + locale.insufficientFunds()));
@@ -479,25 +488,30 @@ public class TransactionGUI extends InventoryGUI {
         sellItem.setAmount(amount);
 
         if (player.getInventory().containsAtLeast(sellItem, amount)) {
-            player.getInventory().removeItem(sellItem);
-            skyShop.getEconomy().depositPlayer(player, price);
+            ItemSoldEvent itemSoldEvent = new ItemSoldEvent(sellItem);
+            skyShop.getServer().getPluginManager().callEvent(itemSoldEvent);
 
-            List<TagResolver.Single> successPlaceholders = new ArrayList<>();
-            successPlaceholders.add(Placeholder.parsed("amount", String.valueOf(amount)));
-            successPlaceholders.add(Placeholder.parsed("item", shopItem.name()));
-            successPlaceholders.add(Placeholder.parsed("price", String.valueOf(price)));
-            successPlaceholders.add(Placeholder.parsed("bal", String.valueOf(skyShop.getEconomy().getBalance(player))));
+            if (!itemSoldEvent.isCancelled()) {
+                player.getInventory().removeItem(sellItem);
+                skyShop.getEconomy().depositPlayer(player, price);
 
-            player.sendMessage(FormatUtil.format(player, locale.prefix() + locale.sellSuccess(), successPlaceholders));
+                List<TagResolver.Single> successPlaceholders = new ArrayList<>();
+                successPlaceholders.add(Placeholder.parsed("amount", String.valueOf(amount)));
+                successPlaceholders.add(Placeholder.parsed("item", shopItem.name()));
+                successPlaceholders.add(Placeholder.parsed("price", String.valueOf(price)));
+                successPlaceholders.add(Placeholder.parsed("bal", String.valueOf(skyShop.getEconomy().getBalance(player))));
 
-            if(statsDatabaseManager != null) {
-                skyShop.getServer().getScheduler().runTaskAsynchronously(skyShop, () -> {
-                    try {
-                        statsDatabaseManager.updateMaterial(sellItem.getType().toString(), 0, amount);
-                    } catch (SQLException e) {
-                        throw new RuntimeException(e);
-                    }
-                });
+                player.sendMessage(FormatUtil.format(player, locale.prefix() + locale.sellSuccess(), successPlaceholders));
+
+                if (statsDatabaseManager != null) {
+                    skyShop.getServer().getScheduler().runTaskAsynchronously(skyShop, () -> {
+                        try {
+                            statsDatabaseManager.updateMaterial(sellItem.getType().toString(), 0, amount);
+                        } catch (SQLException e) {
+                            throw new RuntimeException(e);
+                        }
+                    });
+                }
             }
         } else {
             player.sendMessage(FormatUtil.format(player, locale.prefix() + locale.notEnoughItems()));
@@ -514,21 +528,26 @@ public class TransactionGUI extends InventoryGUI {
         Locale locale = localeManager.getLocale();
 
         if (skyShop.getEconomy().getBalance(player) >= price) {
-            for (String command : buyCommands) {
-                for(int i = 1; i <= amount; i++) {
-                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), PlaceholderAPIUtil.parsePlaceholders(player, command));
+            CommandPurchasedEvent commandPurchasedEvent = new CommandPurchasedEvent(buyCommands);
+            skyShop.getServer().getPluginManager().callEvent(commandPurchasedEvent);
+
+            if (!commandPurchasedEvent.isCancelled()) {
+                for (String command : buyCommands) {
+                    for (int i = 1; i <= amount; i++) {
+                        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), PlaceholderAPIUtil.parsePlaceholders(player, command));
+                    }
                 }
+
+                skyShop.getEconomy().withdrawPlayer(player, price);
+
+                List<TagResolver.Single> successPlaceholders = new ArrayList<>();
+                successPlaceholders.add(Placeholder.parsed("amount", String.valueOf(amount)));
+                successPlaceholders.add(Placeholder.parsed("item", shopItem.name()));
+                successPlaceholders.add(Placeholder.parsed("price", String.valueOf(price)));
+                successPlaceholders.add(Placeholder.parsed("bal", String.valueOf(skyShop.getEconomy().getBalance(player))));
+
+                player.sendMessage(FormatUtil.format(player, locale.prefix() + locale.buySuccess(), successPlaceholders));
             }
-
-            skyShop.getEconomy().withdrawPlayer(player, price);
-
-            List<TagResolver.Single> successPlaceholders = new ArrayList<>();
-            successPlaceholders.add(Placeholder.parsed("amount", String.valueOf(amount)));
-            successPlaceholders.add(Placeholder.parsed("item", shopItem.name()));
-            successPlaceholders.add(Placeholder.parsed("price", String.valueOf(price)));
-            successPlaceholders.add(Placeholder.parsed("bal", String.valueOf(skyShop.getEconomy().getBalance(player))));
-
-            player.sendMessage(FormatUtil.format(player, locale.prefix() + locale.buySuccess(), successPlaceholders));
         } else {
             player.sendMessage(FormatUtil.format(player, locale.prefix() + locale.insufficientFunds()));
             Bukkit.getScheduler().runTaskLater(skyShop, () -> player.closeInventory(InventoryCloseEvent.Reason.UNLOADED), 1L);
@@ -543,19 +562,24 @@ public class TransactionGUI extends InventoryGUI {
     private void sellCommand(int amount, double price) {
         Locale locale = localeManager.getLocale();
 
-        skyShop.getEconomy().depositPlayer(player, price);
-        for(String command : sellCommands) {
-            for(int i = 1; i <= amount; i++) {
-                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), PlaceholderAPIUtil.parsePlaceholders(player, command));
+        CommandSoldEvent commandSoldEvent = new CommandSoldEvent(sellCommands);
+        skyShop.getServer().getPluginManager().callEvent(commandSoldEvent);
+
+        if (!commandSoldEvent.isCancelled()) {
+            skyShop.getEconomy().depositPlayer(player, price);
+            for (String command : sellCommands) {
+                for (int i = 1; i <= amount; i++) {
+                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), PlaceholderAPIUtil.parsePlaceholders(player, command));
+                }
             }
+
+            List<TagResolver.Single> successPlaceholders = new ArrayList<>();
+            successPlaceholders.add(Placeholder.parsed("amount", String.valueOf(amount)));
+            successPlaceholders.add(Placeholder.parsed("item", shopItem.name()));
+            successPlaceholders.add(Placeholder.parsed("price", String.valueOf(price)));
+            successPlaceholders.add(Placeholder.parsed("bal", String.valueOf(skyShop.getEconomy().getBalance(player))));
+
+            player.sendMessage(FormatUtil.format(player, locale.prefix() + locale.sellSuccess(), successPlaceholders));
         }
-
-        List<TagResolver.Single> successPlaceholders = new ArrayList<>();
-        successPlaceholders.add(Placeholder.parsed("amount", String.valueOf(amount)));
-        successPlaceholders.add(Placeholder.parsed("item", shopItem.name()));
-        successPlaceholders.add(Placeholder.parsed("price", String.valueOf(price)));
-        successPlaceholders.add(Placeholder.parsed("bal", String.valueOf(skyShop.getEconomy().getBalance(player))));
-
-        player.sendMessage(FormatUtil.format(player, locale.prefix() + locale.sellSuccess(), successPlaceholders));
     }
 }

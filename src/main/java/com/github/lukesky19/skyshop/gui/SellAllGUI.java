@@ -186,7 +186,7 @@ public class SellAllGUI extends InventoryGUI {
         clearButtons();
 
         // Proceed to sell any items in the inventory
-        skyShopAPI.sellInventoryGUI(event.getInventory(), player);
+        skyShopAPI.sellInventoryGUI(event.getInventory(), player, true);
     }
 }
 

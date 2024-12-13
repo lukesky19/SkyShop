@@ -55,7 +55,7 @@ public class SellCommand implements CommandExecutor, TabExecutor {
                 switch (args.length) {
                     case 0 -> {
                         if (sender.hasPermission("skyshop.commands.sell.all")) {
-                            skyShopAPI.sellPlayerInventory(player.getInventory(), player);
+                            skyShopAPI.sellInventory(player, player.getInventory(), true);
                             return true;
                         } else {
                             sender.sendMessage(FormatUtil.format(player, locale.prefix() + locale.noPermission()));
@@ -71,7 +71,7 @@ public class SellCommand implements CommandExecutor, TabExecutor {
                                     int slot = player.getInventory().getHeldItemSlot();
 
                                     if(!itemStack.isEmpty() && !itemStack.getType().equals(Material.AIR)) {
-                                        skyShopAPI.sellItemStack(player, player.getInventory(), itemStack, slot);
+                                        skyShopAPI.sellItemStack(player, itemStack, slot, true);
                                         return true;
                                     }
 
@@ -84,7 +84,7 @@ public class SellCommand implements CommandExecutor, TabExecutor {
 
                             case "all" -> {
                                 if (sender.hasPermission("skyshop.commands.sell.all")) {
-                                    skyShopAPI.sellPlayerInventory(player.getInventory(), player);
+                                    skyShopAPI.sellInventory(player, player.getInventory(), true);
                                     return true;
                                 } else {
                                     sender.sendMessage(FormatUtil.format(player, locale.prefix() + locale.noPermission()));
@@ -105,7 +105,7 @@ public class SellCommand implements CommandExecutor, TabExecutor {
                                 if (sender.hasPermission("skyshop.commands.sell.hand") && sender.hasPermission("skyshop.commands.sell.hand.all")) {
                                     ItemStack itemStack = player.getInventory().getItemInMainHand();
                                     if (!itemStack.isEmpty() && !itemStack.getType().equals(Material.AIR)) {
-                                        skyShopAPI.sellAllMatchingItemStack(player, player.getInventory(), itemStack);
+                                        skyShopAPI.sellAllMatchingItemStack(player, itemStack, true);
                                         return true;
                                     }
                                 } else {

@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "com.github.lukesky19"
-version = "2.0.0-Pre-Release-2"
+version = "2.0.0-Pre-Release-3"
 
 repositories {
     mavenCentral()
