@@ -89,14 +89,14 @@ public class SkyShopAPI {
                         }
                     } else {
                         // Give the player the item back
-                        PlayerUtil.giveItem(player, item, item.getAmount());
+                        PlayerUtil.giveItem(player.getInventory(), item, item.getAmount(), player.getLocation());
 
                         // Remove the item from the inventory GUI
                         inventory.clear(i);
                     }
                 } else {
                     // Give the player the item that cannot be sold back
-                    PlayerUtil.giveItem(player, item, item.getAmount());
+                    PlayerUtil.giveItem(player.getInventory(), item, item.getAmount(), player.getLocation());
 
                     // Remove the item from the inventory GUI
                     inventory.clear(i);

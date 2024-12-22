@@ -447,7 +447,7 @@ public class TransactionGUI extends InventoryGUI {
             if (!itemPurchasedEvent.isCancelled()) {
                 skyShop.getEconomy().withdrawPlayer(player, price);
 
-                PlayerUtil.giveItem(player, buyItem, amount);
+                PlayerUtil.giveItem(player.getInventory(), buyItem, amount, player.getLocation());
 
                 List<TagResolver.Single> successPlaceholders = new ArrayList<>();
                 successPlaceholders.add(Placeholder.parsed("amount", String.valueOf(amount)));
