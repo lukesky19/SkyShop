@@ -258,7 +258,7 @@ public class SkyShopAPI {
         Double price = shopManager.getMaterialSellPrice(itemStack.getType());
         double money = 0.0;
 
-        if (price == null || price > 0.0) {
+        if (price == null || price <= 0.0) {
             if (message) {
                 player.sendMessage(FormatUtil.format(player, locale.prefix() + locale.unsellable()));
             }
