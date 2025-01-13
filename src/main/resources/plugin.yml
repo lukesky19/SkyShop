@@ -7,15 +7,6 @@ author: lukeskywlker19
 description: A graphical shop plugin
 depend: [SkyLib, Vault]
 
-commands:
-  skyshop:
-    description: The base command.
-    aliases:
-      - shop
-  sell:
-    description: Sells blocks in the player's inventory.
-    aliases:
-      - sellall
 permissions:
   skyshop.commands.skyshop:
     description: Permission to use the /skyshop command.

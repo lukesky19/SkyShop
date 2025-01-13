@@ -136,12 +136,76 @@ public class SkyShopAPI {
      * <p>Any remaining items that weren't sold will be left inside the inventory.</p>
      * <p>Do not use this method if the inventory is one created by a plugin (i.e., a GUI).</p>
      * <p>Use {@link #sellInventoryGUI(Inventory, Player, boolean)} for GUIs.</p>
+     * <p>Use {@link #sellPlayerInventory(Player, Inventory, boolean)} for Player Inventories.</p>
      * @param inventory The player's inventory containing items.
      * @param player The Player to pay for the items sold.
      * @param message Should the sell success message from SkyShop be sent?
      * @return true if at least one item was sold, else false
      */
     public boolean sellInventory(Player player, Inventory inventory, boolean message) {
+        Locale locale = localeManager.getLocale();
+        double money = 0.0;
+
+        for(int i = 0; i <= inventory.getSize() - 1; i++) {
+            ItemStack item = inventory.getItem(i);
+
+            if (item != null && item.getType() != Material.AIR) {
+                Double price = shopManager.getMaterialSellPrice(item.getType());
+                if (price != null && price > 0.0) {
+                    ItemSoldEvent itemSoldEvent = new ItemSoldEvent(item);
+                    skyShop.getServer().getPluginManager().callEvent(itemSoldEvent);
+
+                    if (!itemSoldEvent.isCancelled()) {
+                        inventory.clear(i);
+
+                        money = money + (price * item.getAmount());
+
+                        if (statsDatabaseManager != null) {
+                            skyShop.getServer().getScheduler().runTaskAsynchronously(skyShop, () -> {
+                                try {
+                                    statsDatabaseManager.updateMaterial(item.getType().toString(), 0, item.getAmount());
+                                } catch (SQLException e) {
+                                    throw new RuntimeException(e);
+                                }
+                            });
+                        }
+                    }
+                }
+            }
+        }
+
+        if(money > 0.0) {
+            skyShop.getEconomy().depositPlayer(player, money);
+
+            if(message) {
+                List<TagResolver.Single> placeholders = new ArrayList<>();
+                placeholders.add(Placeholder.parsed("price", String.valueOf(money)));
+                placeholders.add(Placeholder.parsed("bal", String.valueOf(skyShop.getEconomy().getBalance(player))));
+
+                player.sendMessage(FormatUtil.format(player, locale.prefix() + locale.sellallSuccess(), placeholders));
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * <p>Sells all possible items inside the given inventory if a sell price is configured for that item at least once.</p>
+     * <p>This will remove any and all items if the item type (Material) has a configured sell price that is > 0.0.</p>
+     * <p>If an item has some custom data, the item may not be sold.</p>
+     * <p>Any remaining items that weren't sold will be left inside the inventory.</p>
+     * <p>This method will ignore armor slots. You can use {@link #sellInventory(Player, Inventory, boolean)} for a method that sells armor slots.</p>
+     * <p>Do not use this method if the inventory is one created by a plugin (i.e., a GUI).</p>
+     * <p>Use {@link #sellInventoryGUI(Inventory, Player, boolean)} for GUIs.</p>
+     * <p>Use {@link #sellInventory(Player, Inventory, boolean)} for any other Inventories.</p>
+     * @param inventory The player's inventory containing items.
+     * @param player The Player to pay for the items sold.
+     * @param message Should the sell success message from SkyShop be sent?
+     * @return true if at least one item was sold, else false
+     */
+    public boolean sellPlayerInventory(Player player, Inventory inventory, boolean message) {
         Locale locale = localeManager.getLocale();
         double money = 0.0;
 

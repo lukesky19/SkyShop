@@ -17,145 +17,75 @@
 */
 package com.github.lukesky19.skyshop.commands;
 
-import com.github.lukesky19.skylib.format.FormatUtil;
-import com.github.lukesky19.skyshop.SkyShop;
 import com.github.lukesky19.skyshop.SkyShopAPI;
-import com.github.lukesky19.skyshop.configuration.manager.LocaleManager;
-import com.github.lukesky19.skyshop.configuration.record.Locale;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.mojang.brigadier.tree.LiteralCommandNode;
+import io.papermc.paper.command.brigadier.CommandSourceStack;
+import io.papermc.paper.command.brigadier.Commands;
 import org.bukkit.Material;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
-import org.bukkit.command.CommandSender;
-import org.bukkit.command.TabExecutor;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.List;
-
-public class SellCommand implements CommandExecutor, TabExecutor {
-    private final SkyShop skyShop;
-    private final LocaleManager localeManager;
+public class SellCommand {
     private final SkyShopAPI skyShopAPI;
 
-    public SellCommand(SkyShop skyShop, LocaleManager localeManager, SkyShopAPI skyShopAPI) {
-        this.skyShop = skyShop;
-        this.localeManager = localeManager;
+    public SellCommand(SkyShopAPI skyShopAPI) {
         this.skyShopAPI = skyShopAPI;
     }
 
-    @Override
-    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String @NotNull [] args) {
-        Locale locale = localeManager.getLocale();
+    /**
+     * Builds a {@literal LiteralCommandNode<CommandSourceStack>} for the /sell command to be registered through the Lifecycle API.
+     * @return A {@literal LiteralCommandNode<CommandSourceStack>} representing the /sell command.
+     */
+    public LiteralCommandNode<CommandSourceStack> createCommand() {
+        LiteralArgumentBuilder<CommandSourceStack> builder = Commands.literal("sell")
+            .requires(ctx -> ctx.getSender() instanceof Player && ctx.getSender().hasPermission("skyshop.commands.sell"));
 
-        if(sender instanceof Player player) {
-            if(player.hasPermission("skyshop.commands.sell")) {
-                switch (args.length) {
-                    case 0 -> {
-                        if (sender.hasPermission("skyshop.commands.sell.all")) {
-                            skyShopAPI.sellInventory(player, player.getInventory(), true);
-                            return true;
-                        } else {
-                            sender.sendMessage(FormatUtil.format(player, locale.prefix() + locale.noPermission()));
-                            return false;
-                        }
-                    }
+        builder.then(Commands.literal("hand")
+            .requires(ctx -> ctx.getSender().hasPermission("skyshop.commands.sell.hand"))
+            .executes(ctx -> {
+                Player player = (Player) ctx.getSource().getSender();
 
-                    case 1 -> {
-                        switch (args[0].toLowerCase()) {
-                            case "hand" -> {
-                                if (sender.hasPermission("skyshop.commands.sell.hand")) {
-                                    ItemStack itemStack = player.getInventory().getItemInMainHand();
-                                    int slot = player.getInventory().getHeldItemSlot();
+                ItemStack itemStack = player.getInventory().getItemInMainHand();
+                int slot = player.getInventory().getHeldItemSlot();
 
-                                    if(!itemStack.isEmpty() && !itemStack.getType().equals(Material.AIR)) {
-                                        skyShopAPI.sellItemStack(player, itemStack, slot, true);
-                                        return true;
-                                    }
+                if(!itemStack.isEmpty() && !itemStack.getType().equals(Material.AIR)) {
+                    skyShopAPI.sellItemStack(player, itemStack, slot, true);
 
-                                } else {
-                                    sender.sendMessage(FormatUtil.format(player, locale.prefix() + locale.noPermission()));
-                                }
-
-                                return false;
-                            }
-
-                            case "all" -> {
-                                if (sender.hasPermission("skyshop.commands.sell.all")) {
-                                    skyShopAPI.sellInventory(player, player.getInventory(), true);
-                                    return true;
-                                } else {
-                                    sender.sendMessage(FormatUtil.format(player, locale.prefix() + locale.noPermission()));
-                                    return false;
-                                }
-                            }
-
-                            default -> {
-                                player.sendMessage(FormatUtil.format(player,locale.prefix() + locale.unknownArgument()));
-                                return false;
-                            }
-                        }
-                    }
-
-                    case 2 -> {
-                        if(args[0].equalsIgnoreCase("hand")) {
-                            if (args[1].equalsIgnoreCase("all")) {
-                                if (sender.hasPermission("skyshop.commands.sell.hand") && sender.hasPermission("skyshop.commands.sell.hand.all")) {
-                                    ItemStack itemStack = player.getInventory().getItemInMainHand();
-                                    if (!itemStack.isEmpty() && !itemStack.getType().equals(Material.AIR)) {
-                                        skyShopAPI.sellAllMatchingItemStack(player, itemStack, true);
-                                        return true;
-                                    }
-                                } else {
-                                    sender.sendMessage(FormatUtil.format(player, locale.prefix() + locale.noPermission()));
-                                    return false;
-                                }
-                            } else {
-                                player.sendMessage(FormatUtil.format(player, locale.prefix() + locale.unknownArgument()));
-                                return false;
-                            }
-                        } else {
-                            player.sendMessage(FormatUtil.format(player, locale.prefix() + locale.unknownArgument()));
-                            return false;
-                        }
-                    }
-
-                    default -> {
-                        player.sendMessage(FormatUtil.format(player,locale.prefix() + locale.unknownArgument()));
-                        return false;
-                    }
-                }
-            } else {
-                sender.sendMessage(FormatUtil.format(player, locale.prefix() + locale.noPermission()));
-                return false;
-            }
-        } else {
-            skyShop.getComponentLogger().info(FormatUtil.format(locale.inGameOnly()));
-            return false;
-        }
-
-        return false;
-    }
-
-    @Override
-    public @Nullable List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String @NotNull [] args) {
-        ArrayList<String> subCmds = new ArrayList<>();
-
-        if(sender instanceof Player) {
-            switch (args.length) {
-                case 1 -> {
-                    if(sender.hasPermission("skyshop.commands.sell.hand")) subCmds.add("hand");
-                    if(sender.hasPermission("skyshop.commands.sell.all")) subCmds.add("all");
+                    return 1;
                 }
 
-                case 2 -> {
-                    if(sender.hasPermission("skyshop.commands.sell.hand.all")) subCmds.add("all");
-                }
-            }
-        }
+                return 0;
+            })
+            .then(Commands.literal("all")
+                .requires(ctx -> ctx.getSender().hasPermission("skyshop.commands.sell.hand.all"))
+                .executes(ctx -> {
+                    Player player = (Player) ctx.getSource().getSender();
 
-        return subCmds;
+                    ItemStack itemStack = player.getInventory().getItemInMainHand();
+
+                    if(!itemStack.isEmpty() && !itemStack.getType().equals(Material.AIR)) {
+                        skyShopAPI.sellAllMatchingItemStack(player, itemStack, true);
+
+                        return 1;
+                    }
+
+                    return 0;
+                })
+            )
+        );
+
+        builder.then(Commands.literal("all")
+            .requires(ctx -> ctx.getSender().hasPermission("skyshop.commands.sell.all"))
+            .executes(ctx -> {
+                Player player = (Player) ctx.getSource().getSender();
+
+                skyShopAPI.sellPlayerInventory(player, player.getInventory(), true);
+
+                return 1;
+            })
+        );
+
+        return builder.build();
     }
 }

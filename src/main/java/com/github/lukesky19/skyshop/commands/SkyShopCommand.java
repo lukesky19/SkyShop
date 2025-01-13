@@ -25,23 +25,13 @@ import com.github.lukesky19.skyshop.configuration.record.Locale;
 import com.github.lukesky19.skyshop.gui.MenuGUI;
 import com.github.lukesky19.skyshop.gui.SellAllGUI;
 import com.github.lukesky19.skyshop.manager.StatsDatabaseManager;
-import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
-import org.bukkit.command.CommandSender;
-import org.bukkit.command.TabCompleter;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.mojang.brigadier.tree.LiteralCommandNode;
+import io.papermc.paper.command.brigadier.CommandSourceStack;
+import io.papermc.paper.command.brigadier.Commands;
 import org.bukkit.entity.Player;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
-/**
- * This class manages everything related to handling the skyshop command.
-*/
-public class SkyShopCommand implements CommandExecutor, TabCompleter {
+public class SkyShopCommand {
     private final SkyShop skyShop;
     private final MenuManager menuManager;
     private final ShopManager shopManager;
@@ -81,160 +71,95 @@ public class SkyShopCommand implements CommandExecutor, TabCompleter {
     }
 
     /**
-     * Contains all the logic for the skyshop/shop command.
-     * Includes reloading the plugin, the help message, opening the shop, and opening the sellall inventory.
-     * @param sender The sender of the command.
-     * @param command The actual command object. (Not Used)
-     * @param label The alias of the sent command. (Not Used)
-     * @param args Any arguments with the sent command.
-     * @return true if succeeds, false if not.
+     * Builds a {@literal LiteralCommandNode<CommandSourceStack>} for the/skyshop command to be registered through the Lifecycle API.
+     * @return A {@literal LiteralCommandNode<CommandSourceStack>} representing the /skyshop command.
      */
-    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
-        Locale locale = localeManager.getLocale();
+    public LiteralCommandNode<CommandSourceStack> createCommand() {
+        LiteralArgumentBuilder<CommandSourceStack> builder = Commands.literal("skyshop")
+                .requires(ctx -> ctx.getSender().hasPermission("skyshop.commands.skyshop"))
+                .executes(ctx -> {
+                    Locale locale = localeManager.getLocale();
 
-        if(sender instanceof Player player) {
-            if(player.hasPermission("skyshop.commands.skyshop")) {
-                switch(args.length) {
-                    case 0 -> {
-                        if(sender.hasPermission("skyshop.commands.skyshop.shop")) {
-                            if(menuManager.getMenuConfig() != null) {
-                                MenuGUI gui = new MenuGUI(skyShop, menuManager, shopManager, localeManager, transactionManager, statsDatabaseManager, skyShopAPI, sellAllManager, 0, player);
-                                gui.openInventory(skyShop, player);
-                                return true;
-                            } else {
-                                player.sendMessage(FormatUtil.format(locale.prefix() + locale.guiOpenError()));
+                    if (ctx.getSource().getSender() instanceof Player player) {
+                        if(menuManager.getMenuConfig() != null) {
+                            MenuGUI gui = new MenuGUI(skyShop, menuManager, shopManager, localeManager, transactionManager, statsDatabaseManager, skyShopAPI, sellAllManager, 0, player);
 
-                                return false;
-                            }
+                            gui.openInventory(skyShop, player);
+
+                            return 1;
                         } else {
-                            sender.sendMessage(FormatUtil.format(player, locale.prefix() + locale.noPermission()));
-                            return false;
+                            player.sendMessage(FormatUtil.format(locale.prefix() + locale.guiOpenError()));
+
+                            return 0;
+                        }
+                    } else {
+                        skyShop.getComponentLogger().info(FormatUtil.format(locale.inGameOnly()));
+
+                        return 0;
+                    }
+                });
+
+        builder.then(Commands.literal("help")
+                .requires(ctx -> ctx.getSender().hasPermission("skyshop.commands.skyshop.help"))
+                .executes(ctx -> {
+                    Locale locale = localeManager.getLocale();
+
+                    if(ctx.getSource().getSender() instanceof Player player) {
+                        for(String msg : locale.help()) {
+                            player.sendMessage(FormatUtil.format(player, msg));
+                        }
+                    } else {
+                        for(String msg : locale.help()) {
+                            skyShop.getComponentLogger().info(FormatUtil.format(msg));
                         }
                     }
 
-                    case 1 -> {
-                        switch(args[0].toLowerCase()) {
-                            case "help" -> {
-                                if(sender.hasPermission("skyshop.commands.skyshop.help")) {
-                                    for(String msg : locale.help()) {
-                                        player.sendMessage(FormatUtil.format(player, msg));
-                                    }
-                                    return true;
-                                } else {
-                                    sender.sendMessage(FormatUtil.format(player, locale.prefix() + locale.noPermission()));
-                                    return false;
-                                }
-                            }
+                    return 1;
+                })
+        );
 
-                            case "reload" -> {
-                                if(player.hasPermission("skyshop.commands.skyshop.reload")) {
-                                    skyShop.reload();
-                                    sender.sendMessage(FormatUtil.format(player, locale.prefix() + locale.configReload()));
-                                    return true;
-                                } else {
-                                    sender.sendMessage(FormatUtil.format(player, locale.prefix() + locale.noPermission()));
-                                    return false;
-                                }
-                            }
+        builder.then(Commands.literal("reload")
+                .requires(ctx -> ctx.getSender().hasPermission("skyshop.commands.skyshop.reload"))
+                .executes(ctx -> {
+                    skyShop.reload();
 
-                            case "sellall" -> {
-                                if(sender.hasPermission("skyshop.commands.skyshop.sellall")) {
-                                    SellAllGUI gui = new SellAllGUI(skyShop, localeManager, sellAllManager, skyShopAPI, player);
-                                    gui.openInventory(skyShop, player);
-                                    return true;
-                                } else {
-                                    sender.sendMessage(FormatUtil.format(player, locale.prefix() + locale.noPermission()));
-                                    return false;
-                                }
-                            }
+                    Locale locale = localeManager.getLocale();
 
-                            default -> {
-                                player.sendMessage(FormatUtil.format(player,locale.prefix() + locale.unknownArgument()));
-
-                                return false;
-                            }
-                        }
+                    if(ctx.getSource().getSender() instanceof Player player) {
+                        player.sendMessage(FormatUtil.format(player, locale.prefix() + locale.configReload()));
+                    } else {
+                        skyShop.getComponentLogger().info(FormatUtil.format(locale.configReload()));
                     }
 
-                    default -> {
-                        player.sendMessage(FormatUtil.format(player,locale.prefix() + locale.unknownArgument()));
+                    return 1;
+                })
+        );
 
-                        return false;
+        builder.then(Commands.literal("sellall")
+                .requires(ctx -> ctx.getSender().hasPermission("skyshop.commands.skyshop.sellall"))
+                .executes(ctx -> {
+                    Locale locale = localeManager.getLocale();
+
+                    if (ctx.getSource().getSender() instanceof Player player) {
+                        if(menuManager.getMenuConfig() != null) {
+                            SellAllGUI gui = new SellAllGUI(skyShop, localeManager, sellAllManager, skyShopAPI, player);
+
+                            gui.openInventory(skyShop, player);
+
+                            return 1;
+                        } else {
+                            player.sendMessage(FormatUtil.format(locale.prefix() + locale.guiOpenError()));
+
+                            return 0;
+                        }
+                    } else {
+                        skyShop.getComponentLogger().info(FormatUtil.format(locale.inGameOnly()));
+
+                        return 0;
                     }
-                }
-            }
-        } else {
-            ComponentLogger logger = skyShop.getComponentLogger();
+                })
+        );
 
-            switch(args.length) {
-                case 0 -> {
-                    logger.info(FormatUtil.format(locale.inGameOnly()));
-
-                    return false;
-                }
-
-                case 1 -> {
-                    switch (args[0].toLowerCase()) {
-                        case "help" -> {
-                            locale.help().forEach(msg -> logger.info(FormatUtil.format(msg)));
-
-                            return true;
-                        }
-
-                        case "reload" -> {
-                            logger.info(FormatUtil.format(locale.configReload()));
-
-                            return true;
-                        }
-
-                         case "sellall" -> {
-                             logger.info(FormatUtil.format(locale.inGameOnly()));
-
-                             return false;
-                         }
-
-                        default -> {
-                            logger.info(FormatUtil.format(locale.unknownArgument()));
-
-                            return false;
-                        }
-                    }
-                }
-
-                default -> {
-                    logger.info(FormatUtil.format(locale.unknownArgument()));
-
-                    return false;
-                }
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * The tab completion logic for the skyshop/shop command.
-     * @param sender The sender of the command.
-     * @param command The command object. (Not Used)
-     * @param label The command label. (Not Used)
-     * @param args The arguments sent with the command.
-     * @return A list of commands that can be tab-completed based on permissions and sender.
-     */
-    @Nullable
-    public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
-        if(args.length == 1) {
-            ArrayList<String> subCmds = new ArrayList<>();
-            if(sender instanceof Player) {
-                if(sender.hasPermission("skyshop.commands.skyshop.help")) subCmds.add("help");
-                if(sender.hasPermission("skyshop.commands.skyshop.reload")) subCmds.add("reload");
-                if(sender.hasPermission("skyshop.commands.skyshop.sellall")) subCmds.add("sellall");
-            } else {
-                subCmds.add("help");
-                subCmds.add("reload");
-            }
-            return subCmds;
-        }
-
-        return Collections.emptyList();
+        return builder.build();
     }
 }

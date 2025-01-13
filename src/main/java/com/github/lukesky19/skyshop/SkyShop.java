@@ -28,6 +28,7 @@ import com.github.lukesky19.skyshop.gui.ShopGUI;
 import com.github.lukesky19.skyshop.gui.TransactionGUI;
 import com.github.lukesky19.skyshop.listener.InventoryListener;
 import com.github.lukesky19.skyshop.manager.StatsDatabaseManager;
+import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
@@ -42,7 +43,7 @@ import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.sql.SQLException;
-import java.util.Objects;
+import java.util.List;
 
 public final class SkyShop extends JavaPlugin {
     // Class Instances
@@ -120,10 +121,15 @@ public final class SkyShop extends JavaPlugin {
 
         // Register commands
         SkyShopCommand skyShopCommand = new SkyShopCommand(this, menuManager, shopManager, localeManager, transactionManager, sellAllManager, statsDatabaseManager, skyShopAPI);
-        SellCommand sellCommand = new SellCommand(this, localeManager, skyShopAPI);
-        Objects.requireNonNull(Bukkit.getPluginCommand("skyshop")).setExecutor(skyShopCommand);
-        Objects.requireNonNull(Bukkit.getPluginCommand("skyshop")).setTabCompleter(skyShopCommand);
-        Objects.requireNonNull(Bukkit.getPluginCommand("sellall")).setExecutor(sellCommand);
+        SellCommand sellCommand = new SellCommand(skyShopAPI);
+
+        this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, commands -> {
+                commands.registrar().register(skyShopCommand.createCommand(),
+                        "Command to manage SkyShop plugin and to access the shop.", List.of("shop"));
+
+                commands.registrar().register(sellCommand.createCommand(),
+                        "Command to use the sell command.");
+        });
 
         this.localeManager.reload();
         this.menuManager.reload();
