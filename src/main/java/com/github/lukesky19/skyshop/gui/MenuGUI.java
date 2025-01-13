@@ -21,10 +21,8 @@ import com.github.lukesky19.skylib.format.FormatUtil;
 import com.github.lukesky19.skylib.gui.GUIButton;
 import com.github.lukesky19.skylib.gui.InventoryGUI;
 import com.github.lukesky19.skyshop.SkyShop;
-import com.github.lukesky19.skyshop.configuration.manager.LocaleManager;
-import com.github.lukesky19.skyshop.configuration.manager.MenuManager;
-import com.github.lukesky19.skyshop.configuration.manager.ShopManager;
-import com.github.lukesky19.skyshop.configuration.manager.TransactionManager;
+import com.github.lukesky19.skyshop.SkyShopAPI;
+import com.github.lukesky19.skyshop.configuration.manager.*;
 import com.github.lukesky19.skyshop.configuration.record.GUI;
 import com.github.lukesky19.skyshop.configuration.record.Locale;
 import com.github.lukesky19.skyshop.enums.ActionType;
@@ -51,6 +49,8 @@ public class MenuGUI extends InventoryGUI {
     private final LocaleManager localeManager;
     private final TransactionManager transactionManager;
     private final StatsDatabaseManager statsDatabaseManager;
+    private final SkyShopAPI skyShopAPI;
+    private final SellAllManager sellAllManager;
     private Integer pageNum;
     private final Player player;
     private final GUI menuConfig;
@@ -72,7 +72,7 @@ public class MenuGUI extends InventoryGUI {
             ShopManager shopManager,
             LocaleManager localeManager,
             TransactionManager transactionManager,
-            StatsDatabaseManager statsDatabaseManager,
+            StatsDatabaseManager statsDatabaseManager, SkyShopAPI skyShopAPI, SellAllManager sellAllManager,
             Integer pageNum,
             Player player) {
         this.skyShop = skyShop;
@@ -80,6 +80,8 @@ public class MenuGUI extends InventoryGUI {
         this.localeManager = localeManager;
         this.transactionManager = transactionManager;
         this.statsDatabaseManager = statsDatabaseManager;
+        this.skyShopAPI = skyShopAPI;
+        this.sellAllManager = sellAllManager;
         this.pageNum = pageNum;
         this.player = player;
         menuConfig = menuManager.getMenuConfig();
@@ -288,7 +290,7 @@ public class MenuGUI extends InventoryGUI {
                             GUI shopConfig = shopManager.getShopConfig(entryConfig.shop());
 
                             if(shopConfig != null) {
-                                ShopGUI gui = new ShopGUI(skyShop, localeManager, transactionManager, statsDatabaseManager, this, pageNum, entryConfig.shop(), shopConfig, player);
+                                ShopGUI gui = new ShopGUI(skyShop, localeManager, transactionManager, statsDatabaseManager, skyShopAPI, sellAllManager, this, pageNum, entryConfig.shop(), shopConfig, player);
                                 closeInventory(skyShop, player);
                                 gui.openInventory(skyShop, player);
                             } else {

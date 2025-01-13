@@ -47,7 +47,7 @@ public class SellCommand implements CommandExecutor, TabExecutor {
     }
 
     @Override
-    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String @NotNull [] args) {
         Locale locale = localeManager.getLocale();
 
         if(sender instanceof Player player) {
@@ -140,7 +140,7 @@ public class SellCommand implements CommandExecutor, TabExecutor {
     }
 
     @Override
-    public @Nullable List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
+    public @Nullable List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String @NotNull [] args) {
         ArrayList<String> subCmds = new ArrayList<>();
 
         if(sender instanceof Player) {

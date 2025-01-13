@@ -21,7 +21,9 @@ import com.github.lukesky19.skylib.format.FormatUtil;
 import com.github.lukesky19.skylib.gui.GUIButton;
 import com.github.lukesky19.skylib.gui.InventoryGUI;
 import com.github.lukesky19.skyshop.SkyShop;
+import com.github.lukesky19.skyshop.SkyShopAPI;
 import com.github.lukesky19.skyshop.configuration.manager.LocaleManager;
+import com.github.lukesky19.skyshop.configuration.manager.SellAllManager;
 import com.github.lukesky19.skyshop.configuration.manager.TransactionManager;
 import com.github.lukesky19.skyshop.configuration.record.GUI;
 import com.github.lukesky19.skyshop.configuration.record.Locale;
@@ -50,6 +52,8 @@ public class ShopGUI extends InventoryGUI {
     private final LocaleManager localeManager;
     private final TransactionManager transactionManager;
     private final StatsDatabaseManager statsDatabaseManager;
+    private final SkyShopAPI skyShopAPI;
+    private final SellAllManager sellAllManager;
     private final MenuGUI menuGUI;
     private int pageNum;
     private final Player player;
@@ -72,7 +76,7 @@ public class ShopGUI extends InventoryGUI {
             SkyShop skyShop,
             LocaleManager localeManager,
             TransactionManager transactionManager,
-            StatsDatabaseManager statsDatabaseManager,
+            StatsDatabaseManager statsDatabaseManager, SkyShopAPI skyShopAPI, SellAllManager sellAllManager,
             MenuGUI menuGUI,
             int pageNum,
             String shopId,
@@ -82,6 +86,8 @@ public class ShopGUI extends InventoryGUI {
         this.localeManager = localeManager;
         this.transactionManager = transactionManager;
         this.statsDatabaseManager = statsDatabaseManager;
+        this.skyShopAPI = skyShopAPI;
+        this.sellAllManager = sellAllManager;
         this.menuGUI = menuGUI;
         this.pageNum = pageNum;
         this.player = player;
@@ -297,7 +303,7 @@ public class ShopGUI extends InventoryGUI {
                         builder.setLore(loreList);
 
                         builder.setAction(event -> Bukkit.getScheduler().runTaskLater(skyShop, () -> {
-                            TransactionGUI gui = new TransactionGUI(skyShop, localeManager, transactionManager, statsDatabaseManager, this, entryConfig, itemConfig, type, 0, player);
+                            TransactionGUI gui = new TransactionGUI(skyShop, localeManager, transactionManager, statsDatabaseManager, skyShopAPI, sellAllManager, this, entryConfig, itemConfig, type, 0, player);
                             closeInventory(skyShop, player);
                             gui.openInventory(skyShop, player);
                         }, 1L));

@@ -98,7 +98,7 @@ public class SkyShopCommand implements CommandExecutor, TabCompleter {
                     case 0 -> {
                         if(sender.hasPermission("skyshop.commands.skyshop.shop")) {
                             if(menuManager.getMenuConfig() != null) {
-                                MenuGUI gui = new MenuGUI(skyShop, menuManager, shopManager, localeManager, transactionManager, statsDatabaseManager, 0, player);
+                                MenuGUI gui = new MenuGUI(skyShop, menuManager, shopManager, localeManager, transactionManager, statsDatabaseManager, skyShopAPI, sellAllManager, 0, player);
                                 gui.openInventory(skyShop, player);
                                 return true;
                             } else {

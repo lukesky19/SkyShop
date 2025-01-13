@@ -23,7 +23,9 @@ import com.github.lukesky19.skylib.gui.GUIButton;
 import com.github.lukesky19.skylib.gui.InventoryGUI;
 import com.github.lukesky19.skylib.player.PlayerUtil;
 import com.github.lukesky19.skyshop.SkyShop;
+import com.github.lukesky19.skyshop.SkyShopAPI;
 import com.github.lukesky19.skyshop.configuration.manager.LocaleManager;
+import com.github.lukesky19.skyshop.configuration.manager.SellAllManager;
 import com.github.lukesky19.skyshop.configuration.manager.TransactionManager;
 import com.github.lukesky19.skyshop.configuration.record.GUI;
 import com.github.lukesky19.skyshop.configuration.record.Locale;
@@ -59,6 +61,8 @@ public class TransactionGUI extends InventoryGUI {
     private final SkyShop skyShop;
     private final LocaleManager localeManager;
     private final StatsDatabaseManager statsDatabaseManager;
+    private final SkyShopAPI skyShopAPI;
+    private final SellAllManager sellAllManager;
     private final ShopGUI shopGUI;
     private final GUI.Entry shopEntry;
     private final GUI.Item shopItem;
@@ -83,7 +87,7 @@ public class TransactionGUI extends InventoryGUI {
             SkyShop skyShop,
             LocaleManager localeManager,
             TransactionManager transactionManager,
-            StatsDatabaseManager statsDatabaseManager,
+            StatsDatabaseManager statsDatabaseManager, SkyShopAPI skyShopAPI, SellAllManager sellAllManager,
             ShopGUI shopGUI,
             GUI.Entry shopEntry,
             GUI.Item shopItem,
@@ -93,6 +97,8 @@ public class TransactionGUI extends InventoryGUI {
         this.skyShop = skyShop;
         this.localeManager = localeManager;
         this.statsDatabaseManager = statsDatabaseManager;
+        this.skyShopAPI = skyShopAPI;
+        this.sellAllManager = sellAllManager;
         this.shopGUI = shopGUI;
         this.shopEntry = shopEntry;
         this.shopItem = shopItem;
@@ -306,6 +312,59 @@ public class TransactionGUI extends InventoryGUI {
 
                             setButton(entryConfig.slot(), builder.build());
                         }
+                    } else {
+                        logger.error(FormatUtil.format(locale.skippingEntryInvalidMaterial(), errorPlaceholders));
+                    }
+                }
+
+                case SELL_GUI -> {
+                    Material material = Material.getMaterial(itemConfig.material());
+                    if(material != null) {
+                        GUIButton.Builder builder = new GUIButton.Builder();
+
+                        builder.setMaterial(material);
+
+                        String name = itemConfig.name();
+                        if (name != null) {
+                            builder.setItemName(FormatUtil.format(player, name));
+                        }
+
+                        builder.setLore(loreList);
+
+                        builder.setAction(event -> {
+                            closeInventory(skyShop, player);
+                            new SellAllGUI(skyShop, localeManager, sellAllManager, skyShopAPI, player).openInventory(skyShop, player);
+                        });
+
+                        setButton(entryConfig.slot(), builder.build());
+                    } else {
+                        logger.error(FormatUtil.format(locale.skippingEntryInvalidMaterial(), errorPlaceholders));
+                    }
+                }
+
+                case SELL_ALL -> {
+                    Material material = Material.getMaterial(itemConfig.material());
+                    if(material != null) {
+                        GUIButton.Builder builder = new GUIButton.Builder();
+
+                        builder.setMaterial(material);
+
+                        String name = itemConfig.name();
+                        if (name != null) {
+                            builder.setItemName(FormatUtil.format(player, name));
+                        }
+
+                        builder.setLore(loreList);
+
+                        builder.setAction(event -> {
+                            Material transactionMaterial = Material.getMaterial(shopItem.material());
+                            if(transactionMaterial != null) {
+                                ItemStack transactionItemStack = new ItemStack(transactionMaterial);
+                                skyShopAPI.sellAllMatchingItemStack(player, transactionItemStack, true);
+                            }
+                        });
+
+                        setButton(entryConfig.slot(), builder.build());
                     } else {
                         logger.error(FormatUtil.format(locale.skippingEntryInvalidMaterial(), errorPlaceholders));
                     }

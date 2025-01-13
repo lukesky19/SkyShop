@@ -32,7 +32,9 @@ public enum ActionType {
     COMMAND,
     BUY,
     SELL,
-    DISPLAY;
+    DISPLAY,
+    SELL_ALL,
+    SELL_GUI;
 
     @Nullable
     public static ActionType getActionType(String type) {

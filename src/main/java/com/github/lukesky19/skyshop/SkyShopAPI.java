@@ -146,6 +146,9 @@ public class SkyShopAPI {
         double money = 0.0;
 
         for(int i = 0; i <= inventory.getSize() - 1; i++) {
+            // Ignore armor slots
+            if(i >= 36 && i <= 39) continue;
+
             ItemStack item = inventory.getItem(i);
 
             if (item != null && item.getType() != Material.AIR) {
@@ -267,6 +270,9 @@ public class SkyShopAPI {
         }
 
         for(int i = 0; i <= inventory.getSize() - 1; i++) {
+            // Ignore armor slots
+            if(i >= 36 && i <= 39) continue;
+
             ItemStack inventoryItem = inventory.getItem(i);
 
             if (inventoryItem != null && inventoryItem.getType() != Material.AIR) {
