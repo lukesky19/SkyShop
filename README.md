@@ -56,7 +56,7 @@ A: I will always support latest major version of the game. For example, 1.21.X.
 * Download the plugin from the releases tab and add it to your server.
 
 ## For Developers
-```./gradlew build publishToMavenLocal```
+```./gradlew build```
 
 ```koitlin
 repositories {
@@ -75,7 +75,7 @@ Follow the "For Developers" section above and then add this code to your plugin.
 Then follow the code example below:
 
 ```java
-SkyShopAPI api;
+private SkyShopAPI api;
 
 public SkyShopAPI getSkyShopAPI() {
   return api;
@@ -84,10 +84,15 @@ public SkyShopAPI getSkyShopAPI() {
 @Override
 public void onEnable() {
   loadSkyShopAPI();
+  if(api == null) {
+      this.getServer().getPluginManager().disablePlugin(this);
+      return;
+  }
+  
   // The rest of your plugin's onEnable code.
 }
 
-public void loadSkyShopAPI() {
+private void loadSkyShopAPI() {
   @Nullable RegisteredServiceProvider<SkyShopAPI> rsp = this.getServer().getServicesManager().getRegistration(SkyShopAPI.class);
   if(rsp != null) {
     api = rsp.getProvider();
