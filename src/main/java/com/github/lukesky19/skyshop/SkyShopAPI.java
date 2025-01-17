@@ -20,8 +20,10 @@ package com.github.lukesky19.skyshop;
 import com.github.lukesky19.skylib.format.FormatUtil;
 import com.github.lukesky19.skylib.player.PlayerUtil;
 import com.github.lukesky19.skyshop.configuration.manager.LocaleManager;
+import com.github.lukesky19.skyshop.configuration.manager.SettingsManager;
 import com.github.lukesky19.skyshop.configuration.manager.ShopManager;
 import com.github.lukesky19.skyshop.configuration.record.Locale;
+import com.github.lukesky19.skyshop.configuration.record.Settings;
 import com.github.lukesky19.skyshop.event.ItemSoldEvent;
 import com.github.lukesky19.skyshop.manager.StatsDatabaseManager;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
@@ -38,16 +40,19 @@ import java.util.List;
 
 public class SkyShopAPI {
     private final SkyShop skyShop;
+    private final SettingsManager settingsManager;
     private final LocaleManager localeManager;
     private final ShopManager shopManager;
     private final StatsDatabaseManager statsDatabaseManager;
 
     public SkyShopAPI(
             SkyShop skyShop,
+            SettingsManager settingsManager,
             LocaleManager localeManager,
             ShopManager shopManager,
             StatsDatabaseManager statsDatabaseManager) {
         this.skyShop = skyShop;
+        this.settingsManager = settingsManager;
         this.localeManager = localeManager;
         this.shopManager = shopManager;
         this.statsDatabaseManager = statsDatabaseManager;
@@ -78,14 +83,17 @@ public class SkyShopAPI {
 
                         money = money + (price * item.getAmount());
 
-                        if (statsDatabaseManager != null) {
-                            skyShop.getServer().getScheduler().runTaskAsynchronously(skyShop, () -> {
-                                try {
-                                    statsDatabaseManager.updateMaterial(item.getType().toString(), 0, item.getAmount());
-                                } catch (SQLException e) {
-                                    throw new RuntimeException(e);
-                                }
-                            });
+                        Settings settings = settingsManager.getSettingsConfig();
+                        if(settings != null && statsDatabaseManager != null) {
+                            if(settings.statistics()) {
+                                skyShop.getServer().getScheduler().runTaskAsynchronously(skyShop, () -> {
+                                    try {
+                                        statsDatabaseManager.updateMaterial(item.getType().toString(), 0, item.getAmount());
+                                    } catch (SQLException e) {
+                                        throw new RuntimeException(e);
+                                    }
+                                });
+                            }
                         }
                     } else {
                         // Give the player the item back
@@ -160,14 +168,17 @@ public class SkyShopAPI {
 
                         money = money + (price * item.getAmount());
 
-                        if (statsDatabaseManager != null) {
-                            skyShop.getServer().getScheduler().runTaskAsynchronously(skyShop, () -> {
-                                try {
-                                    statsDatabaseManager.updateMaterial(item.getType().toString(), 0, item.getAmount());
-                                } catch (SQLException e) {
-                                    throw new RuntimeException(e);
-                                }
-                            });
+                        Settings settings = settingsManager.getSettingsConfig();
+                        if(settings != null && statsDatabaseManager != null) {
+                            if(settings.statistics()) {
+                                skyShop.getServer().getScheduler().runTaskAsynchronously(skyShop, () -> {
+                                    try {
+                                        statsDatabaseManager.updateMaterial(item.getType().toString(), 0, item.getAmount());
+                                    } catch (SQLException e) {
+                                        throw new RuntimeException(e);
+                                    }
+                                });
+                            }
                         }
                     }
                 }
@@ -226,14 +237,17 @@ public class SkyShopAPI {
 
                         money = money + (price * item.getAmount());
 
-                        if (statsDatabaseManager != null) {
-                            skyShop.getServer().getScheduler().runTaskAsynchronously(skyShop, () -> {
-                                try {
-                                    statsDatabaseManager.updateMaterial(item.getType().toString(), 0, item.getAmount());
-                                } catch (SQLException e) {
-                                    throw new RuntimeException(e);
-                                }
-                            });
+                        Settings settings = settingsManager.getSettingsConfig();
+                        if(settings != null && statsDatabaseManager != null) {
+                            if(settings.statistics()) {
+                                skyShop.getServer().getScheduler().runTaskAsynchronously(skyShop, () -> {
+                                    try {
+                                        statsDatabaseManager.updateMaterial(item.getType().toString(), 0, item.getAmount());
+                                    } catch (SQLException e) {
+                                        throw new RuntimeException(e);
+                                    }
+                                });
+                            }
                         }
                     }
                 }
@@ -288,14 +302,17 @@ public class SkyShopAPI {
                     player.sendMessage(FormatUtil.format(player, locale.prefix() + locale.sellallSuccess(), placeholders));
                 }
 
-                if (statsDatabaseManager != null) {
-                    skyShop.getServer().getScheduler().runTaskAsynchronously(skyShop, () -> {
-                        try {
-                            statsDatabaseManager.updateMaterial(itemStack.getType().toString(), 0, itemStack.getAmount());
-                        } catch (SQLException e) {
-                            throw new RuntimeException(e);
-                        }
-                    });
+                Settings settings = settingsManager.getSettingsConfig();
+                if(settings != null && statsDatabaseManager != null) {
+                    if(settings.statistics()) {
+                        skyShop.getServer().getScheduler().runTaskAsynchronously(skyShop, () -> {
+                            try {
+                                statsDatabaseManager.updateMaterial(itemStack.getType().toString(), 0, itemStack.getAmount());
+                            } catch (SQLException e) {
+                                throw new RuntimeException(e);
+                            }
+                        });
+                    }
                 }
 
                 return true;
@@ -349,14 +366,17 @@ public class SkyShopAPI {
 
                         money = money + (price * inventoryItem.getAmount());
 
-                        if (statsDatabaseManager != null) {
-                            skyShop.getServer().getScheduler().runTaskAsynchronously(skyShop, () -> {
-                                try {
-                                    statsDatabaseManager.updateMaterial(inventoryItem.getType().toString(), 0, inventoryItem.getAmount());
-                                } catch (SQLException e) {
-                                    throw new RuntimeException(e);
-                                }
-                            });
+                        Settings settings = settingsManager.getSettingsConfig();
+                        if(settings != null && statsDatabaseManager != null) {
+                            if(settings.statistics()) {
+                                skyShop.getServer().getScheduler().runTaskAsynchronously(skyShop, () -> {
+                                    try {
+                                        statsDatabaseManager.updateMaterial(inventoryItem.getType().toString(), 0, inventoryItem.getAmount());
+                                    } catch (SQLException e) {
+                                        throw new RuntimeException(e);
+                                    }
+                                });
+                            }
                         }
                     }
                 }

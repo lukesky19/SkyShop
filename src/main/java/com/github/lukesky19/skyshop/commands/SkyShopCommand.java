@@ -35,6 +35,7 @@ public class SkyShopCommand {
     private final SkyShop skyShop;
     private final MenuManager menuManager;
     private final ShopManager shopManager;
+    private final SettingsManager settingsManager;
     private final LocaleManager localeManager;
     private final TransactionManager transactionManager;
     private final SellAllManager sellAllManager;
@@ -46,21 +47,25 @@ public class SkyShopCommand {
      * @param skyShop The plugin instance.
      * @param menuManager A MenuManager instance.
      * @param shopManager A ShopManager instance.
+     * @param settingsManager A SettingsManager instance
      * @param localeManager A LocaleManager instance.
      * @param transactionManager A TransactionManager instance.
      * @param sellAllManager A SellAllManager instance.
+     * @param statsDatabaseManager A StatsDatabaseManager instance.
      * @param skyShopAPI The SkyShopAPI
      */
     public SkyShopCommand(
             SkyShop skyShop,
             MenuManager menuManager,
             ShopManager shopManager,
+            SettingsManager settingsManager,
             LocaleManager localeManager,
             TransactionManager transactionManager,
             SellAllManager sellAllManager,
             StatsDatabaseManager statsDatabaseManager,
             SkyShopAPI skyShopAPI) {
         this.skyShop = skyShop;
+        this.settingsManager = settingsManager;
         this.menuManager = menuManager;
         this.shopManager = shopManager;
         this.localeManager = localeManager;
@@ -82,7 +87,7 @@ public class SkyShopCommand {
 
                     if (ctx.getSource().getSender() instanceof Player player) {
                         if(menuManager.getMenuConfig() != null) {
-                            MenuGUI gui = new MenuGUI(skyShop, menuManager, shopManager, localeManager, transactionManager, statsDatabaseManager, skyShopAPI, sellAllManager, 0, player);
+                            MenuGUI gui = new MenuGUI(skyShop, settingsManager, menuManager, shopManager, localeManager, transactionManager, statsDatabaseManager, skyShopAPI, sellAllManager, 0, player);
 
                             gui.openInventory(skyShop, player);
 

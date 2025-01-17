@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "com.github.lukesky19"
-version = "2.0.0-Pre-Release-7"
+version = "2.0.0-Pre-Release-8"
 
 repositories {
     mavenCentral()
@@ -22,14 +22,8 @@ repositories {
 
 dependencies {
     compileOnly("io.papermc.paper:paper-api:1.21.4-R0.1-SNAPSHOT")
-    compileOnly("com.github.MilkBowl:VaultAPI:1.7")
+    compileOnly("com.github.MilkBowl:VaultAPI:1.7.1")
     compileOnly("com.github.lukesky19:SkyLib:1.1.1")
-
-    configurations.all {
-        resolutionStrategy.capabilitiesResolution.withCapability("org.bukkit:bukkit") {
-            select("io.papermc.paper:paper-api:1.21.4-R0.1-SNAPSHOT")
-        }
-    }
 }
 
 java {

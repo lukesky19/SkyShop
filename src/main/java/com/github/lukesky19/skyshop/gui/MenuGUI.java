@@ -45,6 +45,7 @@ import java.util.Map;
 */
 public class MenuGUI extends InventoryGUI {
     private final SkyShop skyShop;
+    private final SettingsManager settingsManager;
     private final ShopManager shopManager;
     private final LocaleManager localeManager;
     private final TransactionManager transactionManager;
@@ -58,24 +59,31 @@ public class MenuGUI extends InventoryGUI {
     /**
      * Constructor
      * @param skyShop The plugin's instance.
+     * @param settingsManager A SettingsManager instance.
      * @param menuManager A MenuManager instance.
      * @param shopManager A ShopManager instance.
      * @param localeManager A LocaleManager instance.
      * @param transactionManager A TransactionManager instance.
      * @param statsDatabaseManager A StatsDatabaseManager instance.
+     * @param skyShopAPI A SkyShopAPI instance.
+     * @param sellAllManager A SellAllManager instance.
      * @param pageNum The page number associated with the GUI/Inventory being created.
      * @param player The player viewing the GUI/Inventory.
      */
     public MenuGUI(
             SkyShop skyShop,
+            SettingsManager settingsManager,
             MenuManager menuManager,
             ShopManager shopManager,
             LocaleManager localeManager,
             TransactionManager transactionManager,
-            StatsDatabaseManager statsDatabaseManager, SkyShopAPI skyShopAPI, SellAllManager sellAllManager,
+            StatsDatabaseManager statsDatabaseManager,
+            SkyShopAPI skyShopAPI,
+            SellAllManager sellAllManager,
             Integer pageNum,
             Player player) {
         this.skyShop = skyShop;
+        this.settingsManager = settingsManager;
         this.shopManager = shopManager;
         this.localeManager = localeManager;
         this.transactionManager = transactionManager;
@@ -290,7 +298,7 @@ public class MenuGUI extends InventoryGUI {
                             GUI shopConfig = shopManager.getShopConfig(entryConfig.shop());
 
                             if(shopConfig != null) {
-                                ShopGUI gui = new ShopGUI(skyShop, localeManager, transactionManager, statsDatabaseManager, skyShopAPI, sellAllManager, this, pageNum, entryConfig.shop(), shopConfig, player);
+                                ShopGUI gui = new ShopGUI(skyShop, settingsManager, localeManager, transactionManager, statsDatabaseManager, skyShopAPI, sellAllManager, this, pageNum, entryConfig.shop(), shopConfig, player);
                                 closeInventory(skyShop, player);
                                 gui.openInventory(skyShop, player);
                             } else {

@@ -24,6 +24,7 @@ import com.github.lukesky19.skyshop.SkyShop;
 import com.github.lukesky19.skyshop.SkyShopAPI;
 import com.github.lukesky19.skyshop.configuration.manager.LocaleManager;
 import com.github.lukesky19.skyshop.configuration.manager.SellAllManager;
+import com.github.lukesky19.skyshop.configuration.manager.SettingsManager;
 import com.github.lukesky19.skyshop.configuration.manager.TransactionManager;
 import com.github.lukesky19.skyshop.configuration.record.GUI;
 import com.github.lukesky19.skyshop.configuration.record.Locale;
@@ -49,6 +50,7 @@ import java.util.Map;
 */
 public class ShopGUI extends InventoryGUI {
     private final SkyShop skyShop;
+    private final SettingsManager settingsManager;
     private final LocaleManager localeManager;
     private final TransactionManager transactionManager;
     private final StatsDatabaseManager statsDatabaseManager;
@@ -63,9 +65,12 @@ public class ShopGUI extends InventoryGUI {
     /**
      * Constructor
      * @param skyShop The plugin's instance.
+     * @param settingsManager A SettingsManager instance.
      * @param localeManager A LocaleManager instance.
      * @param transactionManager A TransactionManager instance.
      * @param statsDatabaseManager A StatsDatabaseManager instance.
+     * @param skyShopAPI A SkyShopAPI instance.
+     * @param sellAllManager A SellAllManager instance.
      * @param menuGUI The MenuGUI the player opened this GUI/Inventory from.
      * @param pageNum The page number associated with the GUI/Inventory being created.
      * @param shopId The shop ID associated with the GUI/Inventory being created.
@@ -74,15 +79,19 @@ public class ShopGUI extends InventoryGUI {
      */
     public ShopGUI(
             SkyShop skyShop,
+            SettingsManager settingsManager,
             LocaleManager localeManager,
             TransactionManager transactionManager,
-            StatsDatabaseManager statsDatabaseManager, SkyShopAPI skyShopAPI, SellAllManager sellAllManager,
+            StatsDatabaseManager statsDatabaseManager,
+            SkyShopAPI skyShopAPI,
+            SellAllManager sellAllManager,
             MenuGUI menuGUI,
             int pageNum,
             String shopId,
             GUI shopConfig,
             Player player) {
         this.skyShop = skyShop;
+        this.settingsManager = settingsManager;
         this.localeManager = localeManager;
         this.transactionManager = transactionManager;
         this.statsDatabaseManager = statsDatabaseManager;
@@ -303,7 +312,7 @@ public class ShopGUI extends InventoryGUI {
                         builder.setLore(loreList);
 
                         builder.setAction(event -> Bukkit.getScheduler().runTaskLater(skyShop, () -> {
-                            TransactionGUI gui = new TransactionGUI(skyShop, localeManager, transactionManager, statsDatabaseManager, skyShopAPI, sellAllManager, this, entryConfig, itemConfig, type, 0, player);
+                            TransactionGUI gui = new TransactionGUI(skyShop, settingsManager, localeManager, transactionManager, statsDatabaseManager, skyShopAPI, sellAllManager, this, entryConfig, itemConfig, type, 0, player);
                             closeInventory(skyShop, player);
                             gui.openInventory(skyShop, player);
                         }, 1L));

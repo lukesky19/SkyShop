@@ -3,21 +3,53 @@ package com.github.lukesky19.skyshop.manager;
 import java.sql.*;
 
 public class StatsDatabaseManager {
-    private final Connection connection;
+    private Connection connection;
 
     /**
-     *
+     * Constructor
      * @param path The path of the database file.
-     * @throws SQLException is thrown if the database connection is unable to be created.
      */
-    public StatsDatabaseManager(String path) throws SQLException {
-        connection = DriverManager.getConnection("jdbc:sqlite:" + path);
+    public StatsDatabaseManager(String path) {
+        try {
+            connection = DriverManager.getConnection("jdbc:sqlite:" + path);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
 
         try (Statement statement = connection.createStatement()) {
             statement.execute("CREATE TABLE IF NOT EXISTS stats (" +
                     "material TEXT PRIMARY KEY, " +
                     "buy INTEGER NOT NULL DEFAULT 0, " +
                     "sell INTEGER NOT NULL DEFAULT 0)");
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Closes the active connection to the database and creates a new connection.
+     * @param path The path of the database file.
+     */
+    public void updateConnection(String path) {
+        try {
+            closeConnection();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
+        try {
+            connection = DriverManager.getConnection("jdbc:sqlite:" + path);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
+        try (Statement statement = connection.createStatement()) {
+            statement.execute("CREATE TABLE IF NOT EXISTS stats (" +
+                    "material TEXT PRIMARY KEY, " +
+                    "buy INTEGER NOT NULL DEFAULT 0, " +
+                    "sell INTEGER NOT NULL DEFAULT 0)");
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
         }
     }
 

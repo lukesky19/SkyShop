@@ -93,6 +93,28 @@ public final class SkyShop extends JavaPlugin {
         // Register listeners
         Bukkit.getPluginManager().registerEvents(inventoryListener, this);
 
+        if (!getDataFolder().exists()) {
+            getDataFolder().mkdirs();
+        }
+
+        statsDatabaseManager = new StatsDatabaseManager(getDataFolder().getAbsolutePath() + "/database.db");
+
+        // Register SkyShopAPI
+        SkyShopAPI skyShopAPI = new SkyShopAPI(this, settingsManager, localeManager, shopManager, statsDatabaseManager);
+        this.getServer().getServicesManager().register(SkyShopAPI.class, skyShopAPI, this, ServicePriority.Lowest);
+
+        // Register commands
+        SkyShopCommand skyShopCommand = new SkyShopCommand(this, menuManager, shopManager, settingsManager, localeManager, transactionManager, sellAllManager, statsDatabaseManager, skyShopAPI);
+        SellCommand sellCommand = new SellCommand(skyShopAPI);
+
+        this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, commands -> {
+            commands.registrar().register(skyShopCommand.createCommand(),
+                    "Command to manage SkyShop plugin and to access the shop.", List.of("shop"));
+
+            commands.registrar().register(sellCommand.createCommand(),
+                    "Command to use the sell command.");
+        });
+
         // Reload the plugin data
         reload();
     }
@@ -108,29 +130,13 @@ public final class SkyShop extends JavaPlugin {
     public void reload() {
         closeOpenInventories();
 
-        closeDatabase();
+        if (!getDataFolder().exists()) {
+            getDataFolder().mkdirs();
+        }
+
+        statsDatabaseManager.updateConnection(getDataFolder().getAbsolutePath() + "/database.db");
 
         this.settingsManager.reload();
-
-        createDatabase();
-
-        // (Re-)Register SkyShopAPI
-        SkyShopAPI skyShopAPI = new SkyShopAPI(this, localeManager, shopManager, statsDatabaseManager);
-        this.getServer().getServicesManager().unregister(SkyShopAPI.class);
-        this.getServer().getServicesManager().register(SkyShopAPI.class, skyShopAPI, this, ServicePriority.Lowest);
-
-        // Register commands
-        SkyShopCommand skyShopCommand = new SkyShopCommand(this, menuManager, shopManager, localeManager, transactionManager, sellAllManager, statsDatabaseManager, skyShopAPI);
-        SellCommand sellCommand = new SellCommand(skyShopAPI);
-
-        this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, commands -> {
-                commands.registrar().register(skyShopCommand.createCommand(),
-                        "Command to manage SkyShop plugin and to access the shop.", List.of("shop"));
-
-                commands.registrar().register(sellCommand.createCommand(),
-                        "Command to use the sell command.");
-        });
-
         this.localeManager.reload();
         this.menuManager.reload();
         this.shopManager.reload();
@@ -197,28 +203,6 @@ public final class SkyShop extends JavaPlugin {
         }
 
         return true;
-    }
-
-    /**
-     * Loads the connection to the stats database if enabled.
-     */
-    @SuppressWarnings("ResultOfMethodCallIgnored")
-    private void createDatabase() {
-        if(settingsManager.getSettingsConfig().statistics()) {
-            try {
-                if (!getDataFolder().exists()) {
-                    getDataFolder().mkdirs();
-                }
-
-                statsDatabaseManager = new StatsDatabaseManager(getDataFolder().getAbsolutePath() + "/database.db");
-            } catch (SQLException e) {
-                this.getServer().getPluginManager().disablePlugin(this);
-
-                throw new RuntimeException(e);
-            }
-        } else {
-            statsDatabaseManager = null;
-        }
     }
 
     /**

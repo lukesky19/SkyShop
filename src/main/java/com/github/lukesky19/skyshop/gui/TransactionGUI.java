@@ -26,9 +26,11 @@ import com.github.lukesky19.skyshop.SkyShop;
 import com.github.lukesky19.skyshop.SkyShopAPI;
 import com.github.lukesky19.skyshop.configuration.manager.LocaleManager;
 import com.github.lukesky19.skyshop.configuration.manager.SellAllManager;
+import com.github.lukesky19.skyshop.configuration.manager.SettingsManager;
 import com.github.lukesky19.skyshop.configuration.manager.TransactionManager;
 import com.github.lukesky19.skyshop.configuration.record.GUI;
 import com.github.lukesky19.skyshop.configuration.record.Locale;
+import com.github.lukesky19.skyshop.configuration.record.Settings;
 import com.github.lukesky19.skyshop.configuration.record.Transaction;
 import com.github.lukesky19.skyshop.enums.ActionType;
 import com.github.lukesky19.skyshop.event.CommandPurchasedEvent;
@@ -59,6 +61,7 @@ import java.util.Map;
  */
 public class TransactionGUI extends InventoryGUI {
     private final SkyShop skyShop;
+    private final SettingsManager settingsManager;
     private final LocaleManager localeManager;
     private final StatsDatabaseManager statsDatabaseManager;
     private final SkyShopAPI skyShopAPI;
@@ -79,12 +82,22 @@ public class TransactionGUI extends InventoryGUI {
     /**
      * Constructor
      * @param skyShop The plugin's instance.
+     * @param settingsManager A SettingsManager instance.
      * @param localeManager A LocaleManager instance.
+     * @param transactionManager A TransactionManager instance.
+     * @param statsDatabaseManager A statsDatabaseManager instance.
+     * @param skyShopAPI A SkyShopAPI instance.
+     * @param sellAllManager A SellAllManager instance.
      * @param shopGUI The shop that the player came from.
+     * @param shopEntry The configuration entry related to the item being purchased/sold.
+     * @param shopItem The configuration of the item being purchased/sold.
+     * @param type The transaction type for what is being purchased/sold. Should be ActionType.ITEM or ActionType.COMMAND.
      * @param pageNum The page number of the current transaction GUI.
+     * @param player The player viewing the GUI.
      */
     public TransactionGUI(
             SkyShop skyShop,
+            SettingsManager settingsManager,
             LocaleManager localeManager,
             TransactionManager transactionManager,
             StatsDatabaseManager statsDatabaseManager, SkyShopAPI skyShopAPI, SellAllManager sellAllManager,
@@ -95,6 +108,7 @@ public class TransactionGUI extends InventoryGUI {
             Integer pageNum,
             Player player) {
         this.skyShop = skyShop;
+        this.settingsManager = settingsManager;
         this.localeManager = localeManager;
         this.statsDatabaseManager = statsDatabaseManager;
         this.skyShopAPI = skyShopAPI;
@@ -516,14 +530,17 @@ public class TransactionGUI extends InventoryGUI {
 
                 player.sendMessage(FormatUtil.format(player, locale.prefix() + locale.buySuccess(), successPlaceholders));
 
-                if (statsDatabaseManager != null) {
-                    skyShop.getServer().getScheduler().runTaskAsynchronously(skyShop, () -> {
-                        try {
-                            statsDatabaseManager.updateMaterial(buyItem.getType().toString(), amount, 0);
-                        } catch (SQLException e) {
-                            throw new RuntimeException(e);
-                        }
-                    });
+                Settings settings = settingsManager.getSettingsConfig();
+                if (settings != null && statsDatabaseManager != null) {
+                    if(settings.statistics()) {
+                        skyShop.getServer().getScheduler().runTaskAsynchronously(skyShop, () -> {
+                            try {
+                                statsDatabaseManager.updateMaterial(buyItem.getType().toString(), amount, 0);
+                            } catch (SQLException e) {
+                                throw new RuntimeException(e);
+                            }
+                        });
+                    }
                 }
             }
         } else {
@@ -562,14 +579,17 @@ public class TransactionGUI extends InventoryGUI {
 
                 player.sendMessage(FormatUtil.format(player, locale.prefix() + locale.sellSuccess(), successPlaceholders));
 
-                if (statsDatabaseManager != null) {
-                    skyShop.getServer().getScheduler().runTaskAsynchronously(skyShop, () -> {
-                        try {
-                            statsDatabaseManager.updateMaterial(sellItem.getType().toString(), 0, amount);
-                        } catch (SQLException e) {
-                            throw new RuntimeException(e);
-                        }
-                    });
+                Settings settings = settingsManager.getSettingsConfig();
+                if (settings != null && statsDatabaseManager != null) {
+                    if(settings.statistics()) {
+                        skyShop.getServer().getScheduler().runTaskAsynchronously(skyShop, () -> {
+                            try {
+                                statsDatabaseManager.updateMaterial(sellItem.getType().toString(), 0, amount);
+                            } catch (SQLException e) {
+                                throw new RuntimeException(e);
+                            }
+                        });
+                    }
                 }
             }
         } else {
