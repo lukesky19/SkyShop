@@ -17,81 +17,85 @@
 */
 package com.github.lukesky19.skyshop.listener;
 
-import com.github.lukesky19.skyshop.SkyShop;
-import com.github.lukesky19.skyshop.gui.MenuGUI;
-import com.github.lukesky19.skyshop.gui.SellAllGUI;
-import com.github.lukesky19.skyshop.gui.ShopGUI;
-import com.github.lukesky19.skyshop.gui.TransactionGUI;
+import com.github.lukesky19.skylib.gui.abstracts.ChestGUI;
+import com.github.lukesky19.skyshop.gui.GUIManager;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
+import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.PlayerInventory;
+
+import java.util.UUID;
 
 /**
  * This class listens for when a plugin GUI is clicked or closed.
  */
 public class InventoryListener implements Listener {
-    final SkyShop skyShop;
+    private final GUIManager guiManager;
 
-    /**
-     * Constructor
-     * @param skyShop The plugin's instance.
-     */
-    public InventoryListener(SkyShop skyShop) {
-        this.skyShop = skyShop;
+    public InventoryListener(GUIManager guiManager) {
+        this.guiManager = guiManager;
     }
 
     /**
      * When an inventory is clicked, check if the Inventory is a GUI created by the plugin.
      * If so, call the handleClick method for the specific GUI.
-     * @param event InventoryClickEvent
+     * @param inventoryClickEvent InventoryClickEvent
      */
     @EventHandler
-    public void onClick(InventoryClickEvent event) {
-        Inventory inventory = event.getClickedInventory();
-        if(inventory == null) return;
+    public void onClick(InventoryClickEvent inventoryClickEvent) {
+        UUID uuid = inventoryClickEvent.getWhoClicked().getUniqueId();
+        Inventory inventory = inventoryClickEvent.getClickedInventory();
 
-        if(inventory.getHolder(false) instanceof MenuGUI menuGUI) {
-            menuGUI.handleClick(event);
+        ChestGUI gui = guiManager.getOpenGUI(uuid);
+        if(gui == null) return;
+
+        gui.handleGlobalClick(inventoryClickEvent);
+
+        if(inventory instanceof PlayerInventory) {
+            gui.handleBottomClick(inventoryClickEvent);
+        } else {
+            gui.handleTopClick(inventoryClickEvent);
         }
+    }
 
-        if(inventory.getHolder(false) instanceof ShopGUI shopGUI) {
-            shopGUI.handleClick(event);
-        }
+    /**
+     * When an inventory is dragged, check if the Inventory is a GUI created by the plugin.
+     * If so, call the handleDrag method for the specific GUI.
+     * @param inventoryDragEvent InventoryClickEvent
+     */
+    @EventHandler
+    public void onDrag(InventoryDragEvent inventoryDragEvent) {
+        UUID uuid = inventoryDragEvent.getWhoClicked().getUniqueId();
+        Inventory inventory = inventoryDragEvent.getInventory();
 
-        if(inventory.getHolder(false) instanceof TransactionGUI transactionGUI) {
-            transactionGUI.handleClick(event);
-        }
+        ChestGUI gui = guiManager.getOpenGUI(uuid);
+        if(gui == null) return;
 
-        if(inventory.getHolder(false) instanceof SellAllGUI SellAllGUI) {
-            SellAllGUI.handleClick(event);
+        gui.handleGlobalDrag(inventoryDragEvent);
+
+        if(inventory instanceof PlayerInventory) {
+            gui.handleBottomDrag(inventoryDragEvent);
+        } else {
+            gui.handleTopDrag(inventoryDragEvent);
         }
     }
 
     /**
      * When an inventory is closed, check if the inventory is a GUI created by the plugin.
      * If so, call the handleClose method for the specific GUI.
-     * @param event InventoryCloseEvent
+     * @param inventoryCloseEvent InventoryCloseEvent
      */
     @EventHandler
-    public void onClose(InventoryCloseEvent event) {
-        Inventory inventory = event.getInventory();
+    public void onClose(InventoryCloseEvent inventoryCloseEvent) {
+        UUID uuid = inventoryCloseEvent.getPlayer().getUniqueId();
 
-        if(inventory.getHolder(false) instanceof MenuGUI menuGUI) {
-            menuGUI.handleClose(event);
-        }
+        ChestGUI gui = guiManager.getOpenGUI(uuid);
 
-        if(inventory.getHolder(false) instanceof ShopGUI shopGUI) {
-            shopGUI.handleClose(event);
-        }
-
-        if(inventory.getHolder(false) instanceof TransactionGUI transactionGUI) {
-            transactionGUI.handleClose(event);
-        }
-
-        if(inventory.getHolder(false) instanceof SellAllGUI sellAllGUI) {
-            sellAllGUI.handleClose(event);
+        if (gui != null) {
+            gui.handleClose(inventoryCloseEvent);
         }
     }
 }

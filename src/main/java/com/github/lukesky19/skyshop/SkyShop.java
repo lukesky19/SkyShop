@@ -22,20 +22,13 @@ import com.github.lukesky19.skylib.libs.bstats.bukkit.Metrics;
 import com.github.lukesky19.skyshop.commands.SellCommand;
 import com.github.lukesky19.skyshop.commands.SkyShopCommand;
 import com.github.lukesky19.skyshop.configuration.manager.*;
-import com.github.lukesky19.skyshop.gui.MenuGUI;
-import com.github.lukesky19.skyshop.gui.SellAllGUI;
-import com.github.lukesky19.skyshop.gui.ShopGUI;
-import com.github.lukesky19.skyshop.gui.TransactionGUI;
+import com.github.lukesky19.skyshop.gui.GUIManager;
 import com.github.lukesky19.skyshop.listener.InventoryListener;
 import com.github.lukesky19.skyshop.manager.StatsDatabaseManager;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
-import org.bukkit.entity.Player;
-import org.bukkit.event.inventory.InventoryCloseEvent;
-import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.InventoryView;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.RegisteredServiceProvider;
@@ -47,13 +40,14 @@ import java.util.List;
 
 public final class SkyShop extends JavaPlugin {
     // Class Instances
-    SettingsManager settingsManager;
-    LocaleManager localeManager;
-    MenuManager menuManager;
-    ShopManager shopManager;
-    TransactionManager transactionManager;
-    SellAllManager sellAllManager;
-    StatsDatabaseManager statsDatabaseManager;
+    private GUIManager guiManager;
+    private SettingsManager settingsManager;
+    private LocaleManager localeManager;
+    private MenuManager menuManager;
+    private ShopManager shopManager;
+    private TransactionManager transactionManager;
+    private SellAllManager sellAllManager;
+    private StatsDatabaseManager statsDatabaseManager;
 
     // The variable that stores the server's economy instance.
     Economy economy;
@@ -72,17 +66,16 @@ public final class SkyShop extends JavaPlugin {
     public void onEnable() {
         // Check the version of SkyLib running on the server.
         boolean skyLibResult = checkSkyLibVersion();
+        if(!skyLibResult) return;
         // Check for and set up Vault/Economy.
         boolean economyResult = setupEconomy();
-
-        // If the SkyLib check or Vault setup returns false, stop enabling the plugin.
-        if(!skyLibResult || !economyResult) return;
+        if(!economyResult) return;
 
         // Set up bstats.
         setupBStats();
 
         // Set up all other classes
-        InventoryListener inventoryListener = new InventoryListener(this);
+
         this.settingsManager = new SettingsManager(this);
         this.localeManager = new LocaleManager(this, this.settingsManager);
         this.menuManager = new MenuManager(this);
@@ -90,10 +83,8 @@ public final class SkyShop extends JavaPlugin {
         transactionManager = new TransactionManager(this, shopManager);
         sellAllManager = new SellAllManager(this);
 
-        // Register listeners
-        Bukkit.getPluginManager().registerEvents(inventoryListener, this);
-
         if (!getDataFolder().exists()) {
+            //noinspection ResultOfMethodCallIgnored
             getDataFolder().mkdirs();
         }
 
@@ -103,8 +94,15 @@ public final class SkyShop extends JavaPlugin {
         SkyShopAPI skyShopAPI = new SkyShopAPI(this, settingsManager, localeManager, shopManager, statsDatabaseManager);
         this.getServer().getServicesManager().register(SkyShopAPI.class, skyShopAPI, this, ServicePriority.Lowest);
 
+        guiManager = new GUIManager(this, skyShopAPI);
+
+        InventoryListener inventoryListener = new InventoryListener(guiManager);
+
+        // Register listeners
+        Bukkit.getPluginManager().registerEvents(inventoryListener, this);
+
         // Register commands
-        SkyShopCommand skyShopCommand = new SkyShopCommand(this, menuManager, shopManager, settingsManager, localeManager, transactionManager, sellAllManager, statsDatabaseManager, skyShopAPI);
+        SkyShopCommand skyShopCommand = new SkyShopCommand(this, menuManager, shopManager, settingsManager, localeManager, transactionManager, sellAllManager, statsDatabaseManager, guiManager, skyShopAPI);
         SellCommand sellCommand = new SellCommand(skyShopAPI);
 
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, commands -> {
@@ -121,6 +119,8 @@ public final class SkyShop extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        guiManager.closeOpenGUIs(true);
+
         closeDatabase();
     }
 
@@ -128,9 +128,10 @@ public final class SkyShop extends JavaPlugin {
      * Main reload method
     */
     public void reload() {
-        closeOpenInventories();
+        guiManager.closeOpenGUIs(false);
 
         if (!getDataFolder().exists()) {
+            //noinspection ResultOfMethodCallIgnored
             getDataFolder().mkdirs();
         }
 
@@ -145,64 +146,44 @@ public final class SkyShop extends JavaPlugin {
     }
 
     /**
-     * Forcefully closes any Inventory GUIs created by the plugin.
-     */
-    private void closeOpenInventories() {
-        for(Player player : this.getServer().getOnlinePlayers()) {
-            InventoryView inventory = player.getOpenInventory();
-            Inventory topInventory = inventory.getTopInventory();
-
-            if(topInventory.getHolder(false) instanceof MenuGUI
-                    || topInventory.getHolder(false) instanceof ShopGUI
-                    || topInventory.getHolder(false) instanceof SellAllGUI
-                    || topInventory.getHolder(false) instanceof TransactionGUI) {
-                Bukkit.getScheduler().runTaskLater(this, () -> player.closeInventory(InventoryCloseEvent.Reason.UNLOADED), 1L);
-            }
-        }
-    }
-
-    /**
      * Checks for Vault as a dependency and sets up the Economy instance.
     */
     private boolean setupEconomy() {
-        if (getServer().getPluginManager().getPlugin("Vault") != null) {
+        if(getServer().getPluginManager().getPlugin("Vault") != null) {
             RegisteredServiceProvider<Economy> rsp = getServer().getServicesManager().getRegistration(Economy.class);
             if (rsp != null) {
                 this.economy = rsp.getProvider();
 
                 return true;
             }
-        } else {
-            getComponentLogger().error(MiniMessage.miniMessage().deserialize("<red>SkyShop has been disabled due to no Vault dependency found!</red>"));
-            this.getServer().getPluginManager().disablePlugin(this);
         }
 
+        getComponentLogger().error(MiniMessage.miniMessage().deserialize("<red>SkyShop has been disabled due to no Vault dependency found!</red>"));
+        this.getServer().getPluginManager().disablePlugin(this);
         return false;
     }
 
     /**
-     * Check which version of SkyLib the server is running.
+     * Checks if the Server has the proper SkyLib version.
+     * @return true if it does, false if not.
      */
     @SuppressWarnings("UnstableApiUsage")
     private boolean checkSkyLibVersion() {
         PluginManager pluginManager = this.getServer().getPluginManager();
         Plugin skyLib = pluginManager.getPlugin("SkyLib");
-
         if (skyLib != null) {
             String version = skyLib.getPluginMeta().getVersion();
             String[] splitVersion = version.split("\\.");
-            int minor = Integer.parseInt(splitVersion[1]);
+            int second = Integer.parseInt(splitVersion[1]);
 
-            if(minor < 1) {
-                this.getComponentLogger().error(FormatUtil.format("SkyLib Version 1.1.0 or newer is required to run this plugin."));
-
-                this.getServer().getPluginManager().disablePlugin(this);
-
-                return false;
+            if(second >= 2) {
+                return true;
             }
         }
 
-        return true;
+        this.getComponentLogger().error(FormatUtil.format("SkyLib Version 1.2.0.0 or newer is required to run this plugin."));
+        this.getServer().getPluginManager().disablePlugin(this);
+        return false;
     }
 
     /**

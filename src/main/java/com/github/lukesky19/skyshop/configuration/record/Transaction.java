@@ -26,7 +26,7 @@ import java.util.List;
 public record Transaction(String configVersion, LinkedHashMap<Integer, Page> items, LinkedHashMap<Integer, Page> commands) {
     @ConfigSerializable
     public record Page(
-            Integer size,
+            String guiType,
             String name,
             LinkedHashMap<Integer, Entry> entries) { }
 

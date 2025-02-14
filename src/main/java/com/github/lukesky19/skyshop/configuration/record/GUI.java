@@ -25,7 +25,7 @@ import java.util.List;
 @ConfigSerializable
 public record GUI(String configVersion, GuiData gui) {
     @ConfigSerializable
-    public record GuiData(int size, String name, LinkedHashMap<Integer, Page> pages) {}
+    public record GuiData(String guiType, String name, LinkedHashMap<Integer, Page> pages) {}
 
     @ConfigSerializable
     public record Page(LinkedHashMap<Integer, Entry> entries) {}

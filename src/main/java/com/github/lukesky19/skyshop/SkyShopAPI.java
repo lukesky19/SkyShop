@@ -34,7 +34,10 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.sql.SQLException;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -124,9 +127,14 @@ public class SkyShopAPI {
             skyShop.getEconomy().depositPlayer(player, money);
 
             if(message) {
+                DecimalFormat df = new DecimalFormat("#.##");
+                df.setRoundingMode(RoundingMode.CEILING);
+                BigDecimal bigDecimal = BigDecimal.valueOf(skyShop.getEconomy().getBalance(player));
+                String bal = df.format(bigDecimal);
+
                 List<TagResolver.Single> placeholders = new ArrayList<>();
                 placeholders.add(Placeholder.parsed("price", String.valueOf(money)));
-                placeholders.add(Placeholder.parsed("bal", String.valueOf(skyShop.getEconomy().getBalance(player))));
+                placeholders.add(Placeholder.parsed("bal", bal));
 
                 player.sendMessage(FormatUtil.format(player, locale.prefix() + locale.sellallSuccess(), placeholders));
             }
@@ -189,9 +197,14 @@ public class SkyShopAPI {
             skyShop.getEconomy().depositPlayer(player, money);
 
             if(message) {
+                DecimalFormat df = new DecimalFormat("#.##");
+                df.setRoundingMode(RoundingMode.CEILING);
+                BigDecimal bigDecimal = BigDecimal.valueOf(skyShop.getEconomy().getBalance(player));
+                String bal = df.format(bigDecimal);
+
                 List<TagResolver.Single> placeholders = new ArrayList<>();
                 placeholders.add(Placeholder.parsed("price", String.valueOf(money)));
-                placeholders.add(Placeholder.parsed("bal", String.valueOf(skyShop.getEconomy().getBalance(player))));
+                placeholders.add(Placeholder.parsed("bal", bal));
 
                 player.sendMessage(FormatUtil.format(player, locale.prefix() + locale.sellallSuccess(), placeholders));
             }
@@ -258,9 +271,14 @@ public class SkyShopAPI {
             skyShop.getEconomy().depositPlayer(player, money);
 
             if(message) {
+                DecimalFormat df = new DecimalFormat("#.##");
+                df.setRoundingMode(RoundingMode.CEILING);
+                BigDecimal bigDecimal = BigDecimal.valueOf(skyShop.getEconomy().getBalance(player));
+                String bal = df.format(bigDecimal);
+
                 List<TagResolver.Single> placeholders = new ArrayList<>();
                 placeholders.add(Placeholder.parsed("price", String.valueOf(money)));
-                placeholders.add(Placeholder.parsed("bal", String.valueOf(skyShop.getEconomy().getBalance(player))));
+                placeholders.add(Placeholder.parsed("bal", bal));
 
                 player.sendMessage(FormatUtil.format(player, locale.prefix() + locale.sellallSuccess(), placeholders));
             }
@@ -295,9 +313,14 @@ public class SkyShopAPI {
                 skyShop.getEconomy().depositPlayer(player, money);
 
                 if(message) {
+                    DecimalFormat df = new DecimalFormat("#.##");
+                    df.setRoundingMode(RoundingMode.CEILING);
+                    BigDecimal bigDecimal = BigDecimal.valueOf(skyShop.getEconomy().getBalance(player));
+                    String bal = df.format(bigDecimal);
+
                     List<TagResolver.Single> placeholders = new ArrayList<>();
                     placeholders.add(Placeholder.parsed("price", String.valueOf(money)));
-                    placeholders.add(Placeholder.parsed("bal", String.valueOf(skyShop.getEconomy().getBalance(player))));
+                    placeholders.add(Placeholder.parsed("bal", bal));
 
                     player.sendMessage(FormatUtil.format(player, locale.prefix() + locale.sellallSuccess(), placeholders));
                 }
@@ -387,9 +410,14 @@ public class SkyShopAPI {
             skyShop.getEconomy().depositPlayer(player, money);
 
             if(message) {
+                DecimalFormat df = new DecimalFormat("#.##");
+                df.setRoundingMode(RoundingMode.CEILING);
+                BigDecimal bigDecimal = BigDecimal.valueOf(skyShop.getEconomy().getBalance(player));
+                String bal = df.format(bigDecimal);
+
                 List<TagResolver.Single> placeholders = new ArrayList<>();
                 placeholders.add(Placeholder.parsed("price", String.valueOf(money)));
-                placeholders.add(Placeholder.parsed("bal", String.valueOf(skyShop.getEconomy().getBalance(player))));
+                placeholders.add(Placeholder.parsed("bal", bal));
 
                 player.sendMessage(FormatUtil.format(player, locale.prefix() + locale.sellallSuccess(), placeholders));
             }

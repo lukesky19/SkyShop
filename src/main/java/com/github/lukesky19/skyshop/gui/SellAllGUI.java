@@ -19,7 +19,8 @@ package com.github.lukesky19.skyshop.gui;
 
 import com.github.lukesky19.skylib.format.FormatUtil;
 import com.github.lukesky19.skylib.gui.GUIButton;
-import com.github.lukesky19.skylib.gui.InventoryGUI;
+import com.github.lukesky19.skylib.gui.GUIType;
+import com.github.lukesky19.skylib.gui.abstracts.ChestGUI;
 import com.github.lukesky19.skyshop.SkyShop;
 import com.github.lukesky19.skyshop.SkyShopAPI;
 import com.github.lukesky19.skyshop.configuration.manager.LocaleManager;
@@ -36,19 +37,25 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
+import org.bukkit.event.inventory.InventoryDragEvent;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * This class is called to create a sellall inventory for a player to sell items.
 */
-public class SellAllGUI extends InventoryGUI {
+public class SellAllGUI extends ChestGUI {
     private final SkyShop skyShop;
     private final LocaleManager localeManager;
     private final SkyShopAPI skyShopAPI;
+    private final GUIManager guiManager;
     private final Player player;
     private final GUI sellAllGuiConfig;
 
@@ -60,36 +67,39 @@ public class SellAllGUI extends InventoryGUI {
      */
     public SellAllGUI(
             SkyShop skyShop,
-            LocaleManager localeManager,
+            LocaleManager localeManager, GUIManager guiManager,
             SellAllManager sellAllManager,
             SkyShopAPI skyShopAPI,
             Player player) {
         this.skyShop = skyShop;
         this.localeManager = localeManager;
+        this.guiManager = guiManager;
         this.skyShopAPI = skyShopAPI;
         this.player = player;
         sellAllGuiConfig = sellAllManager.getSellAllGuiConfig();
 
-        createInventory();
-        decorate();
-    }
+        GUIType guiType = GUIType.getType(sellAllGuiConfig.gui().guiType());
+        if(guiType == null) {
+            throw new RuntimeException("Invalid GUIType");
+        }
 
-    /**
-     * A method to create the base structure of the inventory GUI.
-    */
-    public void createInventory() {
-        int size = sellAllGuiConfig.gui().size();
-        Component name = FormatUtil.format(player, sellAllGuiConfig.gui().name());
-        setInventory(Bukkit.createInventory(this, size, name));
+        String guiName = "";
+        if(sellAllGuiConfig.gui().name() != null) guiName = sellAllGuiConfig.gui().name();
+
+        createInventory(player, guiType, guiName, null);
+
+        update();
     }
 
     /**
      * A method to create all the buttons in the inventory GUI.
     */
-    public void decorate() {
+    @Override
+    public void update() {
         final ComponentLogger logger = skyShop.getComponentLogger();
         final Locale locale = localeManager.getLocale();
 
+        // Clear the GUI of buttons
         clearButtons();
 
         // Create the placeholders list for errors with the config file associated with this GUI
@@ -134,14 +144,18 @@ public class SellAllGUI extends InventoryGUI {
                     if(material != null) {
                         GUIButton.Builder builder = new GUIButton.Builder();
 
-                        builder.setMaterial(material);
+                        ItemStack itemStack = ItemStack.of(material);
+                        ItemMeta meta = itemStack.getItemMeta();
 
-                        String name = itemConfig.name();
-                        if (name != null) {
-                            builder.setItemName(FormatUtil.format(player, name));
+                        if(itemConfig.name() != null) {
+                            meta.displayName(FormatUtil.format(itemConfig.name()));
                         }
 
-                        builder.setLore(loreList);
+                        meta.lore(loreList);
+
+                        itemStack.setItemMeta(meta);
+
+                        builder.setItemStack(itemStack);
 
                         builder.setAction(event -> Bukkit.getScheduler()
                                         .runTaskLater(skyShop, () -> closeInventory(skyShop, player), 1L));
@@ -158,35 +172,65 @@ public class SellAllGUI extends InventoryGUI {
             }
         }
 
-        super.decorate();
+        super.update();
     }
 
-    /**
-     * Handles when a button inside the inventory GUI is clicked.
-     * @param event InventoryClickEvent
-     */
     @Override
-    public void handleClick(InventoryClickEvent event) {
+    public void handleTopDrag(@NotNull InventoryDragEvent inventoryDragEvent) {}
+
+    @Override
+    public void handleTopClick(@NotNull InventoryClickEvent event) {
         int slot = event.getSlot();
-        GUIButton button = getButtonMap().get(slot);
-        if(button != null) {
+        GUIButton button = this.getButtonMapping().get(slot);
+        if (button != null) {
             event.setCancelled(true);
+
             button.action().accept(event);
         }
+    }
+
+    @Override
+    public void openInventory(@NotNull Plugin plugin, @NotNull Player player) {
+        super.openInventory(plugin, player);
+
+        guiManager.addOpenGUI(player.getUniqueId(), this);
+    }
+
+    @Override
+    public void closeInventory(@NotNull Plugin plugin, @NotNull Player player) {
+        UUID uuid = player.getUniqueId();
+
+        plugin.getServer().getScheduler().runTaskLater(plugin, () ->
+                player.closeInventory(), 1L);
+
+        // Remove any buttons so that they aren't sold or given to the player.
+        clearButtons();
+
+        // Proceed to sell any items in the inventory
+        skyShopAPI.sellInventoryGUI(getInventory(), player, true);
+
+        // Stop tracking the GUI as being open
+        guiManager.removeOpenGUI(uuid);
     }
 
     /**
      * Handles the closing of the inventory GUI.
      * Also handles selling of items and returning any un-sellable items.
-     * @param event The InventoryCloseEvent
-    */
+     * @param inventoryCloseEvent The InventoryCloseEvent
+     */
     @Override
-    public void handleClose(@NotNull InventoryCloseEvent event) {
+    public void handleClose(@NotNull InventoryCloseEvent inventoryCloseEvent) {
+        Player player = (Player) inventoryCloseEvent.getPlayer();
+        UUID uuid = player.getUniqueId();
+
         // Remove any buttons so that they aren't sold or given to the player.
         clearButtons();
 
         // Proceed to sell any items in the inventory
-        skyShopAPI.sellInventoryGUI(event.getInventory(), player, true);
+        skyShopAPI.sellInventoryGUI(inventoryCloseEvent.getInventory(), player, true);
+
+        // Stop tracking the GUI as being open
+        guiManager.removeOpenGUI(uuid);
     }
 }
 

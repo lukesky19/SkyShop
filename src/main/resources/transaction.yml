@@ -1,7 +1,7 @@
 config-version: 2.0.0
 items:
   0:
-    size: 54
+    gui-type: CHEST_54
     name: "<aqua><bold>Transaction Menu - Page 1</bold></aqua>"
     entries:
       0:

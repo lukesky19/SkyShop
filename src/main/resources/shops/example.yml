@@ -1,6 +1,6 @@
 config-version: 2.0.0
 gui:
-  size: 27
+  gui-type: CHEST_27
   name: "<aqua><bold>Example Shop</bold></aqua>"
   pages:
     0:

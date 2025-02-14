@@ -19,7 +19,8 @@ package com.github.lukesky19.skyshop.gui;
 
 import com.github.lukesky19.skylib.format.FormatUtil;
 import com.github.lukesky19.skylib.gui.GUIButton;
-import com.github.lukesky19.skylib.gui.InventoryGUI;
+import com.github.lukesky19.skylib.gui.GUIType;
+import com.github.lukesky19.skylib.gui.abstracts.ChestGUI;
 import com.github.lukesky19.skyshop.SkyShop;
 import com.github.lukesky19.skyshop.SkyShopAPI;
 import com.github.lukesky19.skyshop.configuration.manager.*;
@@ -31,19 +32,23 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
-import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryCloseEvent;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.plugin.Plugin;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * This class is called to create a menu inventory for a player to access the shop.
 */
-public class MenuGUI extends InventoryGUI {
+public class MenuGUI extends ChestGUI {
     private final SkyShop skyShop;
     private final SettingsManager settingsManager;
     private final ShopManager shopManager;
@@ -52,6 +57,7 @@ public class MenuGUI extends InventoryGUI {
     private final StatsDatabaseManager statsDatabaseManager;
     private final SkyShopAPI skyShopAPI;
     private final SellAllManager sellAllManager;
+    private final GUIManager guiManager;
     private Integer pageNum;
     private final Player player;
     private final GUI menuConfig;
@@ -67,6 +73,7 @@ public class MenuGUI extends InventoryGUI {
      * @param statsDatabaseManager A StatsDatabaseManager instance.
      * @param skyShopAPI A SkyShopAPI instance.
      * @param sellAllManager A SellAllManager instance.
+     * @param guiManager A GUIManager instance.
      * @param pageNum The page number associated with the GUI/Inventory being created.
      * @param player The player viewing the GUI/Inventory.
      */
@@ -80,6 +87,7 @@ public class MenuGUI extends InventoryGUI {
             StatsDatabaseManager statsDatabaseManager,
             SkyShopAPI skyShopAPI,
             SellAllManager sellAllManager,
+            GUIManager guiManager,
             Integer pageNum,
             Player player) {
         this.skyShop = skyShop;
@@ -90,50 +98,33 @@ public class MenuGUI extends InventoryGUI {
         this.statsDatabaseManager = statsDatabaseManager;
         this.skyShopAPI = skyShopAPI;
         this.sellAllManager = sellAllManager;
+        this.guiManager = guiManager;
         this.pageNum = pageNum;
         this.player = player;
         menuConfig = menuManager.getMenuConfig();
 
-        createInventory();
-        decorate();
-    }
-
-    /**
-     * A method to create the base structure of the inventory GUI.
-    */
-    public void createInventory() {
-        final ComponentLogger logger = skyShop.getComponentLogger();
-        final Locale locale = localeManager.getLocale();
-        int invSize = menuConfig.gui().size();
-
-        // Verify GUI Size
-        if(invSize % 9 != 0 || invSize < 9 || invSize > 54) {
-            List<TagResolver.Single> placeholders = List.of(Placeholder.parsed("file", "menu.yml"));
-
-            player.sendMessage(FormatUtil.format(locale.prefix() + locale.guiOpenError(), placeholders));
-
-            logger.error(FormatUtil.format(locale.guiInvalidSize(), placeholders));
-
-            Bukkit.getScheduler().runTaskLater(skyShop, () -> player.closeInventory(InventoryCloseEvent.Reason.UNLOADED), 1L);
-
-            return;
+        GUIType type = GUIType.getType(menuConfig.gui().guiType());
+        if(type == null) {
+            throw new RuntimeException("Invalid GUIType");
         }
 
-        // Create the Inventory based on whether a name is configured or not
-        if(menuConfig.gui().name() != null) {
-            Component menuName = FormatUtil.format(player, menuConfig.gui().name());
-            setInventory(skyShop.getServer().createInventory(this, invSize, menuName));
-        } else {
-            setInventory(skyShop.getServer().createInventory(this, invSize));
-        }
+        String guiName = "";
+        if(menuConfig.gui().name() != null) guiName = menuConfig.gui().name();
+
+        createInventory(player, type, guiName, null);
+
+        update();
     }
 
     /**
      * A method to create all the buttons in the inventory GUI.
     */
-    public void decorate() {
+    @Override
+    public void update() {
         final ComponentLogger logger = skyShop.getComponentLogger();
         final Locale locale = localeManager.getLocale();
+
+        int guiSize = getInventory().getSize();
 
         // Clear the GUI of buttons
         clearButtons();
@@ -185,19 +176,24 @@ public class MenuGUI extends InventoryGUI {
                 case FILLER -> {
                     Material material = Material.getMaterial(itemConfig.material());
                     if(material != null) {
-                        for (int i = 0; i <= menuConfig.gui().size() - 1; i++) {
-                            GUIButton.Builder builder = new GUIButton.Builder();
+                        GUIButton.Builder builder = new GUIButton.Builder();
 
-                            builder.setMaterial(material);
+                        ItemStack itemStack = ItemStack.of(material);
+                        ItemMeta meta = itemStack.getItemMeta();
+                        if(itemConfig.name() != null) {
+                            meta.displayName(FormatUtil.format(itemConfig.name()));
+                        }
 
-                            String name = itemConfig.name();
-                            if (name != null) {
-                                builder.setItemName(FormatUtil.format(player, name));
-                            }
+                        meta.lore(loreList);
 
-                            builder.setLore(loreList);
+                        itemStack.setItemMeta(meta);
 
-                            setButton(i, builder.build());
+                        builder.setItemStack(itemStack);
+
+                        GUIButton fillerButton = builder.build();
+
+                        for (int i = 0; i <= (guiSize - 1); i++) {
+                            setButton(i, fillerButton);
                         }
                     } else {
                         logger.error(FormatUtil.format(locale.skippingEntryInvalidMaterial(), placeholders));
@@ -210,18 +206,21 @@ public class MenuGUI extends InventoryGUI {
                         if(material != null) {
                             GUIButton.Builder builder = new GUIButton.Builder();
 
-                            builder.setMaterial(material);
-
-                            String name = itemConfig.name();
-                            if (name != null) {
-                                builder.setItemName(FormatUtil.format(player, name));
+                            ItemStack itemStack = ItemStack.of(material);
+                            ItemMeta meta = itemStack.getItemMeta();
+                            if(itemConfig.name() != null) {
+                                meta.displayName(FormatUtil.format(itemConfig.name()));
                             }
 
-                            builder.setLore(loreList);
+                            meta.lore(loreList);
+
+                            itemStack.setItemMeta(meta);
+
+                            builder.setItemStack(itemStack);
 
                             builder.setAction(event -> {
                                 pageNum = pageNum - 1;
-                                decorate();
+                                update();
                             });
 
                             setButton(entryConfig.slot(), builder.build());
@@ -237,18 +236,22 @@ public class MenuGUI extends InventoryGUI {
                         if(material != null) {
                             GUIButton.Builder builder = new GUIButton.Builder();
 
-                            builder.setMaterial(material);
+                            ItemStack itemStack = ItemStack.of(material);
+                            ItemMeta meta = itemStack.getItemMeta();
 
-                            String name = itemConfig.name();
-                            if (name != null) {
-                                builder.setItemName(FormatUtil.format(player, name));
+                            if(itemConfig.name() != null) {
+                                meta.displayName(FormatUtil.format(itemConfig.name()));
                             }
 
-                            builder.setLore(loreList);
+                            meta.lore(loreList);
+
+                            itemStack.setItemMeta(meta);
+
+                            builder.setItemStack(itemStack);
 
                             builder.setAction(event -> {
                                 pageNum = pageNum + 1;
-                                decorate();
+                                update();
                             });
 
                             setButton(entryConfig.slot(), builder.build());
@@ -263,14 +266,18 @@ public class MenuGUI extends InventoryGUI {
                     if(material != null) {
                         GUIButton.Builder builder = new GUIButton.Builder();
 
-                        builder.setMaterial(material);
+                        ItemStack itemStack = ItemStack.of(material);
+                        ItemMeta meta = itemStack.getItemMeta();
 
-                        String name = itemConfig.name();
-                        if (name != null) {
-                            builder.setItemName(FormatUtil.format(player, name));
+                        if(itemConfig.name() != null) {
+                            meta.displayName(FormatUtil.format(itemConfig.name()));
                         }
 
-                        builder.setLore(loreList);
+                        meta.lore(loreList);
+
+                        itemStack.setItemMeta(meta);
+
+                        builder.setItemStack(itemStack);
 
                         builder.setAction(event -> closeInventory(skyShop, player));
 
@@ -285,27 +292,35 @@ public class MenuGUI extends InventoryGUI {
                     if(material != null) {
                         GUIButton.Builder builder = new GUIButton.Builder();
 
-                        builder.setMaterial(material);
+                        ItemStack itemStack = ItemStack.of(material);
+                        ItemMeta meta = itemStack.getItemMeta();
 
-                        String name = itemConfig.name();
-                        if (name != null) {
-                            builder.setItemName(FormatUtil.format(player, name));
+                        if(itemConfig.name() != null) {
+                            meta.displayName(FormatUtil.format(itemConfig.name()));
                         }
 
-                        builder.setLore(loreList);
+                        meta.lore(loreList);
 
-                        builder.setAction(event -> Bukkit.getScheduler().runTaskLater(skyShop, () -> {
+                        itemStack.setItemMeta(meta);
+
+                        builder.setItemStack(itemStack);
+
+                        builder.setAction(event -> {
                             GUI shopConfig = shopManager.getShopConfig(entryConfig.shop());
 
-                            if(shopConfig != null) {
-                                ShopGUI gui = new ShopGUI(skyShop, settingsManager, localeManager, transactionManager, statsDatabaseManager, skyShopAPI, sellAllManager, this, pageNum, entryConfig.shop(), shopConfig, player);
-                                closeInventory(skyShop, player);
+                            if (shopConfig != null) {
+                                skyShop.getServer().getScheduler().runTaskLater(skyShop, () ->
+                                        player.closeInventory(InventoryCloseEvent.Reason.OPEN_NEW), 1L);
+
+                                ShopGUI gui = new ShopGUI(skyShop, settingsManager, localeManager, transactionManager, statsDatabaseManager, skyShopAPI, sellAllManager, guiManager, this, pageNum, shopConfig, player);
+
                                 gui.openInventory(skyShop, player);
                             } else {
                                 player.sendMessage(FormatUtil.format(locale.prefix() + locale.guiOpenError()));
+
                                 closeInventory(skyShop, player);
                             }
-                        }, 1L));
+                        });
 
                         setButton(entryConfig.slot(), builder.build());
                     } else {
@@ -319,6 +334,33 @@ public class MenuGUI extends InventoryGUI {
             }
         }
 
-        super.decorate();
+        super.update();
+    }
+
+    @Override
+    public void openInventory(@NotNull Plugin plugin, @NotNull Player player) {
+        super.openInventory(plugin, player);
+
+        guiManager.addOpenGUI(player.getUniqueId(), this);
+    }
+
+    @Override
+    public void closeInventory(@NotNull Plugin plugin, @NotNull Player player) {
+        UUID uuid = player.getUniqueId();
+
+        plugin.getServer().getScheduler().runTaskLater(plugin, () ->
+                player.closeInventory(InventoryCloseEvent.Reason.OPEN_NEW), 1L);
+
+        guiManager.removeOpenGUI(uuid);
+    }
+
+    @Override
+    public void handleClose(@NotNull InventoryCloseEvent inventoryCloseEvent) {
+        if(inventoryCloseEvent.getReason().equals(InventoryCloseEvent.Reason.UNLOADED) || inventoryCloseEvent.getReason().equals(InventoryCloseEvent.Reason.OPEN_NEW)) return;
+
+        Player player = (Player) inventoryCloseEvent.getPlayer();
+        UUID uuid = player.getUniqueId();
+
+        guiManager.removeOpenGUI(uuid);
     }
 }

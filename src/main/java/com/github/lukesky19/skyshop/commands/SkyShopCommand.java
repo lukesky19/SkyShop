@@ -22,6 +22,7 @@ import com.github.lukesky19.skyshop.SkyShop;
 import com.github.lukesky19.skyshop.SkyShopAPI;
 import com.github.lukesky19.skyshop.configuration.manager.*;
 import com.github.lukesky19.skyshop.configuration.record.Locale;
+import com.github.lukesky19.skyshop.gui.GUIManager;
 import com.github.lukesky19.skyshop.gui.MenuGUI;
 import com.github.lukesky19.skyshop.gui.SellAllGUI;
 import com.github.lukesky19.skyshop.manager.StatsDatabaseManager;
@@ -40,6 +41,7 @@ public class SkyShopCommand {
     private final TransactionManager transactionManager;
     private final SellAllManager sellAllManager;
     private final StatsDatabaseManager statsDatabaseManager;
+    private final GUIManager guiManager;
     private final SkyShopAPI skyShopAPI;
 
     /**
@@ -63,6 +65,7 @@ public class SkyShopCommand {
             TransactionManager transactionManager,
             SellAllManager sellAllManager,
             StatsDatabaseManager statsDatabaseManager,
+            GUIManager guiManager,
             SkyShopAPI skyShopAPI) {
         this.skyShop = skyShop;
         this.settingsManager = settingsManager;
@@ -72,6 +75,7 @@ public class SkyShopCommand {
         this.transactionManager = transactionManager;
         this.sellAllManager = sellAllManager;
         this.statsDatabaseManager = statsDatabaseManager;
+        this.guiManager = guiManager;
         this.skyShopAPI = skyShopAPI;
     }
 
@@ -81,88 +85,88 @@ public class SkyShopCommand {
      */
     public LiteralCommandNode<CommandSourceStack> createCommand() {
         LiteralArgumentBuilder<CommandSourceStack> builder = Commands.literal("skyshop")
-                .requires(ctx -> ctx.getSender().hasPermission("skyshop.commands.skyshop"))
-                .executes(ctx -> {
-                    Locale locale = localeManager.getLocale();
+            .requires(ctx -> ctx.getSender().hasPermission("skyshop.commands.skyshop"))
+            .executes(ctx -> {
+                Locale locale = localeManager.getLocale();
 
-                    if (ctx.getSource().getSender() instanceof Player player) {
-                        if(menuManager.getMenuConfig() != null) {
-                            MenuGUI gui = new MenuGUI(skyShop, settingsManager, menuManager, shopManager, localeManager, transactionManager, statsDatabaseManager, skyShopAPI, sellAllManager, 0, player);
+                if (ctx.getSource().getSender() instanceof Player player) {
+                    if(menuManager.getMenuConfig() != null) {
+                        MenuGUI gui = new MenuGUI(skyShop, settingsManager, menuManager, shopManager, localeManager, transactionManager, statsDatabaseManager, skyShopAPI, sellAllManager, guiManager, 0, player);
 
-                            gui.openInventory(skyShop, player);
+                        gui.openInventory(skyShop, player);
 
-                            return 1;
-                        } else {
-                            player.sendMessage(FormatUtil.format(locale.prefix() + locale.guiOpenError()));
-
-                            return 0;
-                        }
+                        return 1;
                     } else {
-                        skyShop.getComponentLogger().info(FormatUtil.format(locale.inGameOnly()));
+                        player.sendMessage(FormatUtil.format(locale.prefix() + locale.guiOpenError()));
 
                         return 0;
                     }
-                });
+                } else {
+                    skyShop.getComponentLogger().info(FormatUtil.format(locale.inGameOnly()));
+
+                    return 0;
+                }
+            });
 
         builder.then(Commands.literal("help")
-                .requires(ctx -> ctx.getSender().hasPermission("skyshop.commands.skyshop.help"))
-                .executes(ctx -> {
-                    Locale locale = localeManager.getLocale();
+            .requires(ctx -> ctx.getSender().hasPermission("skyshop.commands.skyshop.help"))
+            .executes(ctx -> {
+                Locale locale = localeManager.getLocale();
 
-                    if(ctx.getSource().getSender() instanceof Player player) {
-                        for(String msg : locale.help()) {
-                            player.sendMessage(FormatUtil.format(player, msg));
-                        }
-                    } else {
-                        for(String msg : locale.help()) {
-                            skyShop.getComponentLogger().info(FormatUtil.format(msg));
-                        }
+                if(ctx.getSource().getSender() instanceof Player player) {
+                    for(String msg : locale.help()) {
+                        player.sendMessage(FormatUtil.format(player, msg));
                     }
+                } else {
+                    for(String msg : locale.help()) {
+                        skyShop.getComponentLogger().info(FormatUtil.format(msg));
+                    }
+                }
 
-                    return 1;
-                })
+                return 1;
+            })
         );
 
         builder.then(Commands.literal("reload")
-                .requires(ctx -> ctx.getSender().hasPermission("skyshop.commands.skyshop.reload"))
-                .executes(ctx -> {
-                    skyShop.reload();
+            .requires(ctx -> ctx.getSender().hasPermission("skyshop.commands.skyshop.reload"))
+            .executes(ctx -> {
+                skyShop.reload();
 
-                    Locale locale = localeManager.getLocale();
+                Locale locale = localeManager.getLocale();
 
-                    if(ctx.getSource().getSender() instanceof Player player) {
-                        player.sendMessage(FormatUtil.format(player, locale.prefix() + locale.configReload()));
-                    } else {
-                        skyShop.getComponentLogger().info(FormatUtil.format(locale.configReload()));
-                    }
+                if(ctx.getSource().getSender() instanceof Player player) {
+                    player.sendMessage(FormatUtil.format(player, locale.prefix() + locale.configReload()));
+                } else {
+                    skyShop.getComponentLogger().info(FormatUtil.format(locale.configReload()));
+                }
 
-                    return 1;
-                })
+                return 1;
+            })
         );
 
         builder.then(Commands.literal("sellall")
-                .requires(ctx -> ctx.getSender().hasPermission("skyshop.commands.skyshop.sellall"))
-                .executes(ctx -> {
-                    Locale locale = localeManager.getLocale();
+            .requires(ctx -> ctx.getSender().hasPermission("skyshop.commands.skyshop.sellall"))
+            .executes(ctx -> {
+                Locale locale = localeManager.getLocale();
 
-                    if (ctx.getSource().getSender() instanceof Player player) {
-                        if(menuManager.getMenuConfig() != null) {
-                            SellAllGUI gui = new SellAllGUI(skyShop, localeManager, sellAllManager, skyShopAPI, player);
+                if (ctx.getSource().getSender() instanceof Player player) {
+                    if(menuManager.getMenuConfig() != null) {
+                        SellAllGUI gui = new SellAllGUI(skyShop, localeManager, guiManager, sellAllManager, skyShopAPI, player);
 
-                            gui.openInventory(skyShop, player);
+                        gui.openInventory(skyShop, player);
 
-                            return 1;
-                        } else {
-                            player.sendMessage(FormatUtil.format(locale.prefix() + locale.guiOpenError()));
-
-                            return 0;
-                        }
+                        return 1;
                     } else {
-                        skyShop.getComponentLogger().info(FormatUtil.format(locale.inGameOnly()));
+                        player.sendMessage(FormatUtil.format(locale.prefix() + locale.guiOpenError()));
 
                         return 0;
                     }
-                })
+                } else {
+                    skyShop.getComponentLogger().info(FormatUtil.format(locale.inGameOnly()));
+
+                    return 0;
+                }
+            })
         );
 
         return builder.build();
