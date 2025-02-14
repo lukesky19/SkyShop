@@ -129,11 +129,15 @@ public class SkyShopAPI {
             if(message) {
                 DecimalFormat df = new DecimalFormat("#.##");
                 df.setRoundingMode(RoundingMode.CEILING);
-                BigDecimal bigDecimal = BigDecimal.valueOf(skyShop.getEconomy().getBalance(player));
-                String bal = df.format(bigDecimal);
+
+                BigDecimal bigPrice = BigDecimal.valueOf(money);
+                String formattedPrice = df.format(bigPrice);
+
+                BigDecimal bigBalance = BigDecimal.valueOf(skyShop.getEconomy().getBalance(player));
+                String bal = df.format(bigBalance);
 
                 List<TagResolver.Single> placeholders = new ArrayList<>();
-                placeholders.add(Placeholder.parsed("price", String.valueOf(money)));
+                placeholders.add(Placeholder.parsed("price", formattedPrice));
                 placeholders.add(Placeholder.parsed("bal", bal));
 
                 player.sendMessage(FormatUtil.format(player, locale.prefix() + locale.sellallSuccess(), placeholders));
@@ -199,11 +203,15 @@ public class SkyShopAPI {
             if(message) {
                 DecimalFormat df = new DecimalFormat("#.##");
                 df.setRoundingMode(RoundingMode.CEILING);
-                BigDecimal bigDecimal = BigDecimal.valueOf(skyShop.getEconomy().getBalance(player));
-                String bal = df.format(bigDecimal);
+
+                BigDecimal bigPrice = BigDecimal.valueOf(money);
+                String formattedPrice = df.format(bigPrice);
+
+                BigDecimal bigBalance = BigDecimal.valueOf(skyShop.getEconomy().getBalance(player));
+                String bal = df.format(bigBalance);
 
                 List<TagResolver.Single> placeholders = new ArrayList<>();
-                placeholders.add(Placeholder.parsed("price", String.valueOf(money)));
+                placeholders.add(Placeholder.parsed("price", formattedPrice));
                 placeholders.add(Placeholder.parsed("bal", bal));
 
                 player.sendMessage(FormatUtil.format(player, locale.prefix() + locale.sellallSuccess(), placeholders));
@@ -273,11 +281,15 @@ public class SkyShopAPI {
             if(message) {
                 DecimalFormat df = new DecimalFormat("#.##");
                 df.setRoundingMode(RoundingMode.CEILING);
-                BigDecimal bigDecimal = BigDecimal.valueOf(skyShop.getEconomy().getBalance(player));
-                String bal = df.format(bigDecimal);
+
+                BigDecimal bigPrice = BigDecimal.valueOf(money);
+                String formattedPrice = df.format(bigPrice);
+
+                BigDecimal bigBalance = BigDecimal.valueOf(skyShop.getEconomy().getBalance(player));
+                String bal = df.format(bigBalance);
 
                 List<TagResolver.Single> placeholders = new ArrayList<>();
-                placeholders.add(Placeholder.parsed("price", String.valueOf(money)));
+                placeholders.add(Placeholder.parsed("price", formattedPrice));
                 placeholders.add(Placeholder.parsed("bal", bal));
 
                 player.sendMessage(FormatUtil.format(player, locale.prefix() + locale.sellallSuccess(), placeholders));
@@ -315,11 +327,15 @@ public class SkyShopAPI {
                 if(message) {
                     DecimalFormat df = new DecimalFormat("#.##");
                     df.setRoundingMode(RoundingMode.CEILING);
-                    BigDecimal bigDecimal = BigDecimal.valueOf(skyShop.getEconomy().getBalance(player));
-                    String bal = df.format(bigDecimal);
+
+                    BigDecimal bigPrice = BigDecimal.valueOf(money);
+                    String formattedPrice = df.format(bigPrice);
+
+                    BigDecimal bigBalance = BigDecimal.valueOf(skyShop.getEconomy().getBalance(player));
+                    String bal = df.format(bigBalance);
 
                     List<TagResolver.Single> placeholders = new ArrayList<>();
-                    placeholders.add(Placeholder.parsed("price", String.valueOf(money)));
+                    placeholders.add(Placeholder.parsed("price", formattedPrice));
                     placeholders.add(Placeholder.parsed("bal", bal));
 
                     player.sendMessage(FormatUtil.format(player, locale.prefix() + locale.sellallSuccess(), placeholders));
@@ -412,11 +428,15 @@ public class SkyShopAPI {
             if(message) {
                 DecimalFormat df = new DecimalFormat("#.##");
                 df.setRoundingMode(RoundingMode.CEILING);
-                BigDecimal bigDecimal = BigDecimal.valueOf(skyShop.getEconomy().getBalance(player));
-                String bal = df.format(bigDecimal);
+
+                BigDecimal bigPrice = BigDecimal.valueOf(money);
+                String formattedPrice = df.format(bigPrice);
+
+                BigDecimal bigBalance = BigDecimal.valueOf(skyShop.getEconomy().getBalance(player));
+                String bal = df.format(bigBalance);
 
                 List<TagResolver.Single> placeholders = new ArrayList<>();
-                placeholders.add(Placeholder.parsed("price", String.valueOf(money)));
+                placeholders.add(Placeholder.parsed("price", formattedPrice));
                 placeholders.add(Placeholder.parsed("bal", bal));
 
                 player.sendMessage(FormatUtil.format(player, locale.prefix() + locale.sellallSuccess(), placeholders));

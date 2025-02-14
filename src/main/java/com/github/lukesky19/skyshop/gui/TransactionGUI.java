@@ -577,13 +577,17 @@ public class TransactionGUI extends ChestGUI {
 
                 DecimalFormat df = new DecimalFormat("#.##");
                 df.setRoundingMode(RoundingMode.CEILING);
-                BigDecimal bigDecimal = BigDecimal.valueOf(skyShop.getEconomy().getBalance(player));
-                String bal = df.format(bigDecimal);
+
+                BigDecimal bigPrice = BigDecimal.valueOf(price);
+                String formattedPrice = df.format(bigPrice);
+
+                BigDecimal bigBalance = BigDecimal.valueOf(skyShop.getEconomy().getBalance(player));
+                String bal = df.format(bigBalance);
 
                 List<TagResolver.Single> successPlaceholders = new ArrayList<>();
                 successPlaceholders.add(Placeholder.parsed("amount", String.valueOf(amount)));
                 successPlaceholders.add(Placeholder.parsed("item", shopItem.name()));
-                successPlaceholders.add(Placeholder.parsed("price", String.valueOf(price)));
+                successPlaceholders.add(Placeholder.parsed("price", formattedPrice));
                 successPlaceholders.add(Placeholder.parsed("bal", bal));
 
                 player.sendMessage(FormatUtil.format(player, locale.prefix() + locale.buySuccess(), successPlaceholders));
@@ -634,13 +638,17 @@ public class TransactionGUI extends ChestGUI {
 
                 DecimalFormat df = new DecimalFormat("#.##");
                 df.setRoundingMode(RoundingMode.CEILING);
-                BigDecimal bigDecimal = BigDecimal.valueOf(skyShop.getEconomy().getBalance(player));
-                String bal = df.format(bigDecimal);
+
+                BigDecimal bigPrice = BigDecimal.valueOf(price);
+                String formattedPrice = df.format(bigPrice);
+
+                BigDecimal bigBalance = BigDecimal.valueOf(skyShop.getEconomy().getBalance(player));
+                String bal = df.format(bigBalance);
 
                 List<TagResolver.Single> successPlaceholders = new ArrayList<>();
                 successPlaceholders.add(Placeholder.parsed("amount", String.valueOf(amount)));
                 successPlaceholders.add(Placeholder.parsed("item", shopItem.name()));
-                successPlaceholders.add(Placeholder.parsed("price", String.valueOf(price)));
+                successPlaceholders.add(Placeholder.parsed("price", formattedPrice));
                 successPlaceholders.add(Placeholder.parsed("bal", bal));
 
                 player.sendMessage(FormatUtil.format(player, locale.prefix() + locale.sellSuccess(), successPlaceholders));
@@ -690,13 +698,17 @@ public class TransactionGUI extends ChestGUI {
 
                 DecimalFormat df = new DecimalFormat("#.##");
                 df.setRoundingMode(RoundingMode.CEILING);
-                BigDecimal bigDecimal = BigDecimal.valueOf(skyShop.getEconomy().getBalance(player));
-                String bal = df.format(bigDecimal);
+
+                BigDecimal bigPrice = BigDecimal.valueOf(price);
+                String formattedPrice = df.format(bigPrice);
+
+                BigDecimal bigBalance = BigDecimal.valueOf(skyShop.getEconomy().getBalance(player));
+                String bal = df.format(bigBalance);
 
                 List<TagResolver.Single> successPlaceholders = new ArrayList<>();
                 successPlaceholders.add(Placeholder.parsed("amount", String.valueOf(amount)));
                 successPlaceholders.add(Placeholder.parsed("item", shopItem.name()));
-                successPlaceholders.add(Placeholder.parsed("price", String.valueOf(price)));
+                successPlaceholders.add(Placeholder.parsed("price", formattedPrice));
                 successPlaceholders.add(Placeholder.parsed("bal", bal));
 
                 player.sendMessage(FormatUtil.format(player, locale.prefix() + locale.buySuccess(), successPlaceholders));
@@ -731,13 +743,17 @@ public class TransactionGUI extends ChestGUI {
 
             DecimalFormat df = new DecimalFormat("#.##");
             df.setRoundingMode(RoundingMode.CEILING);
-            BigDecimal bigDecimal = BigDecimal.valueOf(skyShop.getEconomy().getBalance(player));
-            String bal = df.format(bigDecimal);
+
+            BigDecimal bigPrice = BigDecimal.valueOf(price);
+            String formattedPrice = df.format(bigPrice);
+
+            BigDecimal bigBalance = BigDecimal.valueOf(skyShop.getEconomy().getBalance(player));
+            String bal = df.format(bigBalance);
 
             List<TagResolver.Single> successPlaceholders = new ArrayList<>();
             successPlaceholders.add(Placeholder.parsed("amount", String.valueOf(amount)));
             successPlaceholders.add(Placeholder.parsed("item", shopItem.name()));
-            successPlaceholders.add(Placeholder.parsed("price", String.valueOf(price)));
+            successPlaceholders.add(Placeholder.parsed("price", formattedPrice));
             successPlaceholders.add(Placeholder.parsed("bal", bal));
 
             player.sendMessage(FormatUtil.format(player, locale.prefix() + locale.sellSuccess(), successPlaceholders));

@@ -201,7 +201,7 @@ public class SellAllGUI extends ChestGUI {
         UUID uuid = player.getUniqueId();
 
         plugin.getServer().getScheduler().runTaskLater(plugin, () ->
-                player.closeInventory(), 1L);
+                player.closeInventory(InventoryCloseEvent.Reason.UNLOADED), 1L);
 
         // Remove any buttons so that they aren't sold or given to the player.
         clearButtons();
@@ -220,6 +220,8 @@ public class SellAllGUI extends ChestGUI {
      */
     @Override
     public void handleClose(@NotNull InventoryCloseEvent inventoryCloseEvent) {
+        if(inventoryCloseEvent.getReason().equals(InventoryCloseEvent.Reason.UNLOADED)) return;
+
         Player player = (Player) inventoryCloseEvent.getPlayer();
         UUID uuid = player.getUniqueId();
 
