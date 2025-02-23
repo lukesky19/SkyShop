@@ -114,7 +114,7 @@ public class ShopGUI extends ChestGUI {
         String guiName = "";
         if(shopConfig.gui().name() != null) guiName = shopConfig.gui().name();
 
-        createInventory(player, type, guiName, null);
+        create(player, type, guiName, null);
 
         update();
     }
@@ -287,7 +287,7 @@ public class ShopGUI extends ChestGUI {
 
                         builder.setItemStack(itemStack);
 
-                        builder.setAction(event -> closeInventory(skyShop, player));
+                        builder.setAction(event -> close(skyShop, player));
 
                         setButton(entryConfig.slot(), builder.build());
                     } else {
@@ -321,7 +321,7 @@ public class ShopGUI extends ChestGUI {
 
                             guiManager.removeOpenGUI(player.getUniqueId());
 
-                            gui.openInventory(skyShop, player);
+                            gui.open(skyShop, player);
                         });
 
                         setButton(entryConfig.slot(), builder.build());
@@ -340,14 +340,14 @@ public class ShopGUI extends ChestGUI {
     }
 
     @Override
-    public void openInventory(@NotNull Plugin plugin, @NotNull Player player) {
-        super.openInventory(plugin, player);
+    public void open(@NotNull Plugin plugin, @NotNull Player player) {
+        super.open(plugin, player);
 
         guiManager.addOpenGUI(player.getUniqueId(), this);
     }
 
     @Override
-    public void closeInventory(@NotNull Plugin plugin, @NotNull Player player) {
+    public void close(@NotNull Plugin plugin, @NotNull Player player) {
         UUID uuid = player.getUniqueId();
 
         plugin.getServer().getScheduler().runTaskLater(plugin, () ->
@@ -357,9 +357,18 @@ public class ShopGUI extends ChestGUI {
 
         menuGUI.update();
 
-        menuGUI.openInventory(plugin, player);
+        menuGUI.open(plugin, player);
 
         guiManager.addOpenGUI(uuid, menuGUI);
+    }
+
+    @Override
+    public void unload(@NotNull Plugin plugin, @NotNull Player player, boolean onDisable) {
+        UUID uuid = player.getUniqueId();
+
+        player.closeInventory(InventoryCloseEvent.Reason.UNLOADED);
+
+        guiManager.removeOpenGUI(uuid);
     }
 
     @Override
@@ -373,7 +382,7 @@ public class ShopGUI extends ChestGUI {
 
         menuGUI.update();
 
-        menuGUI.openInventory(skyShop, player);
+        menuGUI.open(skyShop, player);
 
         guiManager.addOpenGUI(uuid, menuGUI);
     }

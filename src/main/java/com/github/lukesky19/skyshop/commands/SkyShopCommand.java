@@ -93,7 +93,7 @@ public class SkyShopCommand {
                     if(menuManager.getMenuConfig() != null) {
                         MenuGUI gui = new MenuGUI(skyShop, settingsManager, menuManager, shopManager, localeManager, transactionManager, statsDatabaseManager, skyShopAPI, sellAllManager, guiManager, 0, player);
 
-                        gui.openInventory(skyShop, player);
+                        gui.open(skyShop, player);
 
                         return 1;
                     } else {
@@ -153,7 +153,7 @@ public class SkyShopCommand {
                     if(menuManager.getMenuConfig() != null) {
                         SellAllGUI gui = new SellAllGUI(skyShop, localeManager, guiManager, sellAllManager, skyShopAPI, player);
 
-                        gui.openInventory(skyShop, player);
+                        gui.open(skyShop, player);
 
                         return 1;
                     } else {

@@ -151,7 +151,7 @@ public class TransactionGUI extends ChestGUI {
         String guiName = "";
         if(pageConfig.name() != null) guiName = pageConfig.name();
 
-        createInventory(player, guiType, guiName, null);
+        create(player, guiType, guiName, null);
 
         update();
     }
@@ -269,7 +269,7 @@ public class TransactionGUI extends ChestGUI {
 
                         builder.setItemStack(itemStack);
 
-                        builder.setAction(event -> closeInventory(skyShop, player));
+                        builder.setAction(event -> close(skyShop, player));
 
                         setButton(entryConfig.slot(), builder.build());
                     } else {
@@ -362,7 +362,7 @@ public class TransactionGUI extends ChestGUI {
 
                             guiManager.removeOpenGUI(player.getUniqueId());
 
-                            new SellAllGUI(skyShop, localeManager, guiManager, sellAllManager, skyShopAPI, player).openInventory(skyShop, player);
+                            new SellAllGUI(skyShop, localeManager, guiManager, sellAllManager, skyShopAPI, player).open(skyShop, player);
                         });
 
                         setButton(entryConfig.slot(), builder.build());
@@ -505,8 +505,8 @@ public class TransactionGUI extends ChestGUI {
     }
 
     @Override
-    public void openInventory(@NotNull Plugin plugin, @NotNull Player player) {
-        super.openInventory(plugin, player);
+    public void open(@NotNull Plugin plugin, @NotNull Player player) {
+        super.open(plugin, player);
 
         guiManager.addOpenGUI(player.getUniqueId(), this);
     }
@@ -517,7 +517,7 @@ public class TransactionGUI extends ChestGUI {
      * @param player The Player to close the inventory for.
      */
     @Override
-    public void closeInventory(@NotNull Plugin plugin, @NotNull Player player) {
+    public void close(@NotNull Plugin plugin, @NotNull Player player) {
         UUID uuid = player.getUniqueId();
 
         plugin.getServer().getScheduler().runTaskLater(plugin, () ->
@@ -527,9 +527,23 @@ public class TransactionGUI extends ChestGUI {
 
         shopGUI.update();
 
-        shopGUI.openInventory(plugin, player);
+        shopGUI.open(plugin, player);
 
         guiManager.addOpenGUI(uuid, shopGUI);
+    }
+
+    @Override
+    public void unload(@NotNull Plugin plugin, @NotNull Player player, boolean onDisable) {
+        UUID uuid = player.getUniqueId();
+
+        if(onDisable) {
+            player.closeInventory(InventoryCloseEvent.Reason.UNLOADED);
+        } else {
+            plugin.getServer().getScheduler().runTaskLater(plugin, () ->
+                    player.closeInventory(InventoryCloseEvent.Reason.UNLOADED), 1L);
+        }
+
+        guiManager.removeOpenGUI(uuid);
     }
 
     /**
@@ -547,7 +561,7 @@ public class TransactionGUI extends ChestGUI {
 
         shopGUI.update();
 
-        shopGUI.openInventory(skyShop, player);
+        shopGUI.open(skyShop, player);
 
         guiManager.addOpenGUI(uuid, shopGUI);
     }

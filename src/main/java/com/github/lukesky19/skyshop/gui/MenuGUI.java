@@ -111,7 +111,7 @@ public class MenuGUI extends ChestGUI {
         String guiName = "";
         if(menuConfig.gui().name() != null) guiName = menuConfig.gui().name();
 
-        createInventory(player, type, guiName, null);
+        create(player, type, guiName, null);
 
         update();
     }
@@ -279,7 +279,7 @@ public class MenuGUI extends ChestGUI {
 
                         builder.setItemStack(itemStack);
 
-                        builder.setAction(event -> closeInventory(skyShop, player));
+                        builder.setAction(event -> close(skyShop, player));
 
                         setButton(entryConfig.slot(), builder.build());
                     } else {
@@ -314,11 +314,11 @@ public class MenuGUI extends ChestGUI {
 
                                 ShopGUI gui = new ShopGUI(skyShop, settingsManager, localeManager, transactionManager, statsDatabaseManager, skyShopAPI, sellAllManager, guiManager, this, pageNum, shopConfig, player);
 
-                                gui.openInventory(skyShop, player);
+                                gui.open(skyShop, player);
                             } else {
                                 player.sendMessage(FormatUtil.format(locale.prefix() + locale.guiOpenError()));
 
-                                closeInventory(skyShop, player);
+                                close(skyShop, player);
                             }
                         });
 
@@ -338,18 +338,32 @@ public class MenuGUI extends ChestGUI {
     }
 
     @Override
-    public void openInventory(@NotNull Plugin plugin, @NotNull Player player) {
-        super.openInventory(plugin, player);
+    public void open(@NotNull Plugin plugin, @NotNull Player player) {
+        super.open(plugin, player);
 
         guiManager.addOpenGUI(player.getUniqueId(), this);
     }
 
     @Override
-    public void closeInventory(@NotNull Plugin plugin, @NotNull Player player) {
+    public void close(@NotNull Plugin plugin, @NotNull Player player) {
         UUID uuid = player.getUniqueId();
 
         plugin.getServer().getScheduler().runTaskLater(plugin, () ->
                 player.closeInventory(InventoryCloseEvent.Reason.OPEN_NEW), 1L);
+
+        guiManager.removeOpenGUI(uuid);
+    }
+
+    @Override
+    public void unload(@NotNull Plugin plugin, @NotNull Player player, boolean onDisable) {
+        UUID uuid = player.getUniqueId();
+
+        if(onDisable) {
+            player.closeInventory(InventoryCloseEvent.Reason.UNLOADED);
+        } else {
+            plugin.getServer().getScheduler().runTaskLater(plugin, () ->
+                    player.closeInventory(InventoryCloseEvent.Reason.UNLOADED), 1L);
+        }
 
         guiManager.removeOpenGUI(uuid);
     }

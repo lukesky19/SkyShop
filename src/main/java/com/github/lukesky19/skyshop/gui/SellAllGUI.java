@@ -86,7 +86,7 @@ public class SellAllGUI extends ChestGUI {
         String guiName = "";
         if(sellAllGuiConfig.gui().name() != null) guiName = sellAllGuiConfig.gui().name();
 
-        createInventory(player, guiType, guiName, null);
+        create(player, guiType, guiName, null);
 
         update();
     }
@@ -158,7 +158,7 @@ public class SellAllGUI extends ChestGUI {
                         builder.setItemStack(itemStack);
 
                         builder.setAction(event -> Bukkit.getScheduler()
-                                        .runTaskLater(skyShop, () -> closeInventory(skyShop, player), 1L));
+                                        .runTaskLater(skyShop, () -> close(skyShop, player), 1L));
 
                         setButton(entryConfig.slot(), builder.build());
                     } else {
@@ -190,18 +190,39 @@ public class SellAllGUI extends ChestGUI {
     }
 
     @Override
-    public void openInventory(@NotNull Plugin plugin, @NotNull Player player) {
-        super.openInventory(plugin, player);
+    public void open(@NotNull Plugin plugin, @NotNull Player player) {
+        super.open(plugin, player);
 
         guiManager.addOpenGUI(player.getUniqueId(), this);
     }
 
     @Override
-    public void closeInventory(@NotNull Plugin plugin, @NotNull Player player) {
+    public void close(@NotNull Plugin plugin, @NotNull Player player) {
         UUID uuid = player.getUniqueId();
 
         plugin.getServer().getScheduler().runTaskLater(plugin, () ->
                 player.closeInventory(InventoryCloseEvent.Reason.UNLOADED), 1L);
+
+        // Remove any buttons so that they aren't sold or given to the player.
+        clearButtons();
+
+        // Proceed to sell any items in the inventory
+        skyShopAPI.sellInventoryGUI(getInventory(), player, true);
+
+        // Stop tracking the GUI as being open
+        guiManager.removeOpenGUI(uuid);
+    }
+
+    @Override
+    public void unload(@NotNull Plugin plugin, @NotNull Player player, boolean onDisable) {
+        UUID uuid = player.getUniqueId();
+
+        if(onDisable) {
+            player.closeInventory(InventoryCloseEvent.Reason.UNLOADED);
+        } else {
+            plugin.getServer().getScheduler().runTaskLater(plugin, () ->
+                    player.closeInventory(InventoryCloseEvent.Reason.UNLOADED), 1L);
+        }
 
         // Remove any buttons so that they aren't sold or given to the player.
         clearButtons();

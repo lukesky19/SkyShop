@@ -94,7 +94,7 @@ public final class SkyShop extends JavaPlugin {
         SkyShopAPI skyShopAPI = new SkyShopAPI(this, settingsManager, localeManager, shopManager, statsDatabaseManager);
         this.getServer().getServicesManager().register(SkyShopAPI.class, skyShopAPI, this, ServicePriority.Lowest);
 
-        guiManager = new GUIManager(this, skyShopAPI);
+        guiManager = new GUIManager(this);
 
         InventoryListener inventoryListener = new InventoryListener(guiManager);
 
