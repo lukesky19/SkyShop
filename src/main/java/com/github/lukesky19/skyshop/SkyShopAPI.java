@@ -1,6 +1,6 @@
 /*
     SkyShop is a simple inventory based shop plugin with page support, sell commands, and error checking.
-    Copyright (C) 2024  lukeskywlker19
+    Copyright (C) 2024 lukeskywlker19
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as published
@@ -17,48 +17,54 @@
 */
 package com.github.lukesky19.skyshop;
 
-import com.github.lukesky19.skylib.format.FormatUtil;
-import com.github.lukesky19.skylib.player.PlayerUtil;
-import com.github.lukesky19.skyshop.configuration.manager.LocaleManager;
-import com.github.lukesky19.skyshop.configuration.manager.SettingsManager;
-import com.github.lukesky19.skyshop.configuration.manager.ShopManager;
-import com.github.lukesky19.skyshop.configuration.record.Locale;
-import com.github.lukesky19.skyshop.configuration.record.Settings;
+import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
+import com.github.lukesky19.skylib.api.player.PlayerUtil;
+import com.github.lukesky19.skyshop.configuration.LocaleManager;
+import com.github.lukesky19.skyshop.data.Locale;
 import com.github.lukesky19.skyshop.event.ItemSoldEvent;
-import com.github.lukesky19.skyshop.manager.StatsDatabaseManager;
+import com.github.lukesky19.skyshop.manager.PriceManager;
+import com.github.lukesky19.skyshop.manager.StatsManager;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
-import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.ItemType;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.sql.SQLException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
+/**
+ * This class provides methods to sell items using the prices configured in SkyShop.
+ */
 public class SkyShopAPI {
-    private final SkyShop skyShop;
-    private final SettingsManager settingsManager;
-    private final LocaleManager localeManager;
-    private final ShopManager shopManager;
-    private final StatsDatabaseManager statsDatabaseManager;
+    private final @NotNull SkyShop skyShop;
+    private final @NotNull LocaleManager localeManager;
+    private final @NotNull PriceManager priceManager;
+    private final @Nullable StatsManager statsManager;
 
+    /**
+     * Constructor
+     * @param skyShop A {@link SkyShop} instance.
+     * @param localeManager A {@link LocaleManager} instance.
+     * @param priceManager A {@link PriceManager} instance.
+     * @param statsManager A {@link StatsManager} instance.
+     */
     public SkyShopAPI(
-            SkyShop skyShop,
-            SettingsManager settingsManager,
-            LocaleManager localeManager,
-            ShopManager shopManager,
-            StatsDatabaseManager statsDatabaseManager) {
+            @NotNull SkyShop skyShop,
+            @NotNull LocaleManager localeManager,
+            @NotNull PriceManager priceManager,
+            @Nullable StatsManager statsManager) {
         this.skyShop = skyShop;
-        this.settingsManager = settingsManager;
         this.localeManager = localeManager;
-        this.shopManager = shopManager;
-        this.statsDatabaseManager = statsDatabaseManager;
+        this.priceManager = priceManager;
+        this.statsManager = statsManager;
     }
 
     /**
@@ -67,6 +73,7 @@ public class SkyShopAPI {
      * @param inventory An inventory containing items.
      * @param player The player selling items.
      * @param message Should the sell success or unsellable message from SkyShop be sent?
+     * @return true if successful, otherwise false.
      */
     public boolean sellInventoryGUI(@NotNull Inventory inventory, Player player, boolean message) {
         Locale locale = localeManager.getLocale();
@@ -74,50 +81,46 @@ public class SkyShopAPI {
 
         boolean sent = false;
         for(int i = 0; i <= inventory.getSize() - 1; i++) {
-            ItemStack item = inventory.getItem(i);
+            ItemStack invStack = inventory.getItem(i);
+            if(invStack == null) continue;
 
-            if (item != null && item.getType() != Material.AIR) {
-                Double price = shopManager.getMaterialSellPrice(item.getType());
-                if (price != null && price > 0.0) {
-                    ItemSoldEvent itemSoldEvent = new ItemSoldEvent(item);
+            ItemType itemType = invStack.getType().asItemType();
+            if(itemType == null) continue;
+            if(itemType.equals(ItemType.AIR)) continue;
+
+            @NotNull Optional<@NotNull Double> optionalPrice = priceManager.getItemTypeSellPrice(itemType);
+            if(optionalPrice.isPresent()) {
+                double price = optionalPrice.get();
+                if(price >= 0.0) {
+                    ItemSoldEvent itemSoldEvent = new ItemSoldEvent(invStack);
                     skyShop.getServer().getPluginManager().callEvent(itemSoldEvent);
-                    if (!itemSoldEvent.isCancelled()) {
+
+                    if(!itemSoldEvent.isCancelled()) {
                         inventory.clear(i);
 
-                        money = money + (price * item.getAmount());
+                        money = money + (price * invStack.getAmount());
 
-                        Settings settings = settingsManager.getSettingsConfig();
-                        if(settings != null && statsDatabaseManager != null) {
-                            if(settings.statistics()) {
-                                skyShop.getServer().getScheduler().runTaskAsynchronously(skyShop, () -> {
-                                    try {
-                                        statsDatabaseManager.updateMaterial(item.getType().toString(), 0, item.getAmount());
-                                    } catch (SQLException e) {
-                                        throw new RuntimeException(e);
-                                    }
-                                });
-                            }
-                        }
+                        if(statsManager != null) statsManager.incrementAmountSold(itemType, invStack.getAmount());
                     } else {
                         // Give the player the item back
-                        PlayerUtil.giveItem(player.getInventory(), item, item.getAmount(), player.getLocation());
+                        PlayerUtil.giveItem(player.getInventory(), invStack, invStack.getAmount(), player.getLocation());
 
                         // Remove the item from the inventory GUI
                         inventory.clear(i);
                     }
-                } else {
-                    // Give the player the item that cannot be sold back
-                    PlayerUtil.giveItem(player.getInventory(), item, item.getAmount(), player.getLocation());
+                }
+            } else {
+                // Give the player the item that cannot be sold back
+                PlayerUtil.giveItem(player.getInventory(), invStack, invStack.getAmount(), player.getLocation());
 
-                    // Remove the item from the inventory GUI
-                    inventory.clear(i);
+                // Remove the item from the inventory GUI
+                inventory.clear(i);
 
-                    // Only send the unsellable message once as to not spam the player
-                    if(!sent) {
-                        if(message) {
-                            player.sendMessage(FormatUtil.format(player, locale.prefix() + locale.sellallUnsellable()));
-                            sent = true;
-                        }
+                // Only send the unsellable message once as to not spam the player
+                if(!sent) {
+                    if(message) {
+                        player.sendMessage(AdventureUtil.serialize(player, locale.prefix() + locale.sellallUnsellable()));
+                        sent = true;
                     }
                 }
             }
@@ -140,7 +143,7 @@ public class SkyShopAPI {
                 placeholders.add(Placeholder.parsed("price", formattedPrice));
                 placeholders.add(Placeholder.parsed("bal", bal));
 
-                player.sendMessage(FormatUtil.format(player, locale.prefix() + locale.sellallSuccess(), placeholders));
+                player.sendMessage(AdventureUtil.serialize(player, locale.prefix() + locale.sellallSuccess(), placeholders));
             }
 
             return true;
@@ -167,31 +170,27 @@ public class SkyShopAPI {
         double money = 0.0;
 
         for(int i = 0; i <= inventory.getSize() - 1; i++) {
-            ItemStack item = inventory.getItem(i);
+            ItemStack invStack = inventory.getItem(i);
+            if(invStack == null) continue;
 
-            if (item != null && item.getType() != Material.AIR) {
-                Double price = shopManager.getMaterialSellPrice(item.getType());
-                if (price != null && price > 0.0) {
-                    ItemSoldEvent itemSoldEvent = new ItemSoldEvent(item);
+            ItemType itemType = invStack.getType().asItemType();
+            if(itemType == null) continue;
+            if(itemType.equals(ItemType.AIR)) continue;
+
+            @NotNull Optional<@NotNull Double> optionalPrice = priceManager.getItemTypeSellPrice(itemType);
+            if(optionalPrice.isPresent()) {
+                double price = optionalPrice.get();
+
+                if(price >= 0.0) {
+                    ItemSoldEvent itemSoldEvent = new ItemSoldEvent(invStack);
                     skyShop.getServer().getPluginManager().callEvent(itemSoldEvent);
 
                     if (!itemSoldEvent.isCancelled()) {
                         inventory.clear(i);
 
-                        money = money + (price * item.getAmount());
+                        money = money + (price * invStack.getAmount());
 
-                        Settings settings = settingsManager.getSettingsConfig();
-                        if(settings != null && statsDatabaseManager != null) {
-                            if(settings.statistics()) {
-                                skyShop.getServer().getScheduler().runTaskAsynchronously(skyShop, () -> {
-                                    try {
-                                        statsDatabaseManager.updateMaterial(item.getType().toString(), 0, item.getAmount());
-                                    } catch (SQLException e) {
-                                        throw new RuntimeException(e);
-                                    }
-                                });
-                            }
-                        }
+                        if(statsManager != null) statsManager.incrementAmountSold(itemType, invStack.getAmount());
                     }
                 }
             }
@@ -214,7 +213,7 @@ public class SkyShopAPI {
                 placeholders.add(Placeholder.parsed("price", formattedPrice));
                 placeholders.add(Placeholder.parsed("bal", bal));
 
-                player.sendMessage(FormatUtil.format(player, locale.prefix() + locale.sellallSuccess(), placeholders));
+                player.sendMessage(AdventureUtil.serialize(player, locale.prefix() + locale.sellallSuccess(), placeholders));
             }
 
             return true;
@@ -245,31 +244,26 @@ public class SkyShopAPI {
             // Ignore armor slots
             if(i >= 36 && i <= 39) continue;
 
-            ItemStack item = inventory.getItem(i);
+            ItemStack invStack = inventory.getItem(i);
+            if(invStack == null) continue;
 
-            if (item != null && item.getType() != Material.AIR) {
-                Double price = shopManager.getMaterialSellPrice(item.getType());
-                if (price != null && price > 0.0) {
-                    ItemSoldEvent itemSoldEvent = new ItemSoldEvent(item);
+            ItemType itemType = invStack.getType().asItemType();
+            if(itemType == null) continue;
+            if(itemType.equals(ItemType.AIR)) continue;
+
+            @NotNull Optional<@NotNull Double> optionalPrice = priceManager.getItemTypeSellPrice(itemType);
+            if(optionalPrice.isPresent()) {
+                double price = optionalPrice.get();
+                if(price >= 0.0) {
+                    ItemSoldEvent itemSoldEvent = new ItemSoldEvent(invStack);
                     skyShop.getServer().getPluginManager().callEvent(itemSoldEvent);
 
-                    if (!itemSoldEvent.isCancelled()) {
+                    if(!itemSoldEvent.isCancelled()) {
                         inventory.clear(i);
 
-                        money = money + (price * item.getAmount());
+                        money = money + (price * invStack.getAmount());
 
-                        Settings settings = settingsManager.getSettingsConfig();
-                        if(settings != null && statsDatabaseManager != null) {
-                            if(settings.statistics()) {
-                                skyShop.getServer().getScheduler().runTaskAsynchronously(skyShop, () -> {
-                                    try {
-                                        statsDatabaseManager.updateMaterial(item.getType().toString(), 0, item.getAmount());
-                                    } catch (SQLException e) {
-                                        throw new RuntimeException(e);
-                                    }
-                                });
-                            }
-                        }
+                        if(statsManager != null) statsManager.incrementAmountSold(itemType, invStack.getAmount());
                     }
                 }
             }
@@ -292,7 +286,7 @@ public class SkyShopAPI {
                 placeholders.add(Placeholder.parsed("price", formattedPrice));
                 placeholders.add(Placeholder.parsed("bal", bal));
 
-                player.sendMessage(FormatUtil.format(player, locale.prefix() + locale.sellallSuccess(), placeholders));
+                player.sendMessage(AdventureUtil.serialize(player, locale.prefix() + locale.sellallSuccess(), placeholders));
             }
 
             return true;
@@ -306,59 +300,58 @@ public class SkyShopAPI {
      * <p>If the ItemStack could not be sold, it will be left inside the Inventory.</p>
      * @param itemStack The ItemStack to sell.
      * @param player The Player to pay for the items sold.
+     * @param slot The slot inside the player's inventory for the {@link ItemStack} being sold.
      * @param message Should the sell success or unsellable message from SkyShop be sent?
+     * @return true if successful, otherwise false.
      */
-    public boolean sellItemStack(Player player, ItemStack itemStack, int slot, boolean message) {
+    public boolean sellItemStack(@NotNull Player player, @NotNull ItemStack itemStack, int slot, boolean message) {
         Locale locale = localeManager.getLocale();
         Inventory inventory = player.getInventory();
-        Double price = shopManager.getMaterialSellPrice(itemStack.getType());
 
-        if (price != null && price > 0.0) {
-            ItemSoldEvent itemSoldEvent = new ItemSoldEvent(itemStack);
-            skyShop.getServer().getPluginManager().callEvent(itemSoldEvent);
+        ItemType itemType = itemStack.getType().asItemType();
+        if(itemType == null) return false;
+        if(itemType.equals(ItemType.AIR)) return false;
 
-            if (!itemSoldEvent.isCancelled()) {
-                inventory.clear(slot);
+        @NotNull Optional<@NotNull Double> optionalPrice = priceManager.getItemTypeSellPrice(itemType);
+        if(optionalPrice.isPresent()) {
+            double price = optionalPrice.get();
 
-                double money = price * itemStack.getAmount();
+            if(price >= 0.0) {
+                ItemSoldEvent itemSoldEvent = new ItemSoldEvent(itemStack);
+                skyShop.getServer().getPluginManager().callEvent(itemSoldEvent);
 
-                skyShop.getEconomy().depositPlayer(player, money);
+                if(!itemSoldEvent.isCancelled()) {
+                    inventory.clear(slot);
 
-                if(message) {
-                    DecimalFormat df = new DecimalFormat("#.##");
-                    df.setRoundingMode(RoundingMode.CEILING);
+                    double money = price * itemStack.getAmount();
 
-                    BigDecimal bigPrice = BigDecimal.valueOf(money);
-                    String formattedPrice = df.format(bigPrice);
+                    skyShop.getEconomy().depositPlayer(player, money);
 
-                    BigDecimal bigBalance = BigDecimal.valueOf(skyShop.getEconomy().getBalance(player));
-                    String bal = df.format(bigBalance);
+                    if(message) {
+                        DecimalFormat df = new DecimalFormat("#.##");
+                        df.setRoundingMode(RoundingMode.CEILING);
 
-                    List<TagResolver.Single> placeholders = new ArrayList<>();
-                    placeholders.add(Placeholder.parsed("price", formattedPrice));
-                    placeholders.add(Placeholder.parsed("bal", bal));
+                        BigDecimal bigPrice = BigDecimal.valueOf(money);
+                        String formattedPrice = df.format(bigPrice);
 
-                    player.sendMessage(FormatUtil.format(player, locale.prefix() + locale.sellallSuccess(), placeholders));
-                }
+                        BigDecimal bigBalance = BigDecimal.valueOf(skyShop.getEconomy().getBalance(player));
+                        String bal = df.format(bigBalance);
 
-                Settings settings = settingsManager.getSettingsConfig();
-                if(settings != null && statsDatabaseManager != null) {
-                    if(settings.statistics()) {
-                        skyShop.getServer().getScheduler().runTaskAsynchronously(skyShop, () -> {
-                            try {
-                                statsDatabaseManager.updateMaterial(itemStack.getType().toString(), 0, itemStack.getAmount());
-                            } catch (SQLException e) {
-                                throw new RuntimeException(e);
-                            }
-                        });
+                        List<TagResolver.Single> placeholders = new ArrayList<>();
+                        placeholders.add(Placeholder.parsed("price", formattedPrice));
+                        placeholders.add(Placeholder.parsed("bal", bal));
+
+                        player.sendMessage(AdventureUtil.serialize(player, locale.prefix() + locale.sellallSuccess(), placeholders));
                     }
-                }
 
-                return true;
-            }
-        } else {
-            if(message) {
-                player.sendMessage(FormatUtil.format(player, locale.prefix() + locale.unsellable()));
+                    if(statsManager != null) statsManager.incrementAmountSold(itemType, itemStack.getAmount());
+
+                    return true;
+                }
+            } else {
+                if(message) {
+                    player.sendMessage(AdventureUtil.serialize(player, locale.prefix() + locale.unsellable()));
+                }
             }
         }
 
@@ -378,47 +371,47 @@ public class SkyShopAPI {
     public boolean sellAllMatchingItemStack(Player player, ItemStack itemStack, boolean message) {
         Locale locale = localeManager.getLocale();
         Inventory inventory = player.getInventory();
-        Double price = shopManager.getMaterialSellPrice(itemStack.getType());
         double money = 0.0;
 
-        if (price == null || price <= 0.0) {
-            if (message) {
-                player.sendMessage(FormatUtil.format(player, locale.prefix() + locale.unsellable()));
-            }
+        ItemType itemType = itemStack.getType().asItemType();
+        if(itemType == null) return false;
+        if(itemType.equals(ItemType.AIR)) return false;
 
-            return false;
-        }
+        @NotNull Optional<@NotNull Double> optionalPrice = priceManager.getItemTypeSellPrice(itemType);
+        if(optionalPrice.isPresent()) {
+            double price = optionalPrice.get();
 
-        for(int i = 0; i <= inventory.getSize() - 1; i++) {
-            // Ignore armor slots
-            if(i >= 36 && i <= 39) continue;
+            if(price >= 0.0) {
+                for(int i = 0; i <= inventory.getSize() - 1; i++) {
+                    // Ignore armor slots
+                    if(i >= 36 && i <= 39) continue;
 
-            ItemStack inventoryItem = inventory.getItem(i);
+                    ItemStack invStack = inventory.getItem(i);
+                    if(invStack == null) continue;
 
-            if (inventoryItem != null && inventoryItem.getType() != Material.AIR) {
-                if(inventoryItem.getType().equals(itemStack.getType())) {
-                    ItemSoldEvent itemSoldEvent = new ItemSoldEvent(inventoryItem);
-                    skyShop.getServer().getPluginManager().callEvent(itemSoldEvent);
+                    ItemType invItemType = invStack.getType().asItemType();
+                    if(invItemType == null) continue;
+                    if(invItemType.equals(ItemType.AIR)) continue;
 
-                    if (!itemSoldEvent.isCancelled()) {
-                        inventory.clear(i);
+                    if(itemType.equals(invItemType)) {
+                        ItemSoldEvent itemSoldEvent = new ItemSoldEvent(invStack);
+                        skyShop.getServer().getPluginManager().callEvent(itemSoldEvent);
 
-                        money = money + (price * inventoryItem.getAmount());
+                        if (!itemSoldEvent.isCancelled()) {
+                            inventory.clear(i);
 
-                        Settings settings = settingsManager.getSettingsConfig();
-                        if(settings != null && statsDatabaseManager != null) {
-                            if(settings.statistics()) {
-                                skyShop.getServer().getScheduler().runTaskAsynchronously(skyShop, () -> {
-                                    try {
-                                        statsDatabaseManager.updateMaterial(inventoryItem.getType().toString(), 0, inventoryItem.getAmount());
-                                    } catch (SQLException e) {
-                                        throw new RuntimeException(e);
-                                    }
-                                });
-                            }
+                            money = money + (price * invStack.getAmount());
+
+                            if(statsManager != null) statsManager.incrementAmountSold(itemType, invStack.getAmount());
                         }
                     }
                 }
+            } else {
+                if (message) {
+                    player.sendMessage(AdventureUtil.serialize(player, locale.prefix() + locale.unsellable()));
+                }
+
+                return false;
             }
         }
 
@@ -439,7 +432,7 @@ public class SkyShopAPI {
                 placeholders.add(Placeholder.parsed("price", formattedPrice));
                 placeholders.add(Placeholder.parsed("bal", bal));
 
-                player.sendMessage(FormatUtil.format(player, locale.prefix() + locale.sellallSuccess(), placeholders));
+                player.sendMessage(AdventureUtil.serialize(player, locale.prefix() + locale.sellallSuccess(), placeholders));
             }
 
             return true;

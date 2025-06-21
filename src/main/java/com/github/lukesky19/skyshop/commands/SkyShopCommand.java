@@ -1,6 +1,6 @@
 /*
     SkyShop is a simple inventory based shop plugin with page support, sell commands, and error checking.
-    Copyright (C) 2024  lukeskywlker19
+    Copyright (C) 2024 lukeskywlker19
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as published
@@ -17,157 +17,148 @@
 */
 package com.github.lukesky19.skyshop.commands;
 
-import com.github.lukesky19.skylib.format.FormatUtil;
+import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
 import com.github.lukesky19.skyshop.SkyShop;
 import com.github.lukesky19.skyshop.SkyShopAPI;
-import com.github.lukesky19.skyshop.configuration.manager.*;
-import com.github.lukesky19.skyshop.configuration.record.Locale;
+import com.github.lukesky19.skyshop.commands.arguments.HelpCommand;
+import com.github.lukesky19.skyshop.commands.arguments.ReloadCommand;
+import com.github.lukesky19.skyshop.commands.arguments.SellAllCommand;
+import com.github.lukesky19.skyshop.commands.arguments.StatsCommand;
+import com.github.lukesky19.skyshop.configuration.*;
+import com.github.lukesky19.skyshop.data.Locale;
+import com.github.lukesky19.skyshop.data.gui.MenuConfig;
 import com.github.lukesky19.skyshop.gui.GUIManager;
 import com.github.lukesky19.skyshop.gui.MenuGUI;
-import com.github.lukesky19.skyshop.gui.SellAllGUI;
-import com.github.lukesky19.skyshop.manager.StatsDatabaseManager;
+import com.github.lukesky19.skyshop.manager.StatsManager;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
+import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+
+/**
+ * This class is used to create the main skyshop command.
+ */
 public class SkyShopCommand {
-    private final SkyShop skyShop;
-    private final MenuManager menuManager;
-    private final ShopManager shopManager;
-    private final SettingsManager settingsManager;
-    private final LocaleManager localeManager;
-    private final TransactionManager transactionManager;
-    private final SellAllManager sellAllManager;
-    private final StatsDatabaseManager statsDatabaseManager;
-    private final GUIManager guiManager;
-    private final SkyShopAPI skyShopAPI;
+    private final @NotNull SkyShop skyShop;
+    private final @NotNull LocaleManager localeManager;
+    private final @NotNull MenuManager menuManager;
+    private final @NotNull ShopManager shopManager;
+    private final @NotNull TransactionManager transactionManager;
+    private final @NotNull SellAllManager sellAllManager;
+    private final @Nullable StatsManager statsManager;
+    private final @NotNull GUIManager guiManager;
+    private final @NotNull SkyShopAPI skyShopAPI;
 
     /**
      * Constructor
-     * @param skyShop The plugin instance.
-     * @param menuManager A MenuManager instance.
-     * @param shopManager A ShopManager instance.
-     * @param settingsManager A SettingsManager instance
-     * @param localeManager A LocaleManager instance.
-     * @param transactionManager A TransactionManager instance.
-     * @param sellAllManager A SellAllManager instance.
-     * @param statsDatabaseManager A StatsDatabaseManager instance.
-     * @param skyShopAPI The SkyShopAPI
+     * @param skyShop A {@link SkyShop} instance
+     * @param guiManager A {@link GUIManager} instance.
+     * @param localeManager A {@link LocaleManager} instance.
+     * @param menuManager A {@link MenuManager} instance.
+     * @param shopManager A {@link ShopManager} instance.
+     * @param transactionManager A {@link TransactionManager} instance.
+     * @param sellAllManager A {@link SellAllManager} instance.
+     * @param statsManager A {@link StatsManager} instance.
+     * @param skyShopAPI A {@link SkyShopAPI} instance.
      */
     public SkyShopCommand(
-            SkyShop skyShop,
-            MenuManager menuManager,
-            ShopManager shopManager,
-            SettingsManager settingsManager,
-            LocaleManager localeManager,
-            TransactionManager transactionManager,
-            SellAllManager sellAllManager,
-            StatsDatabaseManager statsDatabaseManager,
-            GUIManager guiManager,
-            SkyShopAPI skyShopAPI) {
+            @NotNull SkyShop skyShop,
+            @NotNull GUIManager guiManager,
+            @NotNull LocaleManager localeManager,
+            @NotNull MenuManager menuManager,
+            @NotNull ShopManager shopManager,
+            @NotNull TransactionManager transactionManager,
+            @NotNull SellAllManager sellAllManager,
+            @Nullable StatsManager statsManager,
+            @NotNull SkyShopAPI skyShopAPI) {
         this.skyShop = skyShop;
-        this.settingsManager = settingsManager;
+        this.localeManager = localeManager;
         this.menuManager = menuManager;
         this.shopManager = shopManager;
-        this.localeManager = localeManager;
         this.transactionManager = transactionManager;
         this.sellAllManager = sellAllManager;
-        this.statsDatabaseManager = statsDatabaseManager;
+        this.statsManager = statsManager;
         this.guiManager = guiManager;
         this.skyShopAPI = skyShopAPI;
     }
 
     /**
-     * Builds a {@literal LiteralCommandNode<CommandSourceStack>} for the/skyshop command to be registered through the Lifecycle API.
-     * @return A {@literal LiteralCommandNode<CommandSourceStack>} representing the /skyshop command.
+     * Builds a {@link LiteralCommandNode} of type {@link CommandSourceStack} for the skyshop command.
+     * @return A {@link LiteralCommandNode} of type {@link CommandSourceStack} representing the skyshop command.
      */
-    public LiteralCommandNode<CommandSourceStack> createCommand() {
-        LiteralArgumentBuilder<CommandSourceStack> builder = Commands.literal("skyshop")
-            .requires(ctx -> ctx.getSender().hasPermission("skyshop.commands.skyshop"))
-            .executes(ctx -> {
-                Locale locale = localeManager.getLocale();
+    public @NotNull LiteralCommandNode<CommandSourceStack> createCommand() {
+        LiteralArgumentBuilder<CommandSourceStack> builder = Commands.literal("skyshop");
+        builder.requires(ctx -> ctx.getSender().hasPermission("skyshop.commands.skyshop"));
+        builder.executes(ctx -> {
+            Locale locale = localeManager.getLocale();
+            ComponentLogger logger = skyShop.getComponentLogger();
 
-                if (ctx.getSource().getSender() instanceof Player player) {
-                    if(menuManager.getMenuConfig() != null) {
-                        MenuGUI gui = new MenuGUI(skyShop, settingsManager, menuManager, shopManager, localeManager, transactionManager, statsDatabaseManager, skyShopAPI, sellAllManager, guiManager, 0, player);
+            if (ctx.getSource().getSender() instanceof Player player) {
+                Optional<MenuConfig> optionalMenuConfig = menuManager.getMenuConfig();
+                if(optionalMenuConfig.isPresent()) {
+                    MenuConfig menuConfig = optionalMenuConfig.get();
+                    MenuGUI menuGUI = new MenuGUI(skyShop, guiManager, player, localeManager, shopManager, transactionManager, sellAllManager, statsManager, skyShopAPI, menuConfig);
 
-                        gui.open(skyShop, player);
-
-                        return 1;
-                    } else {
-                        player.sendMessage(FormatUtil.format(locale.prefix() + locale.guiOpenError()));
-
+                    boolean creationResult = menuGUI.create();
+                    if(!creationResult) {
+                        logger.error(AdventureUtil.serialize("Unable to create the InventoryView for the menu GUI for player " + player.getName() + " due to a configuration error."));
+                        player.sendMessage(AdventureUtil.serialize(locale.prefix() + locale.guiOpenError()));
                         return 0;
                     }
+
+                    // This method is completed sync, the api returns a CompletableFuture for supporting plugins with async requirements.
+                    @NotNull CompletableFuture<Boolean> updateFuture = menuGUI.update();
+                    try {
+                        boolean updateResult = updateFuture.get();
+
+                        if(!updateResult) {
+                            logger.error(AdventureUtil.serialize("Unable to decorate the menu GUI for player " + player.getName() + " due to a configuration error."));
+                            player.sendMessage(AdventureUtil.serialize(locale.prefix() + locale.guiOpenError()));
+                            return 0;
+                        }
+                    } catch (InterruptedException | ExecutionException e) {
+                        logger.error(AdventureUtil.serialize("Unable to decorate the menu GUI for player " + player.getName() + " due to a configuration error. " + e.getMessage()));
+                        player.sendMessage(AdventureUtil.serialize(locale.prefix() + locale.guiOpenError()));
+                        return 0;
+                    }
+
+                    boolean openResult = menuGUI.open();
+                    if(!openResult) {
+                        logger.error(AdventureUtil.serialize("Unable to open the menu GUI for player " + player.getName() + " due to a configuration error."));
+                        player.sendMessage(AdventureUtil.serialize(locale.prefix() + locale.guiOpenError()));
+                        return 0;
+                    }
+
+                    return 1;
                 } else {
-                    skyShop.getComponentLogger().info(FormatUtil.format(locale.inGameOnly()));
+                    player.sendMessage(AdventureUtil.serialize(locale.prefix() + locale.guiOpenError()));
 
                     return 0;
                 }
-            });
+            } else {
+                skyShop.getComponentLogger().info(AdventureUtil.serialize(locale.inGameOnly()));
 
-        builder.then(Commands.literal("help")
-            .requires(ctx -> ctx.getSender().hasPermission("skyshop.commands.skyshop.help"))
-            .executes(ctx -> {
-                Locale locale = localeManager.getLocale();
+                return 0;
+            }
+        });
 
-                if(ctx.getSource().getSender() instanceof Player player) {
-                    for(String msg : locale.help()) {
-                        player.sendMessage(FormatUtil.format(player, msg));
-                    }
-                } else {
-                    for(String msg : locale.help()) {
-                        skyShop.getComponentLogger().info(FormatUtil.format(msg));
-                    }
-                }
+        HelpCommand helpCommand = new HelpCommand(skyShop, localeManager);
+        ReloadCommand reloadCommand = new ReloadCommand(skyShop, localeManager);
+        SellAllCommand sellAllCommand = new SellAllCommand(skyShop, localeManager, guiManager, sellAllManager, skyShopAPI);
+        StatsCommand statsCommand = new StatsCommand(skyShop, localeManager, guiManager, statsManager);
 
-                return 1;
-            })
-        );
-
-        builder.then(Commands.literal("reload")
-            .requires(ctx -> ctx.getSender().hasPermission("skyshop.commands.skyshop.reload"))
-            .executes(ctx -> {
-                skyShop.reload();
-
-                Locale locale = localeManager.getLocale();
-
-                if(ctx.getSource().getSender() instanceof Player player) {
-                    player.sendMessage(FormatUtil.format(player, locale.prefix() + locale.configReload()));
-                } else {
-                    skyShop.getComponentLogger().info(FormatUtil.format(locale.configReload()));
-                }
-
-                return 1;
-            })
-        );
-
-        builder.then(Commands.literal("sellall")
-            .requires(ctx -> ctx.getSender().hasPermission("skyshop.commands.skyshop.sellall"))
-            .executes(ctx -> {
-                Locale locale = localeManager.getLocale();
-
-                if (ctx.getSource().getSender() instanceof Player player) {
-                    if(menuManager.getMenuConfig() != null) {
-                        SellAllGUI gui = new SellAllGUI(skyShop, localeManager, guiManager, sellAllManager, skyShopAPI, player);
-
-                        gui.open(skyShop, player);
-
-                        return 1;
-                    } else {
-                        player.sendMessage(FormatUtil.format(locale.prefix() + locale.guiOpenError()));
-
-                        return 0;
-                    }
-                } else {
-                    skyShop.getComponentLogger().info(FormatUtil.format(locale.inGameOnly()));
-
-                    return 0;
-                }
-            })
-        );
+        builder.then(helpCommand.createCommand());
+        builder.then(reloadCommand.createCommand());
+        builder.then(sellAllCommand.createCommand());
+        builder.then(statsCommand.createCommand());
 
         return builder.build();
     }

@@ -1,4 +1,4 @@
-config-version: 2.0.0
+config-version: 2.0.0.0
 # Prefix is placed in-front of all other messages automatically.
 prefix: "<gray>[</gray><aqua><bold>SkyShop</bold></aqua><gray>]</gray> "
 help:
@@ -13,32 +13,21 @@ help:
   - "<white>/<aqua>sell <yellow>all</yellow></white>"
   - "<white>/<aqua>sell <yellow>hand</yellow></white>"
   - "<white>/<aqua>sell <yellow>hand all</yellow></white>"
-no-permission: "<red>You do not have permission for this command.</red>"
 config-reload: "<aqua>Configuration files have been reloaded.</aqua>"
 not-enough-items: "<red>You do not have enough items to sell.</red>"
 insufficient-funds: "<red>Insufficient funds.</red>"
-# Placeholders: <amount>, <item>, <price>, and <bal>
-buy-success: "<white>Purchased <yellow><amount> <item></yellow> for <yellow><price></yellow>. Balance: <yellow><bal></yellow></white>"
-# Placeholders: <amount>, <item>, <price>, and <bal>
-sell-success: "<white>Sold <yellow><amount> <item></yellow> for <yellow><price></yellow>. Balance: <yellow><bal></yellow></white>"
+buy-item-success: "<white>Purchased <yellow><amount> <transaction_name></yellow> for <yellow><price></yellow>. Balance: <yellow><bal></yellow></white>"
+# Placeholders: <amount>, <transaction_name>, <price>, and <bal>
+sell-item-success: "<white>Sold <yellow><amount> <transaction_name></yellow> for <yellow><price></yellow>. Balance: <yellow><bal></yellow></white>"
+# Placeholders: <amount>, <transaction_name>, <price>, and <bal>
+buy-command-success: "<white>Purchased <yellow><transaction_name></yellow> for <yellow><price></yellow>. Balance: <yellow><bal></yellow>"
+# Placeholders: <amount>, <transaction_name>, <price>, and <bal>
+sell-command-success: "<white>Sold <yellow><transaction_name></yellow> for <yellow><price></yellow>. Balance: <yellow><bal></yellow>"
 # Placeholders: <price>, and <bal>
 sellall-success: "<white>Successfully sold all items for <yellow><price></yellow>. Updated Balance: <yellow><bal></yellow></white>"
 sellall-unsellable: "<white>Unable to sell one or more items. It was added back to your inventory or dropped at your feet if full.</white>"
-unbuyable: "<red>This item is not able to be purchased.</red>"
-unsellable: "<red>This item is not able to be sold.</red>"
+unbuyable: "<red>This is not able to be purchased.</red>"
+unsellable: "<red>This is not able to be sold.</red>"
 in-game-only: "<red>This command can only be ran in-game.</red>"
-unknown-argument: "<red>One or more of the arguments sent is not recognized.</red>"
-gui-open-error: "<red>Unable to open this gui because it's configuration does not exist, failed to load, or is otherwise invalid.</red>"
-# Placeholders: <file>
-gui-invalid-size: "<red>The size of the gui is invalid for <white><file></white>. It must be a multiple of 9 while also being greater than or equal to 9 and less than or equal to 54.</red>"
-# Placeholders: <file>
-gui-invalid-page-size: "<red>The size of the gui is invalid for page <white><page></white> in <white><file></white>. It must be a multiple of 9 while also being greater than or equal to 9 and less than or equal to 54.</red>"
-# Placeholders: <entry>, <page>, and <file>
-skipping-entry-invalid-type: "<yellow>Skipping entry <white><entry></white> for page <white><page></white> in <white><file></white> due to an invalid type.</yellow>"
-# Placeholders: <entry>, <page>, and <file>
-skipping-entry-type-not-allowed: "<yellow>Skipping entry <white><entry></white> for page <white><page></white> in <white><file></white> as the type is not allowed in this context.</yellow>"
-skipping-entry-invalid-material: "<red>Skipping entry <white><entry></white> for page <white><page></white> in <white><file></white> due to an invalid material.</red>"
-# Placeholders: <file>
-no-pages-found: "<red>No pages were found in <white><file></white>.</red>"
-# Placeholders: <page> and <file>
-no-entries-found: "<red>No entries were found for page <white><page></white> in file <white><file></white>.</red>"
+gui-open-error: "<red>Unable to open this GUI because of a configuration error.</red>"
+stats-disabled-gui-error: "<red>Unable to open the stats GUI as stats tracking is disabled.</red>"

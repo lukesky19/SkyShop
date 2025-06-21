@@ -1,6 +1,6 @@
 /*
     SkyShop is a simple inventory based shop plugin with page support, sell commands, and error checking.
-    Copyright (C) 2024  lukeskywlker19
+    Copyright (C) 2024 lukeskywlker19
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as published
@@ -25,19 +25,27 @@ import io.papermc.paper.command.brigadier.Commands;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.jetbrains.annotations.NotNull;
 
+/**
+ * This class is used to create the sell command used to view the sell items the player's inventory.
+ */
 public class SellCommand {
-    private final SkyShopAPI skyShopAPI;
+    private final @NotNull SkyShopAPI skyShopAPI;
 
-    public SellCommand(SkyShopAPI skyShopAPI) {
+    /**
+     * Constructor
+     * @param skyShopAPI A {@link SkyShopAPI} instance.
+     */
+    public SellCommand(@NotNull SkyShopAPI skyShopAPI) {
         this.skyShopAPI = skyShopAPI;
     }
 
     /**
-     * Builds a {@literal LiteralCommandNode<CommandSourceStack>} for the /sell command to be registered through the Lifecycle API.
-     * @return A {@literal LiteralCommandNode<CommandSourceStack>} representing the /sell command.
+     * Builds a {@link LiteralCommandNode} of type {@link CommandSourceStack} for the sell command.
+     * @return A {@link LiteralCommandNode} of type {@link CommandSourceStack} representing the sell command.
      */
-    public LiteralCommandNode<CommandSourceStack> createCommand() {
+    public @NotNull LiteralCommandNode<CommandSourceStack> createCommand() {
         LiteralArgumentBuilder<CommandSourceStack> builder = Commands.literal("sell")
             .requires(ctx -> ctx.getSender() instanceof Player && ctx.getSender().hasPermission("skyshop.commands.sell"));
 

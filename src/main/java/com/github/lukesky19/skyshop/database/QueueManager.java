@@ -1,6 +1,6 @@
 /*
     SkyShop is a simple inventory based shop plugin with page support, sell commands, and error checking.
-    Copyright (C) 2024  lukeskywlker19
+    Copyright (C) 2024 lukeskywlker19
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as published
@@ -15,33 +15,21 @@
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-package com.github.lukesky19.skyshop.enums;
+package com.github.lukesky19.skyshop.database;
 
-import org.jetbrains.annotations.Nullable;
+import com.github.lukesky19.skylib.api.database.connection.AbstractConnectionManager;
+import com.github.lukesky19.skylib.api.database.queue.MultiThreadQueueManager;
+import org.jetbrains.annotations.NotNull;
 
 /**
- * This enum is used for different actions a GUIButton can do.
+ * This class manages the queue for reading from and writing to the database.
  */
-public enum ActionType {
-    FILLER,
-    PREVIOUS_PAGE,
-    NEXT_PAGE,
-    RETURN,
-    OPEN_SHOP,
-    ITEM,
-    COMMAND,
-    BUY,
-    SELL,
-    DISPLAY,
-    SELL_ALL,
-    SELL_GUI;
-
-    @Nullable
-    public static ActionType getActionType(String type) {
-        try {
-           return ActionType.valueOf(type);
-        } catch (IllegalArgumentException ignored) {
-            return null;
-        }
+public class QueueManager extends MultiThreadQueueManager {
+    /**
+     * Constructor that takes a class that extends {@link AbstractConnectionManager}.
+     * @param connectionManager A class that extends {@link AbstractConnectionManager} to use.
+     */
+    public QueueManager(@NotNull AbstractConnectionManager connectionManager) {
+        super(connectionManager);
     }
 }

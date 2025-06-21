@@ -1,14 +1,12 @@
-config-version: 2.0.0
-pages:
-  0:
-    gui-type: CHEST_54
-    name: "<green><bold>SellAll Menu</bold></green>"
-    entries:
-      0:
-        type: RETURN
-        slot: 49
-        item:
-          material: BARRIER
-          name: "<yellow>Close the menu.</yellow>"
-          lore:
-            - "<yellow>Any items inside will be sold or returned to you when closed.</yellow>"
+config-version: 2.0.0.0
+gui:
+  gui-type: CHEST_54
+  name: "<green><bold>SellAll Menu</bold></green>"
+  buttons:
+    - button-type: RETURN
+      slot: 49
+      display-item:
+        item-type: BARRIER
+        name: "<yellow>Close the menu.</yellow>"
+        lore:
+          - "<yellow>Any items inside will be sold or returned to you when closed.</yellow>"

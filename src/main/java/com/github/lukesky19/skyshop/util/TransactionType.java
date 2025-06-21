@@ -1,6 +1,6 @@
 /*
     SkyShop is a simple inventory based shop plugin with page support, sell commands, and error checking.
-    Copyright (C) 2024  lukeskywlker19
+    Copyright (C) 2024 lukeskywlker19
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as published
@@ -15,14 +15,22 @@
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-package com.github.lukesky19.skyshop.configuration.record;
+package com.github.lukesky19.skyshop.util;
 
-import com.github.lukesky19.skylib.libs.configurate.objectmapping.ConfigSerializable;
+import org.bukkit.inventory.ItemStack;
 
-@ConfigSerializable
-public record Settings(
-        String configVersion,
-        boolean firstRun,
-        String locale,
-        boolean statistics) {
+import java.util.List;
+
+/**
+ * This enum is used to identify the type of transaction that is occurring.
+ */
+public enum TransactionType {
+    /**
+     * This type identifies when an {@link ItemStack} is being purchased or sold.
+     */
+    ITEM,
+    /**
+     * This type identifies when a {@link List} of {@link String} for the commands being purchased or sold.
+     */
+    COMMAND
 }

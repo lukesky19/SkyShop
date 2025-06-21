@@ -1,6 +1,6 @@
 /*
     SkyShop is a simple inventory based shop plugin with page support, sell commands, and error checking.
-    Copyright (C) 2024  lukeskywlker19
+    Copyright (C) 2024 lukeskywlker19
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as published
@@ -15,14 +15,16 @@
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-package com.github.lukesky19.skyshop.configuration.manager;
+package com.github.lukesky19.skyshop.configuration;
 
-import com.github.lukesky19.skylib.config.ConfigurationUtility;
+import com.github.lukesky19.skylib.api.configurate.ConfigurationUtility;
 import com.github.lukesky19.skylib.libs.configurate.CommentedConfigurationNode;
 import com.github.lukesky19.skylib.libs.configurate.ConfigurateException;
 import com.github.lukesky19.skylib.libs.configurate.yaml.YamlConfigurationLoader;
 import com.github.lukesky19.skyshop.SkyShop;
-import com.github.lukesky19.skyshop.configuration.record.Settings;
+import com.github.lukesky19.skyshop.data.Settings;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -31,22 +33,22 @@ import java.nio.file.Path;
  * This class manages everything related to handling the plugin's settings.
 */
 public class SettingsManager {
-    final SkyShop skyShop;
-    Settings settingsConfig;
+    private final @NotNull SkyShop skyShop;
+    private @Nullable Settings settingsConfig;
 
     /**
      * Constructor
-     * @param skyShop The plugin's instance.
+     * @param skyShop A {@link SkyShop} instance.
     */
-    public SettingsManager(SkyShop skyShop) {
+    public SettingsManager(@NotNull SkyShop skyShop) {
         this.skyShop = skyShop;
     }
 
     /**
-     * A getter to get the settings configuration.
-     * @return A Settings object.
+     * Get the plugin's {@link Settings}.
+     * @return The plugin's {@link Settings}.
     */
-    public Settings getSettingsConfig() {
+    public @Nullable Settings getSettingsConfig() {
         return settingsConfig;
     }
 
@@ -66,15 +68,15 @@ public class SettingsManager {
         } catch (ConfigurateException e) {
             throw new RuntimeException(e);
         }
-
-        saveExampleShop();
     }
 
     /**
      * This edits the settings.yml file to set `first-run` to false.
     */
     public void setFirstRunFalse() {
-        Settings newSettings = new Settings(settingsConfig.configVersion(), false, settingsConfig.locale(), settingsConfig.statistics());
+        if(settingsConfig == null) return;
+
+        Settings newSettings = new Settings(settingsConfig.configVersion(), settingsConfig.locale(), false, settingsConfig.statistics());
         settingsConfig = newSettings;
 
         Path path = Path.of(skyShop.getDataFolder() + File.separator + "settings.yml");
@@ -86,18 +88,6 @@ public class SettingsManager {
             loader.save(settingsNode);
         } catch (ConfigurateException e) {
             throw new RuntimeException(e);
-        }
-    }
-
-    /**
-     * Saves the example shop file if it does not exist.
-     * Only does so if first-run in settings.yml is true.
-     */
-    public void saveExampleShop() {
-        Path path = Path.of(skyShop.getDataFolder() + File.separator + "shops" + File.separator + "example.yml");
-        if(!path.toFile().exists()) {
-            skyShop.saveResource("shops" + File.separator + "example.yml", false);
-            setFirstRunFalse();
         }
     }
 }

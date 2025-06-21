@@ -1,76 +1,75 @@
-config-version: 2.0.0
+config-version: 2.0.0.0
 gui:
-  gui-type: CHEST_27
-  name: "<aqua><bold>Example Shop</bold></aqua>"
-  pages:
-    0:
-      entries:
-        0:
-          type: FILLER
-          item:
-            material: GRAY_STAINED_GLASS_PANE
-            name: " "
-            lore: []
-        1:
-          type: RETURN
-          slot: 22
-          item:
-            material: BARRIER
-            name: "<yellow>Exit the shop.</yellow>"
-            lore: []
-        2:
-          type: NEXT_PAGE
-          slot: 17
-          item:
-            material: ARROW
-            name: "<yellow>Next Page.</yellow>"
-            lore: []
-        3:
-          type: ITEM
-          slot: 0
-          item:
-            material: CRAFTING_TABLE
-            name: "<white>Crafting Table</white>"
-            lore:
-              - "Buy for: <buy_price>"
-              - "Sell for: <sell_price>"
-          prices:
-            buy-price: 100.0
-            sell-price: 10.0
-    1:
-      entries:
-        0:
-          type: FILLER
-          item:
-            material: GRAY_STAINED_GLASS_PANE
-            name: " "
-            lore: []
-        1:
-          type: RETURN
-          slot: 22
-          item:
-            material: BARRIER
-            name: "<yellow>Exit the shop.</yellow>"
-            lore: []
-        2:
-          type: PREVIOUS_PAGE
-          slot: 17
-          item:
-            material: ARROW
-            name: "<yellow>Next Page.</yellow>"
-            lore: []
-        3:
-          type: COMMAND
-          slot: 1
-          item:
-            material: DIAMOND
-            name: "<white>1 Diamond</white>"
-            lore:
-              - "Buy for: <buy_price>"
-          prices:
-            buy-price: 500.0
-            sell-price: -1.0
-          commands:
-            buy-commands:
-              - "give %player_name% diamond 1"
-            sell-commands: []
+    gui-type: CHEST_27
+    name: "<aqua><bold>Example Shop</bold></aqua>"
+    pages:
+    -   buttons:
+        -   button-type: FILLER
+            display-item:
+                item-type: GRAY_STAINED_GLASS_PANE
+                name: " "
+                lore: []
+        -   button-type: RETURN
+            slot: 22
+            display-item:
+                item-type: BARRIER
+                name: "<yellow>Exit the shop.</yellow>"
+                lore: []
+        -   button-type: NEXT_PAGE
+            slot: 24
+            display-item:
+                item-type: ARROW
+                name: "<yellow>Next Page.</yellow>"
+                lore: []
+        -   button-type: TRANSACTION
+            slot: 0
+            display-item:
+                item-type: crafting_table
+                name: "<white>Crafting Table</white>"
+                lore:
+                    - "Buy for: <buy_price>"
+                    - "Sell for: <sell_price>"
+            transaction-data:
+                transaction-type: ITEM
+                transaction-style: items
+                buy-price: 100.0
+                sell-price: 10.0
+                transaction-name: "Crafting Table"
+                transaction-item:
+                    item-type: crafting_table
+    -   buttons:
+        -   button-type: FILLER
+            display-item:
+                item-type: GRAY_STAINED_GLASS_PANE
+                name: " "
+                lore: []
+        -   button-type: PREVIOUS_PAGE
+            slot: 20
+            display-item:
+                item-type: ARROW
+                name: "<yellow>Previous Page.</yellow>"
+                lore: []
+        -   button-type: RETURN
+            slot: 22
+            display-item:
+                item-type: BARRIER
+                name: "<yellow>Exit the shop.</yellow>"
+                lore: []
+        -   button-type: TRANSACTION
+            slot: 0
+            display-item:
+                item-type: DIAMOND
+                name: "<white>1 Diamond</white>"
+                lore:
+                    - "Buy for: <buy_price>"
+            transaction-data:
+                transaction-type: COMMAND
+                transaction-style: single_command
+                buy-price: 500.0
+                sell-price: -1.0
+                transaction-name: "1 Diamond"
+                display-item:
+                    item-type: DIAMOND
+                buy-commands:
+                    - "give %player_name% diamond 1"
+                sell-commands: []

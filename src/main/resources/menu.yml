@@ -3,31 +3,24 @@
 #########################################################
 # This file acts as the entry point to all other shops.
 # This file is required for the plugin to function.
-config-version: 2.0.0
+config-version: 2.0.0.0
 gui:
-  gui-type: CHEST_27
-  name: "<aqua><bold>Example Shop</bold></aqua>"
-  pages:
-    0:
-      entries:
-        0:
-          type: FILLER
-          item:
-            material: GRAY_STAINED_GLASS_PANE
-            name: " "
-            lore: []
-        1:
-          type: RETURN
-          slot: 13
-          item:
-            material: BARRIER
-            name: "<yellow>Exit the shop.</yellow>"
-            lore: []
-        2:
-          type: OPEN_SHOP
-          slot: 0
-          shop: example
-          item:
-            material: CRAFTING_TABLE
-            name: "<yellow><bold>Example Shop</bold></yellow>"
-            lore: []
+    gui-type: CHEST_27
+    name: "<aqua><bold>Example Shop</bold></aqua>"
+    pages:
+    -   buttons:
+        -   button-type: FILLER
+            display-item:
+                item-type: GRAY_STAINED_GLASS_PANE
+                name: " "
+        -   button-type: RETURN
+            slot: 22
+            display-item:
+                item-type: BARRIER
+                name: "<yellow>Exit the shop.</yellow>"
+        -   button-type: OPEN_SHOP
+            slot: 0
+            shop-name: example
+            display-item:
+                item-type: CRAFTING_TABLE
+                name: "<yellow><bold>Example Shop</bold></yellow>"

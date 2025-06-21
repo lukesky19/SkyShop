@@ -1,6 +1,6 @@
 /*
     SkyShop is a simple inventory based shop plugin with page support, sell commands, and error checking.
-    Copyright (C) 2024  lukeskywlker19
+    Copyright (C) 2024 lukeskywlker19
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as published
@@ -15,63 +15,66 @@
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-package com.github.lukesky19.skyshop.configuration.manager;
+package com.github.lukesky19.skyshop.configuration;
 
-import com.github.lukesky19.skylib.config.ConfigurationUtility;
-import com.github.lukesky19.skylib.format.FormatUtil;
+import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
+import com.github.lukesky19.skylib.api.configurate.ConfigurationUtility;
 import com.github.lukesky19.skylib.libs.configurate.ConfigurateException;
 import com.github.lukesky19.skylib.libs.configurate.yaml.YamlConfigurationLoader;
 import com.github.lukesky19.skyshop.SkyShop;
-import com.github.lukesky19.skyshop.configuration.record.GUI;
+import com.github.lukesky19.skyshop.data.gui.MenuConfig;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.util.Optional;
 
 /**
  * This class manages everything related to handling the plugin's menu.yml file.
  */
 public class MenuManager {
-    private final SkyShop skyShop;
-    private GUI menuConfig;
+    private final @NotNull SkyShop skyShop;
+    private @Nullable MenuConfig menuConfig;
 
     /**
      * Constructor
-     * @param skyShop The plugin's instance.
+     * @param skyShop A {@link SkyShop} instance.
     */
-    public MenuManager(SkyShop skyShop) {
+    public MenuManager(@NotNull SkyShop skyShop) {
         this.skyShop = skyShop;
     }
 
     /**
-     * A getter to get the menu configuration.
-     * @return A Gui object representing the menu configuration.
+     * Get the {@link MenuConfig}.
+     * @return An {@link Optional} containing the {@link MenuConfig}. Will be empty if the config failed to load or is otherwise invalid.
      */
-    public GUI getMenuConfig() {
-        return menuConfig;
+    public Optional<MenuConfig> getMenuConfig() {
+        return Optional.ofNullable(menuConfig);
     }
 
     /**
      * A method to reload the plugin's menu config.
      */
     public void reload() {
-        menuConfig = null;
         ComponentLogger logger = skyShop.getComponentLogger();
 
+        // Set the current config to null
+        menuConfig = null;
+
+        // Create the path to the file.
         Path path = Path.of(skyShop.getDataFolder() + File.separator + "menu.yml");
 
-        if(!path.toFile().exists()) {
-            skyShop.saveResource("menu.yml", false);
-        }
+        // Save the default config if the file doesn't exist.
+        if(!path.toFile().exists()) skyShop.saveResource("menu.yml", false);
 
+        // Attempt to load the config.
         YamlConfigurationLoader loader = ConfigurationUtility.getYamlConfigurationLoader(path);
-
         try {
-            menuConfig = loader.load().get(GUI.class);
+            menuConfig = loader.load().get(MenuConfig.class);
         } catch (ConfigurateException e) {
-            logger.error(FormatUtil.format("<red>Unable to load <yellow>menu.yml</yellow> configuration.</red>"));
-
-            throw new RuntimeException(e);
+            logger.error(AdventureUtil.serialize("Failed to load <yellow>menu.yml</yellow> configuration. " + e.getMessage()));
         }
     }
 }

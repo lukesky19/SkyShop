@@ -2,7 +2,6 @@ name: SkyShop
 version: '${version}'
 main: com.github.lukesky19.skyshop.SkyShop
 api-version: '1.21'
-load: STARTUP
 author: lukeskywlker19
 description: A graphical shop plugin
 depend: [SkyLib, Vault]
@@ -22,6 +21,9 @@ permissions:
     default: op
   skyshop.commands.skyshop.sellall:
     description: Permission to access the /shop sellall GUI.
+    default: op
+  skyshop.command.skyshop.stats:
+    description: Permission to access the /shop stats GUI.
     default: op
   skyshop.commands.sell:
     description: Permission to use the /sell command.

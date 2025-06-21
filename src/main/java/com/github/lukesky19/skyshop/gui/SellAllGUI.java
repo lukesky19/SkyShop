@@ -1,6 +1,6 @@
 /*
     SkyShop is a simple inventory based shop plugin with page support, sell commands, and error checking.
-    Copyright (C) 2024  lukeskywlker19
+    Copyright (C) 2024 lukeskywlker19
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as published
@@ -17,221 +17,154 @@
 */
 package com.github.lukesky19.skyshop.gui;
 
-import com.github.lukesky19.skylib.format.FormatUtil;
-import com.github.lukesky19.skylib.gui.GUIButton;
-import com.github.lukesky19.skylib.gui.GUIType;
-import com.github.lukesky19.skylib.gui.abstracts.ChestGUI;
+import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
+import com.github.lukesky19.skylib.api.gui.AbstractGUIManager;
+import com.github.lukesky19.skylib.api.gui.GUIButton;
+import com.github.lukesky19.skylib.api.gui.GUIType;
+import com.github.lukesky19.skylib.api.gui.abstracts.ChestGUI;
+import com.github.lukesky19.skylib.api.itemstack.ItemStackBuilder;
+import com.github.lukesky19.skylib.api.itemstack.ItemStackConfig;
 import com.github.lukesky19.skyshop.SkyShop;
 import com.github.lukesky19.skyshop.SkyShopAPI;
-import com.github.lukesky19.skyshop.configuration.manager.LocaleManager;
-import com.github.lukesky19.skyshop.configuration.manager.SellAllManager;
-import com.github.lukesky19.skyshop.configuration.record.GUI;
-import com.github.lukesky19.skyshop.configuration.record.Locale;
-import com.github.lukesky19.skyshop.enums.ActionType;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
-import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
-import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
-import org.bukkit.Bukkit;
-import org.bukkit.Material;
+import com.github.lukesky19.skyshop.data.gui.SellAllConfig;
+import com.github.lukesky19.skyshop.util.ButtonType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 /**
- * This class is called to create a sellall inventory for a player to sell items.
+ * This class is called to create a sellall gui for a player to sell items.
 */
 public class SellAllGUI extends ChestGUI {
-    private final SkyShop skyShop;
-    private final LocaleManager localeManager;
-    private final SkyShopAPI skyShopAPI;
-    private final GUIManager guiManager;
-    private final Player player;
-    private final GUI sellAllGuiConfig;
+    private final @NotNull AbstractGUIManager guiManager;
+    private final @NotNull SkyShopAPI skyShopAPI;
+    private final @NotNull SellAllConfig sellAllConfig;
 
     /**
      * Constructor
-     * @param skyShop The plugin's instance.
-     * @param skyShopAPI The SkyShopAPI
-     * @param player The player who opened the GUI.
+     * @param skyShop A {@link SkyShop} instance.
+     * @param guiManager A {@link AbstractGUIManager} instance.
+     * @param sellAllConfig The {@link SellAllConfig} to create the GUI with.
+     * @param skyShopAPI A {@link SkyShopAPI} instance.
+     * @param player The {@link Player} who opened the GUI.
      */
     public SellAllGUI(
-            SkyShop skyShop,
-            LocaleManager localeManager, GUIManager guiManager,
-            SellAllManager sellAllManager,
-            SkyShopAPI skyShopAPI,
-            Player player) {
-        this.skyShop = skyShop;
-        this.localeManager = localeManager;
+            @NotNull SkyShop skyShop,
+            @NotNull AbstractGUIManager guiManager,
+            @NotNull SellAllConfig sellAllConfig,
+            @NotNull SkyShopAPI skyShopAPI,
+            @NotNull Player player) {
+        super(skyShop, guiManager, player);
+
         this.guiManager = guiManager;
         this.skyShopAPI = skyShopAPI;
-        this.player = player;
-        sellAllGuiConfig = sellAllManager.getSellAllGuiConfig();
+        this.sellAllConfig = sellAllConfig;
+    }
 
-        GUIType guiType = GUIType.getType(sellAllGuiConfig.gui().guiType());
+    /**
+     * Create the {@link InventoryView} for this GUI.
+     * @return true if created successfully, otherwise false.
+     */
+    public boolean create() {
+        GUIType guiType = sellAllConfig.gui().guiType();
         if(guiType == null) {
-            throw new RuntimeException("Invalid GUIType");
+            logger.warn(AdventureUtil.serialize("Unable to create the InventoryView for a ShopGUI due to an invalid GUIType"));
+            return false;
         }
 
-        String guiName = "";
-        if(sellAllGuiConfig.gui().name() != null) guiName = sellAllGuiConfig.gui().name();
+        String guiName = Objects.requireNonNullElse(sellAllConfig.gui().name(), "");
 
-        create(player, guiType, guiName, null);
-
-        update();
+        return create(guiType, guiName);
     }
 
     /**
      * A method to create all the buttons in the inventory GUI.
-    */
+     */
     @Override
-    public void update() {
-        final ComponentLogger logger = skyShop.getComponentLogger();
-        final Locale locale = localeManager.getLocale();
+    public @NotNull CompletableFuture<Boolean> update() {
+        // If the InventoryView was not created, log a warning and return false.
+        if (inventoryView == null) {
+            logger.warn(AdventureUtil.serialize("Unable to add GUIButton ItemStacks to the InventoryView as it was not created."));
+            return CompletableFuture.completedFuture(false);
+        }
 
         // Clear the GUI of buttons
         clearButtons();
 
-        // Create the placeholders list for errors with the config file associated with this GUI
-        List<TagResolver.Single> errorPlaceholders = new ArrayList<>(List.of(Placeholder.parsed("file", "sellall.yml")));
+        List<SellAllConfig.Button> buttonList = sellAllConfig.gui().buttons();
+        for(int buttonNum = 0; buttonNum < buttonList.size(); buttonNum++) {
+            SellAllConfig.Button buttonConfig = buttonList.get(buttonNum);
+            ButtonType buttonType = buttonConfig.buttonType();
 
-        Map<Integer, GUI.Page> pages = sellAllGuiConfig.gui().pages();
-        if(pages == null || pages.isEmpty()) {
-            logger.error(FormatUtil.format(locale.noPagesFound(), errorPlaceholders));
-            return;
-        }
+            // Check if the button type is null and send a warning if so, then skipping to the next button.
+            if(buttonType == null) {
+                logger.warn(AdventureUtil.serialize("Unable to add a button due to an invalid button type. Button Num: " + buttonNum));
+                continue;
+            }
 
-        GUI.Page page = sellAllGuiConfig.gui().pages().firstEntry().getValue();
+            // Check if the slot is not configured and send a warning.
+            if(buttonConfig.slot() == null) {
+                logger.warn(AdventureUtil.serialize("Unable to add a button due to a null slot. Button Num: " + buttonNum + " and type: " + buttonType));
+                continue;
+            }
 
-        // Add the page number to the placeholders.
-        errorPlaceholders.add(Placeholder.parsed("page", "0"));
+            if(buttonType == ButtonType.RETURN) {
+                // Get the ItemStackConfig
+                ItemStackConfig itemConfig = buttonConfig.displayItem();
 
-        // Check if at least 1 entry is configured.
-        Map<Integer, GUI.Entry> entries  = page.entries();
-        if(entries == null || entries.isEmpty()) {
-            logger.error(FormatUtil.format(locale.noEntriesFound(), errorPlaceholders));
-            return;
-        }
+                // Create the ItemStackBuilder and pass the ItemStackConfig.
+                ItemStackBuilder itemStackBuilder = new ItemStackBuilder(logger);
+                itemStackBuilder.fromItemStackConfig(itemConfig, player, null, List.of());
 
-        for(Map.Entry<Integer, GUI.Entry> itemEntry : page.entries().entrySet()) {
-            final int entryNum = itemEntry.getKey();
-            final GUI.Entry entryConfig = itemEntry.getValue();
-            final ActionType type = ActionType.getActionType(entryConfig.type());
-            final GUI.Item itemConfig = entryConfig.item();
+                // If an ItemStack was created, create the GUIButton and add it to the GUI.
+                Optional<ItemStack> optionalItemStack = itemStackBuilder.buildItemStack();
+                optionalItemStack.ifPresent(itemStack -> {
+                    GUIButton.Builder guiButtonBuilder = new GUIButton.Builder();
+                    guiButtonBuilder.setItemStack(itemStack);
+                    guiButtonBuilder.setAction(event -> close());
 
-            List<TagResolver.Single> placeholders = List.of(
-                    Placeholder.parsed("entry", String.valueOf(entryNum)),
-                    Placeholder.parsed("page", String.valueOf(0)),
-                    Placeholder.parsed("file", "sellall.yml"));
-
-            List<Component> loreList = itemConfig.lore().stream()
-                    .map(loreLine -> FormatUtil.format(player, loreLine))
-                    .toList();
-
-            switch(type) {
-                case RETURN -> {
-                    Material material = Material.getMaterial(itemConfig.material());
-                    if(material != null) {
-                        GUIButton.Builder builder = new GUIButton.Builder();
-
-                        ItemStack itemStack = ItemStack.of(material);
-                        ItemMeta meta = itemStack.getItemMeta();
-
-                        if(itemConfig.name() != null) {
-                            meta.displayName(FormatUtil.format(itemConfig.name()));
-                        }
-
-                        meta.lore(loreList);
-
-                        itemStack.setItemMeta(meta);
-
-                        builder.setItemStack(itemStack);
-
-                        builder.setAction(event -> Bukkit.getScheduler()
-                                        .runTaskLater(skyShop, () -> close(skyShop, player), 1L));
-
-                        setButton(entryConfig.slot(), builder.build());
-                    } else {
-                        logger.error(FormatUtil.format(locale.skippingEntryInvalidMaterial(), placeholders));
-                    }
-                }
-
-                case null -> logger.warn(FormatUtil.format(locale.skippingEntryInvalidType(), placeholders));
-
-                default -> logger.warn(FormatUtil.format(locale.skippingEntryTypeNotAllowed(), placeholders));
+                    setButton(buttonConfig.slot(), guiButtonBuilder.build());
+                });
+            } else {
+                logger.warn(AdventureUtil.serialize("Unsupported ButtonType in the sellall GUI for " + buttonNum + "."));
             }
         }
 
-        super.update();
+        return super.update();
     }
 
     @Override
-    public void handleTopDrag(@NotNull InventoryDragEvent inventoryDragEvent) {}
+    public void close() {
+        // Close the GUI
+        super.close();
 
-    @Override
-    public void handleTopClick(@NotNull InventoryClickEvent event) {
-        int slot = event.getSlot();
-        GUIButton button = this.getButtonMapping().get(slot);
-        if (button != null) {
-            event.setCancelled(true);
+        // The InventoryView cannot be null as the GUI can only be opened and hence closed when it is not null.
+        assert inventoryView != null;
 
-            button.action().accept(event);
-        }
+        // Sell the items in the GUI.
+        sellItemsInGUI(inventoryView.getTopInventory());
     }
 
     @Override
-    public void open(@NotNull Plugin plugin, @NotNull Player player) {
-        super.open(plugin, player);
+    public void unload(boolean onDisable) {
+        // Close the GUI
+        super.unload(onDisable);
 
-        guiManager.addOpenGUI(player.getUniqueId(), this);
-    }
+        // The InventoryView cannot be null as the GUI can only be opened and hence closed when it is not null.
+        assert inventoryView != null;
 
-    @Override
-    public void close(@NotNull Plugin plugin, @NotNull Player player) {
-        UUID uuid = player.getUniqueId();
-
-        plugin.getServer().getScheduler().runTaskLater(plugin, () ->
-                player.closeInventory(InventoryCloseEvent.Reason.UNLOADED), 1L);
-
-        // Remove any buttons so that they aren't sold or given to the player.
-        clearButtons();
-
-        // Proceed to sell any items in the inventory
-        skyShopAPI.sellInventoryGUI(getInventory(), player, true);
-
-        // Stop tracking the GUI as being open
-        guiManager.removeOpenGUI(uuid);
-    }
-
-    @Override
-    public void unload(@NotNull Plugin plugin, @NotNull Player player, boolean onDisable) {
-        UUID uuid = player.getUniqueId();
-
-        if(onDisable) {
-            player.closeInventory(InventoryCloseEvent.Reason.UNLOADED);
-        } else {
-            plugin.getServer().getScheduler().runTaskLater(plugin, () ->
-                    player.closeInventory(InventoryCloseEvent.Reason.UNLOADED), 1L);
-        }
-
-        // Remove any buttons so that they aren't sold or given to the player.
-        clearButtons();
-
-        // Proceed to sell any items in the inventory
-        skyShopAPI.sellInventoryGUI(getInventory(), player, true);
-
-        // Stop tracking the GUI as being open
-        guiManager.removeOpenGUI(uuid);
+        // Sell the items in the GUI.
+        sellItemsInGUI(inventoryView.getTopInventory());
     }
 
     /**
@@ -243,17 +176,48 @@ public class SellAllGUI extends ChestGUI {
     public void handleClose(@NotNull InventoryCloseEvent inventoryCloseEvent) {
         if(inventoryCloseEvent.getReason().equals(InventoryCloseEvent.Reason.UNLOADED)) return;
 
-        Player player = (Player) inventoryCloseEvent.getPlayer();
-        UUID uuid = player.getUniqueId();
+        // Stop tracking the GUI as being open
+        guiManager.removeOpenGUI(uuid);
 
+        // The InventoryView cannot be null as the GUI can only be opened and hence closed when it is not null.
+        assert inventoryView != null;
+
+        // Sell the items in the GUI.
+        sellItemsInGUI(inventoryView.getTopInventory());
+    }
+
+    @Override
+    public void handleTopDrag(@NotNull InventoryDragEvent inventoryDragEvent) {}
+
+    @Override
+    public void handleBottomDrag(@NotNull InventoryDragEvent inventoryDragEvent) {}
+
+    @Override
+    public void handleGlobalDrag(@NotNull InventoryDragEvent inventoryDragEvent) {}
+
+    @Override
+    public void handleTopClick(@NotNull InventoryClickEvent event) {
+        int slot = event.getSlot();
+        GUIButton button = slotButtons.get(slot);
+        if(button != null) {
+            event.setCancelled(true);
+
+            button.action().accept(event);
+        }
+    }
+
+    @Override
+    public void handleBottomClick(@NotNull InventoryClickEvent inventoryClickEvent) {}
+
+    @Override
+    public void handleGlobalClick(@NotNull InventoryClickEvent inventoryClickEvent) {}
+
+    private void sellItemsInGUI(@NotNull Inventory inventory) {
         // Remove any buttons so that they aren't sold or given to the player.
         clearButtons();
 
         // Proceed to sell any items in the inventory
-        skyShopAPI.sellInventoryGUI(inventoryCloseEvent.getInventory(), player, true);
-
-        // Stop tracking the GUI as being open
-        guiManager.removeOpenGUI(uuid);
+        skyShopAPI.sellInventoryGUI(inventory, player, true);
     }
 }
 

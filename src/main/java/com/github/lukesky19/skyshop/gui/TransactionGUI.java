@@ -1,6 +1,6 @@
 /*
     SkyShop is a simple inventory based shop plugin with page support, sell commands, and error checking.
-    Copyright (C) 2024  lukeskywlker19
+    Copyright (C) 2024 lukeskywlker19
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as published
@@ -17,533 +17,583 @@
 */
 package com.github.lukesky19.skyshop.gui;
 
-import com.github.lukesky19.skylib.format.FormatUtil;
-import com.github.lukesky19.skylib.format.PlaceholderAPIUtil;
-import com.github.lukesky19.skylib.gui.GUIButton;
-import com.github.lukesky19.skylib.gui.GUIType;
-import com.github.lukesky19.skylib.gui.abstracts.ChestGUI;
-import com.github.lukesky19.skylib.player.PlayerUtil;
+import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
+import com.github.lukesky19.skylib.api.gui.AbstractGUIManager;
+import com.github.lukesky19.skylib.api.gui.GUIButton;
+import com.github.lukesky19.skylib.api.gui.GUIType;
+import com.github.lukesky19.skylib.api.gui.abstracts.ChestGUI;
+import com.github.lukesky19.skylib.api.itemstack.ItemStackBuilder;
+import com.github.lukesky19.skylib.api.itemstack.ItemStackConfig;
+import com.github.lukesky19.skylib.api.placeholderapi.PlaceholderAPIUtil;
+import com.github.lukesky19.skylib.api.player.PlayerUtil;
 import com.github.lukesky19.skyshop.SkyShop;
 import com.github.lukesky19.skyshop.SkyShopAPI;
-import com.github.lukesky19.skyshop.configuration.manager.LocaleManager;
-import com.github.lukesky19.skyshop.configuration.manager.SellAllManager;
-import com.github.lukesky19.skyshop.configuration.manager.SettingsManager;
-import com.github.lukesky19.skyshop.configuration.manager.TransactionManager;
-import com.github.lukesky19.skyshop.configuration.record.GUI;
-import com.github.lukesky19.skyshop.configuration.record.Locale;
-import com.github.lukesky19.skyshop.configuration.record.Settings;
-import com.github.lukesky19.skyshop.configuration.record.Transaction;
-import com.github.lukesky19.skyshop.enums.ActionType;
+import com.github.lukesky19.skyshop.configuration.LocaleManager;
+import com.github.lukesky19.skyshop.configuration.SellAllManager;
+import com.github.lukesky19.skyshop.data.Locale;
+import com.github.lukesky19.skyshop.data.gui.SellAllConfig;
+import com.github.lukesky19.skyshop.data.gui.TransactionConfig;
 import com.github.lukesky19.skyshop.event.CommandPurchasedEvent;
 import com.github.lukesky19.skyshop.event.CommandSoldEvent;
 import com.github.lukesky19.skyshop.event.ItemPurchasedEvent;
 import com.github.lukesky19.skyshop.event.ItemSoldEvent;
-import com.github.lukesky19.skyshop.manager.StatsDatabaseManager;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
+import com.github.lukesky19.skyshop.manager.StatsManager;
+import com.github.lukesky19.skyshop.util.ButtonType;
+import com.github.lukesky19.skyshop.util.TransactionType;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
-import org.bukkit.Bukkit;
-import org.bukkit.Material;
+import org.bukkit.Server;
+import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
+import org.bukkit.event.inventory.InventoryDragEvent;
+import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.plugin.Plugin;
+import org.bukkit.inventory.ItemType;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.sql.SQLException;
 import java.text.DecimalFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 /**
  * This class is called to create a transaction inventory for a player to buy and sell items.
  */
 public class TransactionGUI extends ChestGUI {
-    private final SkyShop skyShop;
-    private final SettingsManager settingsManager;
-    private final LocaleManager localeManager;
-    private final StatsDatabaseManager statsDatabaseManager;
-    private final SkyShopAPI skyShopAPI;
-    private final SellAllManager sellAllManager;
-    private final GUIManager guiManager;
-    private final ShopGUI shopGUI;
-    private final GUI.Entry shopEntry;
-    private final GUI.Item shopItem;
-    private final double buyPrice;
-    private final double sellPrice;
-    private final ActionType type;
-    private final List<String> buyCommands;
-    private final List<String> sellCommands;
-    private Integer pageNum;
-    private final Player player;
-    private final LinkedHashMap<Integer, Transaction.Page> pages;
-    private Transaction.Page pageConfig;
+    private final @NotNull SkyShop skyShop;
+    private final @NotNull LocaleManager localeManager;
+    private final @NotNull SellAllManager sellAllManager;
+    private final @Nullable StatsManager statsManager;
+    private final @NotNull SkyShopAPI skyShopAPI;
+    private final @NotNull ShopGUI shopGUI;
+
+    // Config related to the Transaction
+    private final @NotNull TransactionType transactionType;
+    private final @NotNull String transactionStyle;
+    private final @NotNull TransactionConfig transactionConfig;
+    private final @NotNull ItemStackConfig displayItemConfig;
+    private final @NotNull ItemStackConfig transactionItemConfig;
+    private final @Nullable Double buyPrice;
+    private final @Nullable Double sellPrice;
+    private final @NotNull String transactionName;
+    private final @NotNull List<String> buyCommands;
+    private final @NotNull List<String> sellCommands;
+
+    private int pageNum = 0;
+    private boolean isOpen = false;
 
     /**
      * Constructor
-     * @param skyShop The plugin's instance.
-     * @param settingsManager A SettingsManager instance.
-     * @param localeManager A LocaleManager instance.
-     * @param transactionManager A TransactionManager instance.
-     * @param statsDatabaseManager A statsDatabaseManager instance.
-     * @param skyShopAPI A SkyShopAPI instance.
-     * @param sellAllManager A SellAllManager instance.
-     * @param guiManager A GUIManager instance.
-     * @param shopGUI The shop that the player came from.
-     * @param shopEntry The configuration entry related to the item being purchased/sold.
-     * @param shopItem The configuration of the item being purchased/sold.
-     * @param type The transaction type for what is being purchased/sold. Should be ActionType.ITEM or ActionType.COMMAND.
-     * @param pageNum The page number of the current transaction GUI.
-     * @param player The player viewing the GUI.
+     * @param skyShop A {@link SkyShop} instance.
+     * @param guiManager An {@link AbstractGUIManager} instance.
+     * @param player The {@link Player} to create the GUI for.
+     * @param localeManager A {@link SkyShop} instance.
+     * @param sellAllManager A {@link LocaleManager} instance.
+     * @param statsManager A {@link SellAllManager} instance.
+     * @param skyShopAPI A {@link SkyShopAPI} instance.
+     * @param shopGUI The {@link ShopGUI} the player came from.
+     * @param transactionType The {@link TransactionType}.
+     * @param transactionStyle The transaction style name. This is the {@link String} that was used to get the {@link TransactionConfig}.
+     * @param transactionConfig The {@link TransactionConfig} to create the GUI with.
+     * @param displayItemConfig The {@link ItemStackConfig} used to create the {@link ItemStack} that displays what is being purchased or sold.
+     * @param transactionItemConfig The {@link ItemStackConfig} used to create the {@link ItemStack} that will be purchased or sold.
+     * @param buyPrice The price take from the {@link Player} to buy the {@link ItemStack} or execute the buy commands.
+     * @param sellPrice The price to give the {@link Player} to sell the {@link ItemStack} or execute the sell commands.
+     * @param transactionName The name to use when displaying a successful transaction message.
+     * @param buyCommands A {@link List} of {@link String} containing the commands to execute in console when a successful buy transaction is made.
+     * @param sellCommands A {@link List} of {@link String} containing the commands to execute in console when a successful sell transaction is made.
      */
     public TransactionGUI(
-            SkyShop skyShop,
-            SettingsManager settingsManager,
-            LocaleManager localeManager,
-            TransactionManager transactionManager,
-            StatsDatabaseManager statsDatabaseManager,
-            SkyShopAPI skyShopAPI,
-            SellAllManager sellAllManager,
-            GUIManager guiManager,
-            ShopGUI shopGUI,
-            GUI.Entry shopEntry,
-            GUI.Item shopItem,
-            ActionType type,
-            Integer pageNum,
-            Player player) {
+            @NotNull SkyShop skyShop,
+            @NotNull AbstractGUIManager guiManager,
+            @NotNull Player player,
+            @NotNull LocaleManager localeManager,
+            @NotNull SellAllManager sellAllManager,
+            @Nullable StatsManager statsManager,
+            @NotNull SkyShopAPI skyShopAPI,
+            @NotNull ShopGUI shopGUI,
+            @NotNull TransactionType transactionType,
+            @NotNull String transactionStyle,
+            @NotNull TransactionConfig transactionConfig,
+            @NotNull ItemStackConfig displayItemConfig,
+            @NotNull ItemStackConfig transactionItemConfig,
+            @Nullable Double buyPrice,
+            @Nullable Double sellPrice,
+            @Nullable String transactionName,
+            @NotNull List<String> buyCommands,
+            @NotNull List<String> sellCommands) {
+        super(skyShop, guiManager, player);
+
         this.skyShop = skyShop;
-        this.settingsManager = settingsManager;
         this.localeManager = localeManager;
-        this.statsDatabaseManager = statsDatabaseManager;
-        this.skyShopAPI = skyShopAPI;
         this.sellAllManager = sellAllManager;
-        this.guiManager = guiManager;
+        this.statsManager = statsManager;
+        this.skyShopAPI = skyShopAPI;
         this.shopGUI = shopGUI;
-        this.shopEntry = shopEntry;
-        this.shopItem = shopItem;
-        this.buyPrice = shopEntry.prices().buyPrice();
-        this.sellPrice = shopEntry.prices().sellPrice();
-        this.type = type;
-        this.buyCommands = shopEntry.commands().buyCommands();
-        this.sellCommands = shopEntry.commands().sellCommands();
-        this.pageNum = pageNum;
-        this.player = player;
+        this.transactionType = transactionType;
+        this.transactionStyle = transactionStyle;
+        this.transactionConfig = transactionConfig;
+        this.displayItemConfig = displayItemConfig;
+        this.transactionItemConfig = transactionItemConfig;
+        this.buyPrice = buyPrice;
+        this.sellPrice = sellPrice;
+        this.buyCommands = buyCommands;
+        this.sellCommands = sellCommands;
+        this.transactionName = Objects.requireNonNullElse(transactionName, "");
+    }
 
-        Transaction transactionConfig = transactionManager.getTransactionGuiConfig();
-
-        if(type.equals(ActionType.ITEM)) {
-            this.pages = transactionConfig.items();
-        } else {
-            this.pages = transactionConfig.commands();
-        }
-
-        // Get the page config
-        this.pageConfig = pages.get(pageNum);
-
-        GUIType guiType = GUIType.getType(pageConfig.guiType());
+    /**
+     * Create the {@link InventoryView} for this GUI.
+     * @return true if created successfully, otherwise false.
+     */
+    public boolean create() {
+        GUIType guiType = transactionConfig.gui().guiType();
         if(guiType == null) {
-            throw new RuntimeException("Invalid GUIType");
+            logger.warn(AdventureUtil.serialize("Unable to create the InventoryView for a ShopGUI due to an invalid GUIType"));
+            return false;
         }
 
-        String guiName = "";
-        if(pageConfig.name() != null) guiName = pageConfig.name();
+        String guiName = Objects.requireNonNullElse(transactionConfig.gui().name(), "");
 
-        create(player, guiType, guiName, null);
+        return create(guiType, guiName);
+    }
 
-        update();
+    /**
+     * Set the {@link #isOpen} boolean to true and run the super method.
+     * @return true if opened successfully, otherwise false.
+     */
+    @Override
+    public boolean open() {
+        isOpen = true;
+
+        return super.open();
+    }
+
+    /**
+     * Close the current inventory/gui with an OPEN_NEW reason and open the {@link #shopGUI}.
+     */
+    @Override
+    public void close() {
+        plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+            isOpen = false;
+
+            player.closeInventory(InventoryCloseEvent.Reason.OPEN_NEW);
+
+            guiManager.removeOpenGUI(player.getUniqueId());
+
+            shopGUI.open();
+        }, 1L);
+    }
+
+    /**
+     * Close the current inventory/gui with an UNLOADED reason.
+     * @param onDisable Is the plugin being disabled?
+     */
+    @Override
+    public void unload(boolean onDisable) {
+        if(!onDisable) {
+            plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+                isOpen = false;
+
+                player.closeInventory(InventoryCloseEvent.Reason.UNLOADED);
+
+                guiManager.removeOpenGUI(player.getUniqueId());
+            }, 1L);
+        } else {
+            isOpen = false;
+
+            player.closeInventory(InventoryCloseEvent.Reason.UNLOADED);
+
+            guiManager.removeOpenGUI(player.getUniqueId());
+        }
     }
 
     /**
      * A method to create all the buttons in the inventory GUI.
-    */
+     */
     @Override
-    public void update() {
-        final ComponentLogger logger = skyShop.getComponentLogger();
-        final Locale locale = localeManager.getLocale();
+    public @NotNull CompletableFuture<Boolean> update() {
+        Locale locale = localeManager.getLocale();
 
-        List<TagResolver.Single> errorPlaceholders = new ArrayList<>(List.of(Placeholder.parsed("file", "transaction.yml")));
-
-        pageConfig = pages.get(pageNum);
-
-        int guiSize = getInventory().getSize();
-
-        // Add the page number to the placeholders.
-        errorPlaceholders.add(Placeholder.parsed("page", String.valueOf(pageNum)));
-
-        clearButtons();
-
-        Map<Integer, Transaction.Entry> entries = pageConfig.entries();
-        if(entries == null || entries.isEmpty()) {
-            logger.error(FormatUtil.format(locale.noEntriesFound(), errorPlaceholders));
-            return;
+        // If the InventoryView was not created, log a warning and return false.
+        if (inventoryView == null) {
+            logger.warn(AdventureUtil.serialize("Unable to add GUIButton ItemStacks to the InventoryView as it was not created."));
+            if(isOpen) close();
+            return CompletableFuture.completedFuture(false);
         }
 
-        for(Map.Entry<Integer, Transaction.Entry> itemEntry : pageConfig.entries().entrySet()) {
-            int entryNum = itemEntry.getKey();
-            Transaction.Entry entryConfig = itemEntry.getValue();
-            ActionType transactionType = ActionType.getActionType(entryConfig.type());
-            Transaction.Item itemConfig = entryConfig.item();
+        // Get the GUI size
+        int guiSize = inventoryView.getTopInventory().getSize();
 
-            List<TagResolver.Single> pricePlaceholders = List.of(
-                    Placeholder.parsed("buy_price", String.valueOf(shopEntry.prices().buyPrice())),
-                    Placeholder.parsed("sell_price", String.valueOf(shopEntry.prices().sellPrice())));
+        // Clear the GUI of buttons
+        clearButtons();
 
-            // Add the entry number to the placeholders.
-            errorPlaceholders.add(Placeholder.parsed("entry", String.valueOf(entryNum)));
+        // Check if at least 1 page is configured.
+        List<TransactionConfig.PageConfig> pages = transactionConfig.gui().pages();
+        if(pages.isEmpty()) {
+            logger.error(AdventureUtil.serialize("Unable to decorate the transaction GUI due to no pages configured."));
+            return CompletableFuture.completedFuture(false);
+        }
 
-            List<Component> loreList = entryConfig.item().lore().stream()
-                    .map(loreLine -> FormatUtil.format(player, loreLine, pricePlaceholders))
-                    .toList();
+        // Get the page config
+        TransactionConfig.PageConfig page = pages.get(pageNum);
 
-            switch(transactionType) {
+        // Check if at least 1 button is configured.
+        List<TransactionConfig.Button> entries = page.buttons();
+        if (entries.isEmpty()) {
+            logger.error(AdventureUtil.serialize("Unable to decorate the transaction GUI for page " + pageNum + " due to no buttons configured."));
+            if(isOpen) close();
+            return CompletableFuture.completedFuture(false);
+        }
+
+        for(int buttonNum = 0; buttonNum < page.buttons().size(); buttonNum++) {
+            TransactionConfig.Button buttonConfig = page.buttons().get(buttonNum);
+            ButtonType buttonType = buttonConfig.buttonType();
+
+            // Check if the button type is null and send a warning if so, then skipping to the next button.
+            if(buttonType == null) {
+                logger.warn(AdventureUtil.serialize("Unable to add a button due to an invalid button type. Button Num: " + buttonNum));
+                continue;
+            }
+
+            // Handle the creation of buttons by button type.
+            switch (buttonType) {
                 case FILLER -> {
-                    Material material = Material.getMaterial(itemConfig.material());
-                    if(material != null) {
-                        for (int i = 0; i <= guiSize - 1; i++) {
-                            GUIButton.Builder builder = new GUIButton.Builder();
+                    // Get the ItemStackConfig
+                    ItemStackConfig itemConfig = buttonConfig.displayItem();
 
-                            ItemStack itemStack = ItemStack.of(material);
-                            ItemMeta meta = itemStack.getItemMeta();
+                    // Create the ItemStackBuilder and pass the ItemStackConfig.
+                    ItemStackBuilder itemStackBuilder = new ItemStackBuilder(logger);
+                    itemStackBuilder.fromItemStackConfig(itemConfig, player, null, List.of());
 
-                            if(itemConfig.name() != null) {
-                                meta.displayName(FormatUtil.format(itemConfig.name()));
-                            }
+                    // If an ItemStack was created, create the GUIButton and add it to the GUI.
+                    Optional<ItemStack> optionalItemStack = itemStackBuilder.buildItemStack();
+                    optionalItemStack.ifPresent(itemStack -> {
+                        GUIButton.Builder guiButtonBuilder = new GUIButton.Builder();
+                        guiButtonBuilder.setItemStack(itemStack);
 
-                            meta.lore(loreList);
+                        GUIButton fillerButton = guiButtonBuilder.build();
 
-                            itemStack.setItemMeta(meta);
-
-                            builder.setItemStack(itemStack);
-
-                            setButton(i, builder.build());
+                        for (int i = 0; i <= (guiSize - 1); i++) {
+                            setButton(i, fillerButton);
                         }
-                    } else {
-                        logger.error(FormatUtil.format(locale.skippingEntryInvalidMaterial(), errorPlaceholders));
-                    }
-                }
-
-                case DISPLAY -> {
-                    Material material = Material.getMaterial(shopItem.material());
-                    if(material != null) { // The material should never be null at this point
-                        GUIButton.Builder builder = new GUIButton.Builder();
-
-                        ItemStack itemStack = ItemStack.of(material);
-                        ItemMeta meta = itemStack.getItemMeta();
-
-                        if(itemConfig.name() != null) {
-                            meta.displayName(FormatUtil.format(itemConfig.name()));
-                        }
-
-                        List<Component> displayLore = shopItem.lore().stream()
-                                .map(loreLine -> FormatUtil.format(player, loreLine, pricePlaceholders))
-                                .toList();
-
-                        meta.lore(displayLore);
-
-                        itemStack.setItemMeta(meta);
-
-                        builder.setItemStack(itemStack);
-
-                        setButton(entryConfig.slot(), builder.build());
-                    }
-                }
-
-                case RETURN -> {
-                    Material material = Material.getMaterial(itemConfig.material());
-                    if(material != null) {
-                        GUIButton.Builder builder = new GUIButton.Builder();
-
-                        ItemStack itemStack = ItemStack.of(material);
-                        ItemMeta meta = itemStack.getItemMeta();
-
-                        if(itemConfig.name() != null) {
-                            meta.displayName(FormatUtil.format(itemConfig.name()));
-                        }
-
-                        meta.lore(loreList);
-
-                        itemStack.setItemMeta(meta);
-
-                        builder.setItemStack(itemStack);
-
-                        builder.setAction(event -> close(skyShop, player));
-
-                        setButton(entryConfig.slot(), builder.build());
-                    } else {
-                        logger.error(FormatUtil.format(locale.skippingEntryInvalidMaterial(), errorPlaceholders));
-                    }
-                }
-
-                case NEXT_PAGE -> {
-                    if(pages.get(pageNum + 1) != null) {
-                        Material material = Material.getMaterial(itemConfig.material());
-                        if(material != null) {
-                            GUIButton.Builder builder = new GUIButton.Builder();
-
-                            ItemStack itemStack = ItemStack.of(material);
-                            ItemMeta meta = itemStack.getItemMeta();
-
-                            if(itemConfig.name() != null) {
-                                meta.displayName(FormatUtil.format(itemConfig.name()));
-                            }
-
-                            meta.lore(loreList);
-
-                            itemStack.setItemMeta(meta);
-
-                            builder.setItemStack(itemStack);
-
-                            builder.setAction(event -> {
-                                pageNum = pageNum + 1;
-                                update();
-                            });
-
-                            setButton(entryConfig.slot(), builder.build());
-                        }
-                    } else {
-                        logger.error(FormatUtil.format(locale.skippingEntryInvalidMaterial(), errorPlaceholders));
-                    }
+                    });
                 }
 
                 case PREVIOUS_PAGE -> {
-                    if(pages.get(pageNum - 1) != null) {
-                        Material material = Material.getMaterial(itemConfig.material());
-                        if(material != null) {
-                            GUIButton.Builder builder = new GUIButton.Builder();
+                    // Only display the previous page button if the page number is greater than or equal to 1
+                    if (pageNum >= 1) {
+                        // Check if the slot is not configured and send a warning.
+                        if(buttonConfig.slot() == null) {
+                            logger.warn(AdventureUtil.serialize("Unable to add a button due to a null slot. Button Num: " + buttonNum + " and type: " + buttonType));
+                            continue;
+                        }
 
-                            ItemStack itemStack = ItemStack.of(material);
-                            ItemMeta meta = itemStack.getItemMeta();
+                        // Get the ItemStackConfig
+                        ItemStackConfig itemConfig = buttonConfig.displayItem();
 
-                            if(itemConfig.name() != null) {
-                                meta.displayName(FormatUtil.format(itemConfig.name()));
-                            }
+                        // Create the ItemStackBuilder and pass the ItemStackConfig.
+                        ItemStackBuilder itemStackBuilder = new ItemStackBuilder(logger);
+                        itemStackBuilder.fromItemStackConfig(itemConfig, player, null, List.of());
 
-                            meta.lore(loreList);
-
-                            itemStack.setItemMeta(meta);
-
-                            builder.setItemStack(itemStack);
-
-                            builder.setAction(event -> {
+                        // If an ItemStack was created, create the GUIButton and add it to the GUI.
+                        Optional<ItemStack> optionalItemStack = itemStackBuilder.buildItemStack();
+                        optionalItemStack.ifPresent(itemStack -> {
+                            GUIButton.Builder guiButtonBuilder = new GUIButton.Builder();
+                            guiButtonBuilder.setItemStack(itemStack);
+                            guiButtonBuilder.setAction(event -> {
                                 pageNum = pageNum - 1;
                                 update();
                             });
 
-                            setButton(entryConfig.slot(), builder.build());
-                        }
-                    } else {
-                        logger.error(FormatUtil.format(locale.skippingEntryInvalidMaterial(), errorPlaceholders));
+                            setButton(buttonConfig.slot(), guiButtonBuilder.build());
+                        });
                     }
                 }
 
-                case SELL_GUI -> {
-                    Material material = Material.getMaterial(itemConfig.material());
-                    if(material != null) {
-                        GUIButton.Builder builder = new GUIButton.Builder();
-
-                        ItemStack itemStack = ItemStack.of(material);
-                        ItemMeta meta = itemStack.getItemMeta();
-
-                        if(itemConfig.name() != null) {
-                            meta.displayName(FormatUtil.format(itemConfig.name()));
+                case NEXT_PAGE -> {
+                    // Only display the next page button if another page is configured after the current
+                    if(pageNum < (pages.size() - 1)) {
+                        // Check if the slot is not configured and send a warning.
+                        if(buttonConfig.slot() == null) {
+                            logger.warn(AdventureUtil.serialize("Unable to add a button due to a null slot. Button Num: " + buttonNum + " and type: " + buttonType));
+                            continue;
                         }
 
-                        meta.lore(loreList);
+                        // Get the ItemStackConfig
+                        ItemStackConfig itemConfig = buttonConfig.displayItem();
 
-                        itemStack.setItemMeta(meta);
+                        // Create the ItemStackBuilder and pass the ItemStackConfig.
+                        ItemStackBuilder itemStackBuilder = new ItemStackBuilder(logger);
+                        itemStackBuilder.fromItemStackConfig(itemConfig, player, null, List.of());
 
-                        builder.setItemStack(itemStack);
+                        // If an ItemStack was created, create the GUIButton and add it to the GUI.
+                        Optional<ItemStack> optionalItemStack = itemStackBuilder.buildItemStack();
+                        optionalItemStack.ifPresent(itemStack -> {
+                            GUIButton.Builder guiButtonBuilder = new GUIButton.Builder();
+                            guiButtonBuilder.setItemStack(itemStack);
+                            guiButtonBuilder.setAction(event -> {
+                                pageNum = pageNum + 1;
+                                update();
+                            });
 
-                        builder.setAction(event -> {
-                            skyShop.getServer().getScheduler().runTaskLater(skyShop, () -> player.closeInventory(InventoryCloseEvent.Reason.OPEN_NEW), 1L);
-
-                            guiManager.removeOpenGUI(player.getUniqueId());
-
-                            new SellAllGUI(skyShop, localeManager, guiManager, sellAllManager, skyShopAPI, player).open(skyShop, player);
+                            setButton(buttonConfig.slot(), guiButtonBuilder.build());
                         });
-
-                        setButton(entryConfig.slot(), builder.build());
-                    } else {
-                        logger.error(FormatUtil.format(locale.skippingEntryInvalidMaterial(), errorPlaceholders));
                     }
+                }
+
+                case RETURN -> {
+                    // Check if the slot is not configured and send a warning.
+                    if(buttonConfig.slot() == null) {
+                        logger.warn(AdventureUtil.serialize("Unable to add a button due to a null slot. Button Num: " + buttonNum + " and type: " + buttonType));
+                        continue;
+                    }
+
+                    // Get the ItemStackConfig
+                    ItemStackConfig itemConfig = buttonConfig.displayItem();
+
+                    // Create the ItemStackBuilder and pass the ItemStackConfig.
+                    ItemStackBuilder itemStackBuilder = new ItemStackBuilder(logger);
+                    itemStackBuilder.fromItemStackConfig(itemConfig, player, null, List.of());
+
+                    // If an ItemStack was created, create the GUIButton and add it to the GUI.
+                    Optional<ItemStack> optionalItemStack = itemStackBuilder.buildItemStack();
+                    optionalItemStack.ifPresent(itemStack -> {
+                        GUIButton.Builder guiButtonBuilder = new GUIButton.Builder();
+                        guiButtonBuilder.setItemStack(itemStack);
+                        guiButtonBuilder.setAction(event -> close());
+
+                        setButton(buttonConfig.slot(), guiButtonBuilder.build());
+                    });
+                }
+
+                case DISPLAY -> {
+                    // Check if the slot is not configured and send a warning.
+                    if(buttonConfig.slot() == null) {
+                        logger.warn(AdventureUtil.serialize("Unable to add a button due to a null slot. Button Num: " + buttonNum + " and type: " + buttonType));
+                        continue;
+                    }
+
+                    // Create the ItemStackBuilder and pass the ItemStackConfig.
+                    ItemStackBuilder itemStackBuilder = new ItemStackBuilder(logger);
+                    itemStackBuilder.fromItemStackConfig(displayItemConfig, player, null, List.of());
+
+                    // If an ItemStack was created, create the GUIButton and add it to the GUI.
+                    Optional<ItemStack> optionalItemStack = itemStackBuilder.buildItemStack();
+                    optionalItemStack.ifPresent(itemStack -> {
+                        GUIButton.Builder guiButtonBuilder = new GUIButton.Builder();
+                        guiButtonBuilder.setItemStack(itemStack);
+                        guiButtonBuilder.setAction(event -> close());
+
+                        setButton(buttonConfig.slot(), guiButtonBuilder.build());
+                    });
                 }
 
                 case SELL_ALL -> {
-                    Material material = Material.getMaterial(itemConfig.material());
-                    if(material != null) {
-                        GUIButton.Builder builder = new GUIButton.Builder();
+                    // Check if the slot is not configured and send a warning.
+                    if(buttonConfig.slot() == null) {
+                        logger.warn(AdventureUtil.serialize("Unable to add a button due to a null slot. Button Num: " + buttonNum + " and type: " + buttonType));
+                        continue;
+                    }
 
-                        ItemStack itemStack = ItemStack.of(material);
-                        ItemMeta meta = itemStack.getItemMeta();
+                    // Get the ItemStackConfig
+                    ItemStackConfig itemConfig = buttonConfig.displayItem();
 
-                        if(itemConfig.name() != null) {
-                            meta.displayName(FormatUtil.format(itemConfig.name()));
-                        }
+                    // Create the ItemStackBuilder and pass the ItemStackConfig.
+                    ItemStackBuilder itemStackBuilder = new ItemStackBuilder(logger);
+                    itemStackBuilder.fromItemStackConfig(itemConfig, player, null, List.of());
 
-                        meta.lore(loreList);
+                    // If an ItemStack was created, create the GUIButton and add it to the GUI.
+                    Optional<ItemStack> optionalItemStack = itemStackBuilder.buildItemStack();
+                    optionalItemStack.ifPresent(itemStack -> {
+                        GUIButton.Builder guiButtonBuilder = new GUIButton.Builder();
+                        guiButtonBuilder.setItemStack(itemStack);
+                        guiButtonBuilder.setAction(event -> {
+                            ItemStackBuilder transactionItemBuilder = new ItemStackBuilder(logger);
+                            transactionItemBuilder.fromItemStackConfig(transactionItemConfig, player, null, List.of());
+                            Optional<ItemStack> optionalTransactionItemStack = transactionItemBuilder.buildItemStack();
+                            if(optionalTransactionItemStack.isEmpty()) return;
 
-                        itemStack.setItemMeta(meta);
+                            ItemStack transactionItemStack = optionalTransactionItemStack.get();
 
-                        builder.setItemStack(itemStack);
+                            skyShopAPI.sellAllMatchingItemStack(player, transactionItemStack, true);
+                        });
 
-                        builder.setAction(event -> {
-                            Material transactionMaterial = Material.getMaterial(shopItem.material());
-                            if(transactionMaterial != null) {
-                                ItemStack transactionItemStack = new ItemStack(transactionMaterial);
-                                skyShopAPI.sellAllMatchingItemStack(player, transactionItemStack, true);
+                        setButton(buttonConfig.slot(), guiButtonBuilder.build());
+                    });
+                }
+
+                case SELL_GUI -> {
+                    // Check if the slot is not configured and send a warning.
+                    if(buttonConfig.slot() == null) {
+                        logger.warn(AdventureUtil.serialize("Unable to add a button due to a null slot. Button Num: " + buttonNum + " and type: " + buttonType));
+                        continue;
+                    }
+
+                    // Get the ItemStackConfig
+                    ItemStackConfig itemConfig = buttonConfig.displayItem();
+
+                    // Create the ItemStackBuilder and pass the ItemStackConfig.
+                    ItemStackBuilder itemStackBuilder = new ItemStackBuilder(logger);
+                    itemStackBuilder.fromItemStackConfig(itemConfig, player, null, List.of());
+
+                    // If an ItemStack was created, create the GUIButton and add it to the GUI.
+                    Optional<ItemStack> optionalItemStack = itemStackBuilder.buildItemStack();
+                    optionalItemStack.ifPresent(itemStack -> {
+                        GUIButton.Builder guiButtonBuilder = new GUIButton.Builder();
+                        guiButtonBuilder.setItemStack(itemStack);
+                        guiButtonBuilder.setAction(event -> {
+                            @NotNull Optional<@NotNull SellAllConfig> optionalGUIConfig = sellAllManager.getSellAllGuiConfig();
+                            if(optionalGUIConfig.isEmpty()) {
+                                logger.error(AdventureUtil.serialize("Unable to open sellall GUI for player " + player.getName() + " due to invalid sellall config."));
+                                player.sendMessage(AdventureUtil.serialize(locale.prefix() + locale.guiOpenError()));
+                                if(isOpen) close();
+                                return;
+                            }
+
+                            SellAllConfig sellAllGuiConfig = optionalGUIConfig.get();
+                            SellAllGUI sellAllGUI = new SellAllGUI(skyShop, guiManager, sellAllGuiConfig, skyShopAPI, player);
+
+                            boolean creationResult = sellAllGUI.create();
+                            if(!creationResult) {
+                                logger.error(AdventureUtil.serialize("Unable to create the InventoryView for the sellall GUI for player " + player.getName() + " due to a configuration error."));
+                                player.sendMessage(AdventureUtil.serialize(locale.prefix() + locale.guiOpenError()));
+                                if(isOpen) close();
+                                return;
+                            }
+
+                            // This method is completed sync, the api returns a CompletableFuture for supporting plugins with async requirements.
+                            @NotNull CompletableFuture<Boolean> updateFuture = sellAllGUI.update();
+                            try {
+                                if(!updateFuture.get()) {
+                                    logger.error(AdventureUtil.serialize("Unable to decorate the sellall GUI for player " + player.getName() + " due to a configuration error."));
+                                    player.sendMessage(AdventureUtil.serialize(locale.prefix() + locale.guiOpenError()));
+                                    if(isOpen) close();
+                                    return;
+                                }
+                            } catch (InterruptedException | ExecutionException e) {
+                                logger.error(AdventureUtil.serialize("Unable to decorate the sellall GUI for player " + player.getName() + " due to a configuration error. " + e.getMessage()));
+                                player.sendMessage(AdventureUtil.serialize(locale.prefix() + locale.guiOpenError()));
+                                if(isOpen) close();
+                                return;
+                            }
+
+                            boolean openResult = sellAllGUI.open();
+                            if(!openResult) {
+                                logger.error(AdventureUtil.serialize("Unable to open the sellall GUI for player " + player.getName() + " due to a configuration error."));
+                                player.sendMessage(AdventureUtil.serialize(locale.prefix() + locale.guiOpenError()));
+                                if(isOpen) close();
                             }
                         });
 
-                        setButton(entryConfig.slot(), builder.build());
-                    } else {
-                        logger.error(FormatUtil.format(locale.skippingEntryInvalidMaterial(), errorPlaceholders));
-                    }
+                        setButton(buttonConfig.slot(), guiButtonBuilder.build());
+                    });
                 }
 
                 case BUY -> {
-                    if(buyPrice >= 0.0) {
-                        int amount = entryConfig.amount();
-                        double price = buyPrice * amount;
+                    // Check if the slot is not configured and send a warning.
+                    if(buttonConfig.slot() == null) {
+                        logger.warn(AdventureUtil.serialize("Unable to add a button due to a null slot. Button Num: " + buttonNum + " and type: " + buttonType));
+                        continue;
+                    }
 
-                        List<TagResolver.Single> buyPlaceholders = new ArrayList<>();
-                        buyPlaceholders.add(Placeholder.parsed("buy_price", String.valueOf(price)));
-                        buyPlaceholders.add(Placeholder.parsed("amount", String.valueOf(amount)));
+                    if(buyPrice != null && buyPrice > 0.0) {
+                        // Get the ItemStackConfig
+                        ItemStackConfig itemConfig = buttonConfig.displayItem();
+                        if(buttonConfig.transactionAmount() == null || buttonConfig.transactionAmount() <= 0) {
+                            logger.warn(AdventureUtil.serialize("Unable to add a buy button due to an invalid transaction amount."));
+                            continue;
+                        }
 
-                        List<Component> buyLore = itemConfig.lore().stream().map(loreLine ->
-                                FormatUtil.format(player, loreLine, buyPlaceholders)).toList();
+                        // Get the amount to purchase
+                        int purchaseAmount = buttonConfig.transactionAmount();
+                        // Calculate the buy price
+                        double price = buyPrice * purchaseAmount;
 
-                        Material material = Material.getMaterial(itemConfig.material());
-                        if(material != null) {
-                            GUIButton.Builder builder = new GUIButton.Builder();
+                        // Create the ItemStack placeholders
+                        List<TagResolver.Single> itemStackPlaceholders = new ArrayList<>();
+                        itemStackPlaceholders.add(Placeholder.parsed("buy_price", String.valueOf(price)));
+                        itemStackPlaceholders.add(Placeholder.parsed("amount", String.valueOf(purchaseAmount)));
 
-                            ItemStack itemStack = ItemStack.of(material);
-                            ItemMeta meta = itemStack.getItemMeta();
+                        // Create the ItemStackBuilder and pass the ItemStackConfig.
+                        ItemStackBuilder itemStackBuilder = new ItemStackBuilder(logger);
+                        itemStackBuilder.fromItemStackConfig(itemConfig, player, null, itemStackPlaceholders);
 
-                            if(itemConfig.name() != null) {
-                                meta.displayName(FormatUtil.format(itemConfig.name(), buyPlaceholders));
+                        // If an ItemStack was created, create the GUIButton and add it to the GUI.
+                        Optional<ItemStack> optionalItemStack = itemStackBuilder.buildItemStack();
+                        optionalItemStack.ifPresent(itemStack -> {
+                            GUIButton.Builder guiButtonBuilder = new GUIButton.Builder();
+                            guiButtonBuilder.setItemStack(itemStack);
+
+                            if(transactionType.equals(TransactionType.ITEM)) {
+                                guiButtonBuilder.setAction(inventoryClickEvent -> buyItem(purchaseAmount, price));
+                            } else if(transactionType.equals(TransactionType.COMMAND)) {
+                                guiButtonBuilder.setAction(inventoryClickEvent -> buyCommand(purchaseAmount, price));
                             }
 
-                            meta.lore(buyLore);
-
-                            itemStack.setItemMeta(meta);
-
-                            builder.setItemStack(itemStack);
-
-                            builder.setAction(event -> {
-                                if(type.equals(ActionType.ITEM)) {
-                                    buyItem(shopItem.material(), amount, price);
-                                }
-
-                                if(type.equals(ActionType.COMMAND)) {
-                                    buyCommand(amount, price);
-                                }
-                            });
-
-                            setButton(entryConfig.slot(), builder.build());
-                        } else {
-                            logger.error(FormatUtil.format(locale.skippingEntryInvalidMaterial(), errorPlaceholders));
-                        }
+                            setButton(buttonConfig.slot(), guiButtonBuilder.build());
+                        });
                     }
                 }
 
                 case SELL -> {
-                    if(sellPrice >= 0.0) {
-                        int amount = entryConfig.amount();
-                        double price = sellPrice * amount;
+                    // Check if the slot is not configured and send a warning.
+                    if(buttonConfig.slot() == null) {
+                        logger.warn(AdventureUtil.serialize("Unable to add a button due to a null slot. Button Num: " + buttonNum + " and type: " + buttonType));
+                        continue;
+                    }
 
-                        List<TagResolver.Single> sellPlaceholders = new ArrayList<>();
-                        sellPlaceholders.add(Placeholder.parsed("sell_price", String.valueOf(price)));
-                        sellPlaceholders.add(Placeholder.parsed("amount", String.valueOf(amount)));
+                    if(sellPrice != null && sellPrice > 0.0) {
+                        // Get the ItemStackConfig
+                        ItemStackConfig itemConfig = buttonConfig.displayItem();
+                        if(buttonConfig.transactionAmount() == null || buttonConfig.transactionAmount() <= 0) {
+                            logger.warn(AdventureUtil.serialize("Unable to add a sell button due to an invalid transaction amount."));
+                            continue;
+                        }
+                        // Get the amount to sell
+                        int sellAmount = buttonConfig.transactionAmount();
+                        // Calculate the sell price
+                        double price = sellPrice * sellAmount;
 
-                        List<Component> sellLore = itemConfig.lore().stream().map(loreLine ->
-                                FormatUtil.format(player, loreLine, sellPlaceholders)).toList();
+                        // Create the ItemStack placeholders
+                        List<TagResolver.Single> itemStackPlaceholders = new ArrayList<>();
+                        itemStackPlaceholders.add(Placeholder.parsed("sell_price", String.valueOf(price)));
+                        itemStackPlaceholders.add(Placeholder.parsed("amount", String.valueOf(sellAmount)));
 
-                        Material material = Material.getMaterial(itemConfig.material());
-                        if(material != null) {
-                            GUIButton.Builder builder = new GUIButton.Builder();
+                        // Create the ItemStackBuilder and pass the ItemStackConfig.
+                        ItemStackBuilder itemStackBuilder = new ItemStackBuilder(logger);
+                        itemStackBuilder.fromItemStackConfig(itemConfig, player, null, itemStackPlaceholders);
 
-                            ItemStack itemStack = ItemStack.of(material);
-                            ItemMeta meta = itemStack.getItemMeta();
+                        // If an ItemStack was created, create the GUIButton and add it to the GUI.
+                        Optional<ItemStack> optionalItemStack = itemStackBuilder.buildItemStack();
+                        optionalItemStack.ifPresent(itemStack -> {
+                            GUIButton.Builder guiButtonBuilder = new GUIButton.Builder();
+                            guiButtonBuilder.setItemStack(itemStack);
 
-                            if(itemConfig.name() != null) {
-                                meta.displayName(FormatUtil.format(itemConfig.name(), sellPlaceholders));
+                            if(transactionType.equals(TransactionType.ITEM)) {
+                                guiButtonBuilder.setAction(inventoryClickEvent -> sellItem(sellAmount, price));
+                            } else if(transactionType.equals(TransactionType.COMMAND)) {
+                                guiButtonBuilder.setAction(inventoryClickEvent -> sellCommand(sellAmount, price));
                             }
 
-                            meta.lore(sellLore);
-
-                            itemStack.setItemMeta(meta);
-
-                            builder.setItemStack(itemStack);
-
-                            builder.setAction(event -> {
-                                if (type.equals(ActionType.ITEM)) {
-                                    sellItem(shopItem.material(), amount, price);
-                                }
-
-                                if (type.equals(ActionType.COMMAND)) {
-                                    sellCommand(amount, price);
-                                }
-                            });
-
-                            setButton(entryConfig.slot(), builder.build());
-                        } else {
-                            logger.error(FormatUtil.format(locale.skippingEntryInvalidMaterial(), errorPlaceholders));
-                        }
+                            setButton(buttonConfig.slot(), guiButtonBuilder.build());
+                        });
                     }
                 }
 
-                case null -> logger.warn(FormatUtil.format(locale.skippingEntryInvalidType(), errorPlaceholders));
-
-                default -> logger.warn(FormatUtil.format(locale.skippingEntryTypeNotAllowed(), errorPlaceholders));
+                default -> logger.warn(AdventureUtil.serialize("Unsupported ButtonType in the transaction GUI for " + buttonNum + " on page " + pageNum + " and style " + transactionStyle + "."));
             }
         }
 
-        super.update();
-    }
-
-    @Override
-    public void open(@NotNull Plugin plugin, @NotNull Player player) {
-        super.open(plugin, player);
-
-        guiManager.addOpenGUI(player.getUniqueId(), this);
-    }
-
-    /**
-     * Close the inventory with an OPEN_NEW reason.
-     * @param plugin The Plugin closing the inventory.
-     * @param player The Player to close the inventory for.
-     */
-    @Override
-    public void close(@NotNull Plugin plugin, @NotNull Player player) {
-        UUID uuid = player.getUniqueId();
-
-        plugin.getServer().getScheduler().runTaskLater(plugin, () ->
-                player.closeInventory(InventoryCloseEvent.Reason.OPEN_NEW), 1L);
-
-        guiManager.removeOpenGUI(uuid);
-
-        shopGUI.update();
-
-        shopGUI.open(plugin, player);
-
-        guiManager.addOpenGUI(uuid, shopGUI);
-    }
-
-    @Override
-    public void unload(@NotNull Plugin plugin, @NotNull Player player, boolean onDisable) {
-        UUID uuid = player.getUniqueId();
-
-        if(onDisable) {
-            player.closeInventory(InventoryCloseEvent.Reason.UNLOADED);
-        } else {
-            plugin.getServer().getScheduler().runTaskLater(plugin, () ->
-                    player.closeInventory(InventoryCloseEvent.Reason.UNLOADED), 1L);
-        }
-
-        guiManager.removeOpenGUI(uuid);
+        return super.update();
     }
 
     /**
@@ -554,138 +604,151 @@ public class TransactionGUI extends ChestGUI {
     public void handleClose(@NotNull InventoryCloseEvent inventoryCloseEvent) {
         if(inventoryCloseEvent.getReason().equals(InventoryCloseEvent.Reason.UNLOADED) || inventoryCloseEvent.getReason().equals(InventoryCloseEvent.Reason.OPEN_NEW)) return;
 
-        Player player = (Player) inventoryCloseEvent.getPlayer();
-        UUID uuid = player.getUniqueId();
-
         guiManager.removeOpenGUI(uuid);
 
-        shopGUI.update();
-
-        shopGUI.open(skyShop, player);
-
-        guiManager.addOpenGUI(uuid, shopGUI);
+        shopGUI.open();
     }
+
+    @Override
+    public void handleBottomDrag(@NotNull InventoryDragEvent inventoryDragEvent) {}
+
+    @Override
+    public void handleGlobalDrag(@NotNull InventoryDragEvent inventoryDragEvent) {}
+
+    @Override
+    public void handleBottomClick(@NotNull InventoryClickEvent inventoryClickEvent) {}
+
+    @Override
+    public void handleGlobalClick(@NotNull InventoryClickEvent inventoryClickEvent) {}
 
     /**
      * This method contains the logic to purchase an item.
-     * @param materialName The name of the material being purchased.
      * @param amount The amount being purchased.
      * @param price The price of the item being purchased.
      */
-    private void buyItem(String materialName, int amount, double price) {
+    private void buyItem(int amount, double price) {
         Locale locale = localeManager.getLocale();
-        Material material = Material.getMaterial(materialName);
-        if(material == null) return;
 
-        ItemStack buyItem = new ItemStack(material);
-        buyItem.setAmount(amount);
+        // If the player doesn't have enough money, cancel the purchase.
+        if(skyShop.getEconomy().getBalance(player) < price) {
+            player.sendMessage(AdventureUtil.serialize(player, locale.prefix() + locale.insufficientFunds()));
+            close();
+            return;
+        }
 
-        if (skyShop.getEconomy().getBalance(player) >= price) {
+        // Create the ItemStack that will be given to the player on successful purchase.
+        ItemStackBuilder itemStackBuilder = new ItemStackBuilder(logger);
+        itemStackBuilder.fromItemStackConfig(transactionItemConfig, player, null, List.of());
+        Optional<ItemStack> optionalItemStack = itemStackBuilder.buildItemStack();
+        if(optionalItemStack.isPresent()) {
+            ItemStack buyItem = optionalItemStack.get();
+            buyItem.setAmount(amount);
+            ItemType itemType = buyItem.getType().asItemType();
+            if(itemType == null) return; // This should never be null, but just in-case return if such a case occurs.
+
+            // Create and call the ItemPurchasedEvent
             ItemPurchasedEvent itemPurchasedEvent = new ItemPurchasedEvent(buyItem);
             skyShop.getServer().getPluginManager().callEvent(itemPurchasedEvent);
 
-            if (!itemPurchasedEvent.isCancelled()) {
-                skyShop.getEconomy().withdrawPlayer(player, price);
+            // If the event was cancelled, cancel the purchase.
+            if(itemPurchasedEvent.isCancelled()) return;
 
-                PlayerUtil.giveItem(player.getInventory(), buyItem, amount, player.getLocation());
+            // Remove the price from the player's balance.
+            skyShop.getEconomy().withdrawPlayer(player, price);
 
-                DecimalFormat df = new DecimalFormat("#.##");
-                df.setRoundingMode(RoundingMode.CEILING);
+            // Give the player the ItemStack they purchased.
+            PlayerUtil.giveItem(player.getInventory(), buyItem, amount, player.getLocation());
 
-                BigDecimal bigPrice = BigDecimal.valueOf(price);
-                String formattedPrice = df.format(bigPrice);
+            // Create the DecimalFormat that will be used to format the price and player's balance
+            DecimalFormat df = new DecimalFormat("#.##");
+            df.setRoundingMode(RoundingMode.CEILING);
 
-                BigDecimal bigBalance = BigDecimal.valueOf(skyShop.getEconomy().getBalance(player));
-                String bal = df.format(bigBalance);
+            // Format the price
+            BigDecimal bigPrice = BigDecimal.valueOf(price);
+            String formattedPrice = df.format(bigPrice);
 
-                List<TagResolver.Single> successPlaceholders = new ArrayList<>();
-                successPlaceholders.add(Placeholder.parsed("amount", String.valueOf(amount)));
-                successPlaceholders.add(Placeholder.parsed("item", shopItem.name()));
-                successPlaceholders.add(Placeholder.parsed("price", formattedPrice));
-                successPlaceholders.add(Placeholder.parsed("bal", bal));
+            // Format the player's balance
+            BigDecimal bigBalance = BigDecimal.valueOf(skyShop.getEconomy().getBalance(player));
+            String bal = df.format(bigBalance);
 
-                player.sendMessage(FormatUtil.format(player, locale.prefix() + locale.buySuccess(), successPlaceholders));
+            // Create the necessary placeholders
+            List<TagResolver.Single> successPlaceholders = new ArrayList<>();
+            successPlaceholders.add(Placeholder.parsed("amount", String.valueOf(amount)));
+            successPlaceholders.add(Placeholder.parsed("transaction_name", transactionName));
+            successPlaceholders.add(Placeholder.parsed("price", formattedPrice));
+            successPlaceholders.add(Placeholder.parsed("bal", bal));
 
-                Settings settings = settingsManager.getSettingsConfig();
-                if (settings != null && statsDatabaseManager != null) {
-                    if(settings.statistics()) {
-                        skyShop.getServer().getScheduler().runTaskAsynchronously(skyShop, () -> {
-                            try {
-                                statsDatabaseManager.updateMaterial(buyItem.getType().toString(), amount, 0);
-                            } catch (SQLException e) {
-                                throw new RuntimeException(e);
-                            }
-                        });
-                    }
-                }
-            }
+            // Send the message that the transaction was a success
+            player.sendMessage(AdventureUtil.serialize(player, locale.prefix() + locale.buyItemSuccess(), successPlaceholders));
+
+            // Increment stats if statsManager is not null
+            if(statsManager != null) statsManager.incrementAmountPurchased(itemType, amount);
         } else {
-            player.sendMessage(FormatUtil.format(player, locale.prefix() + locale.insufficientFunds()));
-
-            Bukkit.getScheduler().runTaskLater(skyShop, () -> player.closeInventory(InventoryCloseEvent.Reason.UNLOADED), 1L);
-
-            guiManager.removeOpenGUI(player.getUniqueId());
+            logger.warn(AdventureUtil.serialize("An item failed to be purchased as the ItemStack failed to be created."));
         }
     }
 
     /**
      * This method contains the logic to sell an item.
-     * @param materialName The name of the material being sold.
      * @param amount The amount being sold.
      * @param price The price of the item being sold.
      */
-    private void sellItem(String materialName, int amount, double price) {
+    private void sellItem(int amount, double price) {
         Locale locale = localeManager.getLocale();
-        Material material = Material.getMaterial(materialName);
-        if(material == null) return;
 
-        ItemStack sellItem = new ItemStack(material);
-        sellItem.setAmount(amount);
+        // Create the ItemStack that will be taken from the player if they have enough of said ItemStack.
+        ItemStackBuilder itemStackBuilder = new ItemStackBuilder(logger);
+        itemStackBuilder.fromItemStackConfig(transactionItemConfig, player, null, List.of());
+        Optional<ItemStack> optionalItemStack = itemStackBuilder.buildItemStack();
+        if(optionalItemStack.isPresent()) {
+            ItemStack sellItem = optionalItemStack.get();
+            sellItem.setAmount(amount);
+            ItemType itemType = sellItem.getType().asItemType();
+            if(itemType == null) return; // This should never be null, but just in-case return if such a case occurs.
 
-        if (player.getInventory().containsAtLeast(sellItem, amount)) {
+            if(!player.getInventory().containsAtLeast(sellItem, amount)) {
+                player.sendMessage(AdventureUtil.serialize(player, locale.prefix() + locale.notEnoughItems()));
+                close();
+                return;
+            }
+
+            // Create and call the ItemSoldEvent
             ItemSoldEvent itemSoldEvent = new ItemSoldEvent(sellItem);
             skyShop.getServer().getPluginManager().callEvent(itemSoldEvent);
 
-            if (!itemSoldEvent.isCancelled()) {
-                player.getInventory().removeItem(sellItem);
-                skyShop.getEconomy().depositPlayer(player, price);
+            // If the event was cancelled, cancel the purchase.
+            if(itemSoldEvent.isCancelled()) return;
 
-                DecimalFormat df = new DecimalFormat("#.##");
-                df.setRoundingMode(RoundingMode.CEILING);
+            // Remove the sold item from the player's inventory.
+            player.getInventory().removeItem(sellItem);
+            // Deposit the value of the item to the player's balance.
+            skyShop.getEconomy().depositPlayer(player, price);
 
-                BigDecimal bigPrice = BigDecimal.valueOf(price);
-                String formattedPrice = df.format(bigPrice);
+            // Create the DecimalFormat that will be used to format the price and player's balance
+            DecimalFormat df = new DecimalFormat("#.##");
+            df.setRoundingMode(RoundingMode.CEILING);
 
-                BigDecimal bigBalance = BigDecimal.valueOf(skyShop.getEconomy().getBalance(player));
-                String bal = df.format(bigBalance);
+            // Format the price
+            BigDecimal bigPrice = BigDecimal.valueOf(price);
+            String formattedPrice = df.format(bigPrice);
 
-                List<TagResolver.Single> successPlaceholders = new ArrayList<>();
-                successPlaceholders.add(Placeholder.parsed("amount", String.valueOf(amount)));
-                successPlaceholders.add(Placeholder.parsed("item", shopItem.name()));
-                successPlaceholders.add(Placeholder.parsed("price", formattedPrice));
-                successPlaceholders.add(Placeholder.parsed("bal", bal));
+            // Format the player's balance
+            BigDecimal bigBalance = BigDecimal.valueOf(skyShop.getEconomy().getBalance(player));
+            String bal = df.format(bigBalance);
 
-                player.sendMessage(FormatUtil.format(player, locale.prefix() + locale.sellSuccess(), successPlaceholders));
+            // Create the necessary placeholders
+            List<TagResolver.Single> successPlaceholders = new ArrayList<>();
+            successPlaceholders.add(Placeholder.parsed("amount", String.valueOf(amount)));
+            successPlaceholders.add(Placeholder.parsed("transaction_name", transactionName));
+            successPlaceholders.add(Placeholder.parsed("price", formattedPrice));
+            successPlaceholders.add(Placeholder.parsed("bal", bal));
 
-                Settings settings = settingsManager.getSettingsConfig();
-                if (settings != null && statsDatabaseManager != null) {
-                    if(settings.statistics()) {
-                        skyShop.getServer().getScheduler().runTaskAsynchronously(skyShop, () -> {
-                            try {
-                                statsDatabaseManager.updateMaterial(sellItem.getType().toString(), 0, amount);
-                            } catch (SQLException e) {
-                                throw new RuntimeException(e);
-                            }
-                        });
-                    }
-                }
-            }
+            player.sendMessage(AdventureUtil.serialize(player, locale.prefix() + locale.sellItemSuccess(), successPlaceholders));
+
+            // Increment stats if statsManager is not null
+            if(statsManager != null) statsManager.incrementAmountSold(itemType, amount);
         } else {
-            player.sendMessage(FormatUtil.format(player, locale.prefix() + locale.notEnoughItems()));
-
-            Bukkit.getScheduler().runTaskLater(skyShop, () -> player.closeInventory(InventoryCloseEvent.Reason.UNLOADED), 1L);
-
-            guiManager.removeOpenGUI(player.getUniqueId());
+            logger.warn(AdventureUtil.serialize("An item failed to be sold as the ItemStack failed to be created."));
         }
     }
 
@@ -697,43 +760,53 @@ public class TransactionGUI extends ChestGUI {
     private void buyCommand(int amount, double price) {
         Locale locale = localeManager.getLocale();
 
-        if (skyShop.getEconomy().getBalance(player) >= price) {
-            CommandPurchasedEvent commandPurchasedEvent = new CommandPurchasedEvent(buyCommands);
-            skyShop.getServer().getPluginManager().callEvent(commandPurchasedEvent);
-
-            if (!commandPurchasedEvent.isCancelled()) {
-                for (String command : buyCommands) {
-                    for (int i = 1; i <= amount; i++) {
-                        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), PlaceholderAPIUtil.parsePlaceholders(player, command));
-                    }
-                }
-
-                skyShop.getEconomy().withdrawPlayer(player, price);
-
-                DecimalFormat df = new DecimalFormat("#.##");
-                df.setRoundingMode(RoundingMode.CEILING);
-
-                BigDecimal bigPrice = BigDecimal.valueOf(price);
-                String formattedPrice = df.format(bigPrice);
-
-                BigDecimal bigBalance = BigDecimal.valueOf(skyShop.getEconomy().getBalance(player));
-                String bal = df.format(bigBalance);
-
-                List<TagResolver.Single> successPlaceholders = new ArrayList<>();
-                successPlaceholders.add(Placeholder.parsed("amount", String.valueOf(amount)));
-                successPlaceholders.add(Placeholder.parsed("item", shopItem.name()));
-                successPlaceholders.add(Placeholder.parsed("price", formattedPrice));
-                successPlaceholders.add(Placeholder.parsed("bal", bal));
-
-                player.sendMessage(FormatUtil.format(player, locale.prefix() + locale.buySuccess(), successPlaceholders));
-            }
-        } else {
-            player.sendMessage(FormatUtil.format(player, locale.prefix() + locale.insufficientFunds()));
-
-            Bukkit.getScheduler().runTaskLater(skyShop, () -> player.closeInventory(InventoryCloseEvent.Reason.UNLOADED), 1L);
-
-            guiManager.removeOpenGUI(player.getUniqueId());
+        // If the player doesn't have enough money, cancel the purchase.
+        if(skyShop.getEconomy().getBalance(player) < price) {
+            player.sendMessage(AdventureUtil.serialize(player, locale.prefix() + locale.insufficientFunds()));
+            close();
+            return;
         }
+
+        // Create and call the CommandPurchasedEvent
+        CommandPurchasedEvent commandPurchasedEvent = new CommandPurchasedEvent(buyCommands);
+        skyShop.getServer().getPluginManager().callEvent(commandPurchasedEvent);
+
+        // If the event was cancelled, cancel the purchase.
+        if(commandPurchasedEvent.isCancelled()) return;
+
+        // Remove the price from the player's balance.
+        skyShop.getEconomy().withdrawPlayer(player, price);
+
+        // Execute the commands for this transaction
+        Server server = skyShop.getServer();
+        ConsoleCommandSender commandSender = server.getConsoleSender();
+        for(String command : buyCommands) {
+            for(int i = 1; i <= amount; i++) {
+                server.dispatchCommand(commandSender, PlaceholderAPIUtil.parsePlaceholders(player, command));
+            }
+        }
+
+        // Create the DecimalFormat that will be used to format the price and player's balance
+        DecimalFormat df = new DecimalFormat("#.##");
+        df.setRoundingMode(RoundingMode.CEILING);
+
+        // Format the price
+        BigDecimal bigPrice = BigDecimal.valueOf(price);
+        String formattedPrice = df.format(bigPrice);
+
+        // Format the player's balance
+        BigDecimal bigBalance = BigDecimal.valueOf(skyShop.getEconomy().getBalance(player));
+        String bal = df.format(bigBalance);
+
+        // Create the necessary placeholders
+        List<TagResolver.Single> successPlaceholders = new ArrayList<>();
+        successPlaceholders.add(Placeholder.parsed("amount", String.valueOf(amount)));
+        successPlaceholders.add(Placeholder.parsed("transaction_name", transactionName));
+        successPlaceholders.add(Placeholder.parsed("price", formattedPrice));
+        successPlaceholders.add(Placeholder.parsed("bal", bal));
+
+        // Send the message that the transaction was a success
+        player.sendMessage(AdventureUtil.serialize(player, locale.prefix() + locale.buyCommandSuccess(), successPlaceholders));
     }
 
     /**
@@ -744,33 +817,45 @@ public class TransactionGUI extends ChestGUI {
     private void sellCommand(int amount, double price) {
         Locale locale = localeManager.getLocale();
 
+        // Create and call the CommandSoldEvent
         CommandSoldEvent commandSoldEvent = new CommandSoldEvent(sellCommands);
         skyShop.getServer().getPluginManager().callEvent(commandSoldEvent);
 
-        if (!commandSoldEvent.isCancelled()) {
-            skyShop.getEconomy().depositPlayer(player, price);
-            for (String command : sellCommands) {
-                for (int i = 1; i <= amount; i++) {
-                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), PlaceholderAPIUtil.parsePlaceholders(player, command));
-                }
+        // If the event was cancelled, cancel the transaction.
+        if(commandSoldEvent.isCancelled()) return;
+
+        // Deposit the price into the player's balance.
+        skyShop.getEconomy().depositPlayer(player, price);
+
+        // Execute the commands for this transaction
+        Server server = skyShop.getServer();
+        ConsoleCommandSender commandSender = skyShop.getServer().getConsoleSender();
+        for(String command : sellCommands) {
+            for(int i = 1; i <= amount; i++) {
+                server.dispatchCommand(commandSender, PlaceholderAPIUtil.parsePlaceholders(player, command));
             }
-
-            DecimalFormat df = new DecimalFormat("#.##");
-            df.setRoundingMode(RoundingMode.CEILING);
-
-            BigDecimal bigPrice = BigDecimal.valueOf(price);
-            String formattedPrice = df.format(bigPrice);
-
-            BigDecimal bigBalance = BigDecimal.valueOf(skyShop.getEconomy().getBalance(player));
-            String bal = df.format(bigBalance);
-
-            List<TagResolver.Single> successPlaceholders = new ArrayList<>();
-            successPlaceholders.add(Placeholder.parsed("amount", String.valueOf(amount)));
-            successPlaceholders.add(Placeholder.parsed("item", shopItem.name()));
-            successPlaceholders.add(Placeholder.parsed("price", formattedPrice));
-            successPlaceholders.add(Placeholder.parsed("bal", bal));
-
-            player.sendMessage(FormatUtil.format(player, locale.prefix() + locale.sellSuccess(), successPlaceholders));
         }
+
+        // Create the DecimalFormat that will be used to format the price and player's balance
+        DecimalFormat df = new DecimalFormat("#.##");
+        df.setRoundingMode(RoundingMode.CEILING);
+
+        // Format the price
+        BigDecimal bigPrice = BigDecimal.valueOf(price);
+        String formattedPrice = df.format(bigPrice);
+
+        // Format the player's balance
+        BigDecimal bigBalance = BigDecimal.valueOf(skyShop.getEconomy().getBalance(player));
+        String bal = df.format(bigBalance);
+
+        // Create the necessary placeholders
+        List<TagResolver.Single> successPlaceholders = new ArrayList<>();
+        successPlaceholders.add(Placeholder.parsed("amount", String.valueOf(amount)));
+        successPlaceholders.add(Placeholder.parsed("transaction_name", transactionName));
+        successPlaceholders.add(Placeholder.parsed("price", formattedPrice));
+        successPlaceholders.add(Placeholder.parsed("bal", bal));
+
+        // Send the message that the transaction was a success
+        player.sendMessage(AdventureUtil.serialize(player, locale.prefix() + locale.sellCommandSuccess(), successPlaceholders));
     }
 }
