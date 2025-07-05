@@ -34,8 +34,6 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 
 /**
  * This class is used to create the sellall command used to sell items inside the player's inventory.
@@ -92,18 +90,10 @@ public class SellAllCommand {
                         return 0;
                     }
 
-                    // This method is completed sync, the api returns a CompletableFuture for supporting plugins with async requirements.
-                    @NotNull CompletableFuture<Boolean> updateFuture = gui.update();
-                    try {
-                        boolean updateResult = updateFuture.get();
-
-                        if(!updateResult) {
-                            logger.error(AdventureUtil.serialize("Unable to decorate the sell all GUI for player " + player.getName() + " due to a configuration error."));
-                            player.sendMessage(AdventureUtil.serialize(locale.prefix() + locale.guiOpenError()));
-                            return 0;
-                        }
-                    } catch (InterruptedException | ExecutionException e) {
-                        skyShop.getComponentLogger().error(AdventureUtil.serialize("Failed to update the sell all gui: " + e.getMessage()));
+                    boolean updateResult = gui.update();
+                    if(!updateResult) {
+                        logger.error(AdventureUtil.serialize("Unable to decorate the sell all GUI for player " + player.getName() + " due to a configuration error."));
+                        player.sendMessage(AdventureUtil.serialize(locale.prefix() + locale.guiOpenError()));
                         return 0;
                     }
 

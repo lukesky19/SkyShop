@@ -40,7 +40,6 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 
 /**
  * This class is called to create a sellall gui for a player to sell items.
@@ -84,18 +83,18 @@ public class SellAllGUI extends ChestGUI {
 
         String guiName = Objects.requireNonNullElse(sellAllConfig.gui().name(), "");
 
-        return create(guiType, guiName);
+        return create(guiType, guiName, List.of());
     }
 
     /**
      * A method to create all the buttons in the inventory GUI.
      */
     @Override
-    public @NotNull CompletableFuture<Boolean> update() {
+    public boolean update() {
         // If the InventoryView was not created, log a warning and return false.
         if (inventoryView == null) {
             logger.warn(AdventureUtil.serialize("Unable to add GUIButton ItemStacks to the InventoryView as it was not created."));
-            return CompletableFuture.completedFuture(false);
+            return false;
         }
 
         // Clear the GUI of buttons

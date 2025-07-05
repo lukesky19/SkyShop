@@ -47,8 +47,6 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 
 /**
  * This class creates the GUI to access different shop categories.
@@ -115,7 +113,7 @@ public class MenuGUI extends ChestGUI {
 
         String guiName = Objects.requireNonNullElse(menuConfig.gui().name(), "");
 
-        return create(guiType, guiName);
+        return create(guiType, guiName, List.of());
     }
 
     /**
@@ -152,15 +150,16 @@ public class MenuGUI extends ChestGUI {
 
     /**
      * A method to create all the buttons in the inventory GUI.
+     * @return true if successful, otherwise false.
      */
     @Override
-    public @NotNull CompletableFuture<Boolean> update() {
+    public boolean update() {
         Locale locale = localeManager.getLocale();
 
         // If the InventoryView was not created, log a warning and return false.
         if(inventoryView == null) {
             logger.warn(AdventureUtil.serialize("Unable to add GUIButton ItemStacks to the InventoryView as it was not created."));
-            return CompletableFuture.completedFuture(false);
+            return false;
         }
 
         // Get the GUI size
@@ -173,7 +172,7 @@ public class MenuGUI extends ChestGUI {
         List<MenuConfig.PageConfig> pages = menuConfig.gui().pages();
         if(pages.isEmpty()) {
             logger.error(AdventureUtil.serialize("Unable to decorate the menu GUI due to no pages configured."));
-            return CompletableFuture.completedFuture(false);
+            return false;
         }
 
         // Get the page config
@@ -183,7 +182,7 @@ public class MenuGUI extends ChestGUI {
         List<MenuConfig.Button> entries  = page.buttons();
         if(entries.isEmpty()) {
             logger.error(AdventureUtil.serialize("Unable to decorate the menu GUI for page " + pageNum + " due to no buttons configured."));
-            return CompletableFuture.completedFuture(false);
+            return false;
         }
 
         // Loop through buttons to populate the GUI
@@ -352,20 +351,10 @@ public class MenuGUI extends ChestGUI {
                                 if(isOpen) close();
                                 return;
                             }
-                            
-                            // This method is completed sync, the api returns a CompletableFuture for supporting plugins with async requirements.
-                            @NotNull CompletableFuture<Boolean> updateFuture = shopGUI.update();
-                            try {
-                                boolean updateResult = updateFuture.get();
 
-                                if(!updateResult) {
-                                    logger.error(AdventureUtil.serialize("Unable to decorate the shop GUI " + shopName + " for player " + player.getName() + " due to a configuration error."));
-                                    player.sendMessage(AdventureUtil.serialize(locale.prefix() + locale.guiOpenError()));
-                                    if(isOpen) close();
-                                    return;
-                                }
-                            } catch (InterruptedException | ExecutionException e) {
-                                logger.error(AdventureUtil.serialize("Unable to decorate the shop GUI " + shopName + " for player " + player.getName() + " due to a configuration error. " + e.getMessage()));
+                            boolean updateResult = shopGUI.update();
+                            if(!updateResult) {
+                                logger.error(AdventureUtil.serialize("Unable to decorate the shop GUI " + shopName + " for player " + player.getName() + " due to a configuration error."));
                                 player.sendMessage(AdventureUtil.serialize(locale.prefix() + locale.guiOpenError()));
                                 if(isOpen) close();
                                 return;
@@ -422,17 +411,9 @@ public class MenuGUI extends ChestGUI {
                                 return;
                             }
 
-                            // This method is completed sync, the api returns a CompletableFuture for supporting plugins with async requirements.
-                            @NotNull CompletableFuture<Boolean> updateFuture = sellAllGUI.update();
-                            try {
-                                if(!updateFuture.get()) {
-                                    logger.error(AdventureUtil.serialize("Unable to decorate the sellall GUI for player " + player.getName() + " due to a configuration error."));
-                                    player.sendMessage(AdventureUtil.serialize(locale.prefix() + locale.guiOpenError()));
-                                    if(isOpen) close();
-                                    return;
-                                }
-                            } catch (InterruptedException | ExecutionException e) {
-                                logger.error(AdventureUtil.serialize("Unable to decorate the sellall GUI for player " + player.getName() + " due to a configuration error. " + e.getMessage()));
+                            boolean updateResult = sellAllGUI.update();
+                            if(!updateResult) {
+                                logger.error(AdventureUtil.serialize("Unable to decorate the sellall GUI for player " + player.getName() + " due to a configuration error."));
                                 player.sendMessage(AdventureUtil.serialize(locale.prefix() + locale.guiOpenError()));
                                 if(isOpen) close();
                                 return;

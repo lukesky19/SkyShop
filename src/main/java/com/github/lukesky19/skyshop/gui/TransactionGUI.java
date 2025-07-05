@@ -61,8 +61,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 
 /**
  * This class is called to create a transaction inventory for a player to buy and sell items.
@@ -163,7 +161,7 @@ public class TransactionGUI extends ChestGUI {
 
         String guiName = Objects.requireNonNullElse(transactionConfig.gui().name(), "");
 
-        return create(guiType, guiName);
+        return create(guiType, guiName, List.of());
     }
 
     /**
@@ -220,14 +218,14 @@ public class TransactionGUI extends ChestGUI {
      * A method to create all the buttons in the inventory GUI.
      */
     @Override
-    public @NotNull CompletableFuture<Boolean> update() {
+    public boolean update() {
         Locale locale = localeManager.getLocale();
 
         // If the InventoryView was not created, log a warning and return false.
         if (inventoryView == null) {
             logger.warn(AdventureUtil.serialize("Unable to add GUIButton ItemStacks to the InventoryView as it was not created."));
             if(isOpen) close();
-            return CompletableFuture.completedFuture(false);
+            return false;
         }
 
         // Get the GUI size
@@ -240,7 +238,8 @@ public class TransactionGUI extends ChestGUI {
         List<TransactionConfig.PageConfig> pages = transactionConfig.gui().pages();
         if(pages.isEmpty()) {
             logger.error(AdventureUtil.serialize("Unable to decorate the transaction GUI due to no pages configured."));
-            return CompletableFuture.completedFuture(false);
+            if(isOpen) close();
+            return false;
         }
 
         // Get the page config
@@ -251,7 +250,7 @@ public class TransactionGUI extends ChestGUI {
         if (entries.isEmpty()) {
             logger.error(AdventureUtil.serialize("Unable to decorate the transaction GUI for page " + pageNum + " due to no buttons configured."));
             if(isOpen) close();
-            return CompletableFuture.completedFuture(false);
+            return false;
         }
 
         for(int buttonNum = 0; buttonNum < page.buttons().size(); buttonNum++) {
@@ -470,17 +469,9 @@ public class TransactionGUI extends ChestGUI {
                                 return;
                             }
 
-                            // This method is completed sync, the api returns a CompletableFuture for supporting plugins with async requirements.
-                            @NotNull CompletableFuture<Boolean> updateFuture = sellAllGUI.update();
-                            try {
-                                if(!updateFuture.get()) {
-                                    logger.error(AdventureUtil.serialize("Unable to decorate the sellall GUI for player " + player.getName() + " due to a configuration error."));
-                                    player.sendMessage(AdventureUtil.serialize(locale.prefix() + locale.guiOpenError()));
-                                    if(isOpen) close();
-                                    return;
-                                }
-                            } catch (InterruptedException | ExecutionException e) {
-                                logger.error(AdventureUtil.serialize("Unable to decorate the sellall GUI for player " + player.getName() + " due to a configuration error. " + e.getMessage()));
+                            boolean updateResult = sellAllGUI.update();
+                            if(!updateResult) {
+                                logger.error(AdventureUtil.serialize("Unable to decorate the sellall GUI for player " + player.getName() + " due to a configuration error."));
                                 player.sendMessage(AdventureUtil.serialize(locale.prefix() + locale.guiOpenError()));
                                 if(isOpen) close();
                                 return;

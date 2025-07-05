@@ -33,8 +33,7 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
+import java.util.List;
 
 /**
  * This class is used to create the stats command used to view shop stats.
@@ -78,25 +77,16 @@ public class StatsCommand {
 
                 StatsGUI statsGUI = new StatsGUI(skyShop, guiManager, statsManager, player);
 
-                boolean creationResult = statsGUI.create(GUIType.CHEST_54, "<yellow><bold>Transaction Stats</bold></yellow>");
+                boolean creationResult = statsGUI.create(GUIType.CHEST_54, "<yellow><bold>Transaction Stats</bold></yellow>", List.of());
                 if(!creationResult) {
                     logger.error(AdventureUtil.serialize("Unable to create the InventoryView for the stats GUI for player " + player.getName() + " due to a configuration error."));
                     player.sendMessage(AdventureUtil.serialize(locale.prefix() + locale.guiOpenError()));
                     return 0;
                 }
 
-                // This method is completed sync, the api returns a CompletableFuture for supporting plugins with async requirements.
-                @NotNull CompletableFuture<Boolean> updateFuture = statsGUI.update();
-                try {
-                    boolean updateResult = updateFuture.get();
-
-                    if(!updateResult) {
-                        logger.error(AdventureUtil.serialize("Unable to decorate the stats GUI for player " + player.getName() + " due to a configuration error."));
-                        player.sendMessage(AdventureUtil.serialize(locale.prefix() + locale.guiOpenError()));
-                        return 0;
-                    }
-                } catch (InterruptedException | ExecutionException e) {
-                    logger.error(AdventureUtil.serialize("Unable to decorate the stats GUI for player " + player.getName() + " due to a configuration error. " + e.getMessage()));
+                boolean updateResult = statsGUI.update();
+                if(!updateResult) {
+                    logger.error(AdventureUtil.serialize("Unable to decorate the stats GUI for player " + player.getName() + " due to a configuration error."));
                     player.sendMessage(AdventureUtil.serialize(locale.prefix() + locale.guiOpenError()));
                     return 0;
                 }

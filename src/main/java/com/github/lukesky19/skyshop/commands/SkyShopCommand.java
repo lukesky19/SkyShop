@@ -40,8 +40,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 
 /**
  * This class is used to create the main skyshop command.
@@ -114,18 +112,9 @@ public class SkyShopCommand {
                         return 0;
                     }
 
-                    // This method is completed sync, the api returns a CompletableFuture for supporting plugins with async requirements.
-                    @NotNull CompletableFuture<Boolean> updateFuture = menuGUI.update();
-                    try {
-                        boolean updateResult = updateFuture.get();
-
-                        if(!updateResult) {
-                            logger.error(AdventureUtil.serialize("Unable to decorate the menu GUI for player " + player.getName() + " due to a configuration error."));
-                            player.sendMessage(AdventureUtil.serialize(locale.prefix() + locale.guiOpenError()));
-                            return 0;
-                        }
-                    } catch (InterruptedException | ExecutionException e) {
-                        logger.error(AdventureUtil.serialize("Unable to decorate the menu GUI for player " + player.getName() + " due to a configuration error. " + e.getMessage()));
+                    boolean updateResult = menuGUI.update();
+                    if(!updateResult) {
+                        logger.error(AdventureUtil.serialize("Unable to decorate the menu GUI for player " + player.getName() + " due to a configuration error."));
                         player.sendMessage(AdventureUtil.serialize(locale.prefix() + locale.guiOpenError()));
                         return 0;
                     }

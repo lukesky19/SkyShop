@@ -38,7 +38,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 
 /**
  * This class is used to view the stats for how often an item has been purchased or sold.
@@ -66,11 +65,10 @@ public class StatsGUI extends ChestGUI {
 
     /**
      * Add the buttons to the GUI.
-     * While this method returns a {@link CompletableFuture}, this method executes synchronously.
-     * @return A {@link CompletableFuture} containing a {@link Boolean}. true if successful, otherwise false.
+     * @return true if successful, otherwise false.
      */
     @Override
-    public @NotNull CompletableFuture<Boolean> update() {
+    public boolean update() {
         Map<ItemType, TransactionStats> statsMap = statsManager.getStatsMap();
 
         createFillerButtons();

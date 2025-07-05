@@ -50,8 +50,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 
 /**
  * This class is called to create a shop gui for a player to access an individual shop category.
@@ -122,7 +120,7 @@ public class ShopGUI extends ChestGUI {
 
         String guiName = Objects.requireNonNullElse(shopConfig.gui().name(), "");
 
-        return create(guiType, guiName);
+        return create(guiType, guiName, List.of());
     }
 
     /**
@@ -177,17 +175,16 @@ public class ShopGUI extends ChestGUI {
 
     /**
      * Take the mapping of slots to {@link GUIButton}s in {@link #slotButtons} and add the {@link ItemStack}s to the GUI.
-     * While this method returns a {@link CompletableFuture}, the actual code is executed asynchronously.
-     * @return A {@link CompletableFuture} containing a {@link Boolean} where true was successful, otherwise false.
+     * @return true if successful, otherwise false.
      */
     @Override
-    public @NotNull CompletableFuture<Boolean> update() {
+    public boolean update() {
         Locale locale = localeManager.getLocale();
 
         // If the InventoryView was not created, log a warning and return false.
         if(inventoryView == null) {
             logger.warn(AdventureUtil.serialize("Unable to add GUIButton ItemStacks to the InventoryView as it was not created."));
-            return CompletableFuture.completedFuture(false);
+            return false;
         }
 
         // Get the GUI size
@@ -200,7 +197,7 @@ public class ShopGUI extends ChestGUI {
         List<ShopConfig.PageConfig> pages = shopConfig.gui().pages();
         if(pages.isEmpty()) {
             logger.error(AdventureUtil.serialize("Unable to decorate the shop GUI for file " + shopName + ".yml due to no pages configured."));
-            return CompletableFuture.completedFuture(false);
+            return false;
         }
 
         // Get the page config
@@ -210,7 +207,7 @@ public class ShopGUI extends ChestGUI {
         List<ShopConfig.Button> entries  = page.buttons();
         if(entries.isEmpty()) {
             logger.error(AdventureUtil.serialize("Unable to decorate the shop GUI for page " + pageNum + " and file " + shopName + ".yml due to no buttons configured."));
-            return CompletableFuture.completedFuture(false);
+            return false;
         }
 
         for(int buttonNum = 0; buttonNum < page.buttons().size(); buttonNum++) {
@@ -420,19 +417,9 @@ public class ShopGUI extends ChestGUI {
                                 return;
                             }
 
-                            // This method is completed sync, the api returns a CompletableFuture for supporting plugins with async requirements.
-                            @NotNull CompletableFuture<Boolean> updateFuture = transactionGUI.update();
-                            try {
-                                boolean updateResult = updateFuture.get();
-
-                                if(!updateResult) {
-                                    logger.error(AdventureUtil.serialize("Unable to decorate the transaction GUI for player " + player.getName() + " due to a configuration error."));
-                                    player.sendMessage(AdventureUtil.serialize(locale.prefix() + locale.guiOpenError()));
-                                    if(isOpen) close();
-                                    return;
-                                }
-                            } catch (InterruptedException | ExecutionException e) {
-                                logger.error(AdventureUtil.serialize("Unable to decorate the transaction GUI for player " + player.getName() + " due to a configuration error. " + e.getMessage()));
+                            boolean updateFuture = transactionGUI.update();
+                            if(!updateFuture) {
+                                logger.error(AdventureUtil.serialize("Unable to decorate the transaction GUI for player " + player.getName() + " due to a configuration error."));
                                 player.sendMessage(AdventureUtil.serialize(locale.prefix() + locale.guiOpenError()));
                                 if(isOpen) close();
                                 return;
