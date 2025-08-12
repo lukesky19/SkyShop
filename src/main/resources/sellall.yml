@@ -1,12 +1,52 @@
 config-version: 2.0.0.0
 gui:
-  gui-type: CHEST_54
-  name: "<green><bold>SellAll Menu</bold></green>"
-  buttons:
-    - button-type: RETURN
-      slot: 49
-      display-item:
-        item-type: BARRIER
-        name: "<yellow>Close the menu.</yellow>"
-        lore:
-          - "<yellow>Any items inside will be sold or returned to you when closed.</yellow>"
+    gui-type: CHEST_54
+    name: "<green><bold>SellAll Menu</bold></green>"
+    buttons:
+    -   button-type: RETURN
+        slot: 49
+        display-item:
+            item-type: BARRIER
+            name: "<yellow>Close the menu.</yellow>"
+            lore:
+            - "<yellow>Any items inside will be sold or returned to you when closed.</yellow>"
+    -   button-type: DUMMY
+        slot: 45
+        display-item:
+            item-type: GRAY_STAINED_GLASS_PANE
+            name: " "
+    -   button-type: DUMMY
+        slot: 46
+        display-item:
+            item-type: GRAY_STAINED_GLASS_PANE
+            name: " "
+    -   button-type: DUMMY
+        slot: 47
+        display-item:
+            item-type: GRAY_STAINED_GLASS_PANE
+            name: " "
+    -   button-type: DUMMY
+        slot: 48
+        display-item:
+            item-type: GRAY_STAINED_GLASS_PANE
+            name: " "
+    -   button-type: DUMMY
+        slot: 50
+        display-item:
+            item-type: GRAY_STAINED_GLASS_PANE
+            name: " "
+    -   button-type: DUMMY
+        slot: 51
+        display-item:
+            item-type: GRAY_STAINED_GLASS_PANE
+            name: " "
+    -   button-type: DUMMY
+        slot: 52
+        display-item:
+            item-type: GRAY_STAINED_GLASS_PANE
+            name: " "
+    -   button-type: DUMMY
+        slot: 53
+        display-item:
+            item-type: GRAY_STAINED_GLASS_PANE
+            name: " "

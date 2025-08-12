@@ -437,6 +437,30 @@ public class ShopGUI extends ChestGUI {
                     });
                 }
 
+                case DUMMY -> {
+                    // Check if the slot is not configured and send a warning.
+                    if(buttonConfig.slot() == null) {
+                        logger.warn(AdventureUtil.serialize("Unable to add a button due to a null slot. Button Num: " + buttonNum + " and type: " + buttonConfig.buttonType()));
+                        continue;
+                    }
+
+                    // Get the ItemStackConfig
+                    ItemStackConfig itemConfig = buttonConfig.displayItem();
+
+                    // Create the ItemStackBuilder and pass the ItemStackConfig.
+                    ItemStackBuilder itemStackBuilder = new ItemStackBuilder(logger);
+                    itemStackBuilder.fromItemStackConfig(itemConfig, player, null, List.of());
+
+                    // If an ItemStack was created, create the GUIButton and add it to the GUI.
+                    Optional<ItemStack> optionalItemStack = itemStackBuilder.buildItemStack();
+                    optionalItemStack.ifPresent(itemStack -> {
+                        GUIButton.Builder guiButtonBuilder = new GUIButton.Builder();
+                        guiButtonBuilder.setItemStack(itemStack);
+
+                        setButton(buttonConfig.slot(), guiButtonBuilder.build());
+                    });
+                }
+
                 default -> logger.error(AdventureUtil.serialize("Unsupported ButtonType for " + buttonNum + " on page " + pageNum + " and file " + shopName + ".yml due to no buttons configured."));
             }
         }

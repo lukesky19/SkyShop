@@ -117,25 +117,45 @@ public class SellAllGUI extends ChestGUI {
                 continue;
             }
 
-            if(buttonType == ButtonType.RETURN) {
-                // Get the ItemStackConfig
-                ItemStackConfig itemConfig = buttonConfig.displayItem();
+            switch(buttonType) {
+                case RETURN -> {
+                    // Get the ItemStackConfig
+                    ItemStackConfig itemConfig = buttonConfig.displayItem();
 
-                // Create the ItemStackBuilder and pass the ItemStackConfig.
-                ItemStackBuilder itemStackBuilder = new ItemStackBuilder(logger);
-                itemStackBuilder.fromItemStackConfig(itemConfig, player, null, List.of());
+                    // Create the ItemStackBuilder and pass the ItemStackConfig.
+                    ItemStackBuilder itemStackBuilder = new ItemStackBuilder(logger);
+                    itemStackBuilder.fromItemStackConfig(itemConfig, player, null, List.of());
 
-                // If an ItemStack was created, create the GUIButton and add it to the GUI.
-                Optional<ItemStack> optionalItemStack = itemStackBuilder.buildItemStack();
-                optionalItemStack.ifPresent(itemStack -> {
-                    GUIButton.Builder guiButtonBuilder = new GUIButton.Builder();
-                    guiButtonBuilder.setItemStack(itemStack);
-                    guiButtonBuilder.setAction(event -> close());
+                    // If an ItemStack was created, create the GUIButton and add it to the GUI.
+                    Optional<ItemStack> optionalItemStack = itemStackBuilder.buildItemStack();
+                    optionalItemStack.ifPresent(itemStack -> {
+                        GUIButton.Builder guiButtonBuilder = new GUIButton.Builder();
+                        guiButtonBuilder.setItemStack(itemStack);
+                        guiButtonBuilder.setAction(event -> close());
 
-                    setButton(buttonConfig.slot(), guiButtonBuilder.build());
-                });
-            } else {
-                logger.warn(AdventureUtil.serialize("Unsupported ButtonType in the sellall GUI for " + buttonNum + "."));
+                        setButton(buttonConfig.slot(), guiButtonBuilder.build());
+                    });
+                }
+
+                case DUMMY -> {
+                    // Get the ItemStackConfig
+                    ItemStackConfig itemConfig = buttonConfig.displayItem();
+
+                    // Create the ItemStackBuilder and pass the ItemStackConfig.
+                    ItemStackBuilder itemStackBuilder = new ItemStackBuilder(logger);
+                    itemStackBuilder.fromItemStackConfig(itemConfig, player, null, List.of());
+
+                    // If an ItemStack was created, create the GUIButton and add it to the GUI.
+                    Optional<ItemStack> optionalItemStack = itemStackBuilder.buildItemStack();
+                    optionalItemStack.ifPresent(itemStack -> {
+                        GUIButton.Builder guiButtonBuilder = new GUIButton.Builder();
+                        guiButtonBuilder.setItemStack(itemStack);
+
+                        setButton(buttonConfig.slot(), guiButtonBuilder.build());
+                    });
+                }
+
+                default -> logger.warn(AdventureUtil.serialize("Unsupported ButtonType in the sellall GUI for " + buttonNum + " and button type " + buttonType + "."));
             }
         }
 

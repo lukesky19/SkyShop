@@ -71,5 +71,9 @@ public enum ButtonType {
     /**
      * This type is used to identify the configuration for the button that opens the {@link SellAllGUI}.
      */
-    SELL_GUI
+    SELL_GUI,
+    /**
+     * This type is used to identify configuration for dummy buttons. This button type is similar to FILLER, but is only for a single slot.
+     */
+    DUMMY
 }
