@@ -44,7 +44,7 @@ public class LocaleManager {
      */
     public final @NotNull Locale DEFAULT_LOCALE = new Locale(
             "2.0.0.0",
-            "<gray>[</gray><aqua><bold>SkyShop</bold></aqua><gray>]</gray> ",
+            "<aqua><bold>SkyShop</bold></aqua><gray> ▪ </gray>",
             List.of("<aqua>SkyShop is developed by <white><bold>lukeskywlker19</bold></white>.</aqua>",
                     "<aqua>Source code is released on GitHub: <click:OPEN_URL:https://github.com/lukesky19><yellow><underlined><bold>https://github.com/lukesky19</bold></underlined></yellow></click></aqua>",
                     " ",
