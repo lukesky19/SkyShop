@@ -1,0 +1,39 @@
+name: SkyShop
+version: '${version}'
+main: com.github.lukesky19.skyshop.SkyShop
+api-version: '1.21'
+author: lukeskywlker19
+description: A graphical shop plugin
+depend: [SkyLib, Vault]
+
+permissions:
+  skyshop.commands.skyshop:
+    description: Permission to use the /skyshop command.
+    default: op
+  skyshop.commands.skyshop.shop:
+    description: Permission to access the shop.
+    default: op
+  skyshop.commands.skyshop.reload:
+    description: Permission to reload the plugin.
+    default: op
+  skyshop.commands.skyshop.help:
+    description: Permission to view the plugin's help message(s).
+    default: op
+  skyshop.commands.skyshop.sellall:
+    description: Permission to access the /shop sellall GUI.
+    default: op
+  skyshop.command.skyshop.stats:
+    description: Permission to access the /shop stats GUI.
+    default: op
+  skyshop.commands.sell:
+    description: Permission to use the /sell command.
+    default: op
+  skyshop.commands.sell.hand:
+    description: Permission to sell the item in the player's hand.
+    default: op
+  skyshop.commands.sell.hand.all:
+    description: Permission to sell the item in the player's hand.
+    default: op
+  skyshop.commands.sell.all:
+    description: Permission to sell all items in the player's inventory.
+    default: op

@@ -1,0 +1,26 @@
+#########################################################
+################ DO NOT DELETE THIS FILE ################
+#########################################################
+# This file acts as the entry point to all other shops.
+# This file is required for the plugin to function.
+config-version: 2.0.0.0
+gui:
+    gui-type: CHEST_27
+    name: "<aqua><bold>Example Shop</bold></aqua>"
+    pages:
+    -   buttons:
+        -   button-type: FILLER
+            display-item:
+                item-type: GRAY_STAINED_GLASS_PANE
+                name: " "
+        -   button-type: RETURN
+            slot: 22
+            display-item:
+                item-type: BARRIER
+                name: "<yellow>Exit the shop.</yellow>"
+        -   button-type: OPEN_SHOP
+            slot: 0
+            shop-name: example
+            display-item:
+                item-type: CRAFTING_TABLE
+                name: "<yellow><bold>Example Shop</bold></yellow>"

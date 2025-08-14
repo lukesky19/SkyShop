@@ -1,0 +1,336 @@
+config-version: 2.0.0.0
+gui:
+    gui-type: CHEST_54
+    name: "<aqua><bold>Transaction Menu</bold></aqua>"
+    pages:
+        - buttons:
+              -   button-type: FILLER
+                  display-item:
+                      item-type: GRAY_STAINED_GLASS_PANE
+                      name: " "
+                      lore: []
+              -   button-type: SELL_GUI
+                  slot: 45
+                  display-item:
+                      item-type: CHEST
+                      name: "<yellow>Open the sell all GUI</yellow>"
+                      lore:
+                          - "<white>Opens a GUI to add items to that</white>"
+                          - "<white>will be sold when the GUI is closed.</white>"
+              -   button-type: RETURN
+                  slot: 49
+                  display-item:
+                      item-type: BARRIER
+                      name: "<yellow>Return to the previous menu.</yellow>"
+                      lore: []
+              -   button-type: NEXT_PAGE
+                  slot: 51
+                  display-item:
+                      item-type: ARROW
+                      name: "<yellow>Next Page</yellow>"
+                      lore: []
+              -   button-type: SELL_ALL
+                  slot: 53
+                  display-item:
+                      item-type: DIAMOND
+                      name: "<yellow>Sell All</yellow>"
+                      lore:
+                          - "<white>Sells all items of this type inside your inventory.</white>"
+              -   button-type: DISPLAY
+                  slot: 22
+              -   button-type: BUY
+                  slot: 10
+                  transaction-amount: 1
+                  display-item:
+                      item-type: RED_STAINED_GLASS_PANE
+                      name: "<red>Buy <amount></red>"
+                      lore:
+                          - "<yellow>Buy Price:</yellow> <white><buy_price></white>"
+              -   button-type: BUY
+                  slot: 11
+                  transaction-amount: 2
+                  display-item:
+                      item-type: RED_STAINED_GLASS_PANE
+                      name: "<red>Buy <amount></red>"
+                      lore:
+                          - "<yellow>Buy Price:</yellow> <white><buy_price></white>"
+              -   button-type: BUY
+                  slot: 12
+                  transaction-amount: 4
+                  display-item:
+                      item-type: RED_STAINED_GLASS_PANE
+                      name: "<red>Buy <amount></red>"
+                      lore:
+                          - "<yellow>Buy Price:</yellow> <white><buy_price></white>"
+              -   button-type: BUY
+                  slot: 13
+                  transaction-amount: 8
+                  display-item:
+                      item-type: RED_STAINED_GLASS_PANE
+                      name: "<red>Buy <amount></red>"
+                      lore:
+                          - "<yellow>Buy Price:</yellow> <white><buy_price></white>"
+              -   button-type: BUY
+                  slot: 14
+                  transaction-amount: 16
+                  display-item:
+                      item-type: RED_STAINED_GLASS_PANE
+                      name: "<red>Buy <amount></red>"
+                      lore:
+                          - "<yellow>Buy Price:</yellow> <white><buy_price></white>"
+              -   button-type: BUY
+                  slot: 15
+                  transaction-amount: 32
+                  display-item:
+                      item-type: RED_STAINED_GLASS_PANE
+                      name: "<red>Buy <amount></red>"
+                      lore:
+                          - "<yellow>Buy Price:</yellow> <white><buy_price></white>"
+              -   button-type: BUY
+                  slot: 16
+                  transaction-amount: 64
+                  display-item:
+                      item-type: RED_STAINED_GLASS_PANE
+                      name: "<red>Buy <amount></red>"
+                      lore:
+                          - "<yellow>Buy Price:</yellow> <white><buy_price></white>"
+              -   button-type: SELL
+                  slot: 28
+                  transaction-amount: 1
+                  display-item:
+                      item-type: GREEN_STAINED_GLASS_PANE
+                      name: "<green>Sell <amount></green>"
+                      lore:
+                          - "<yellow>Sell Price:</yellow> <white><sell_price></white>"
+              -   button-type: SELL
+                  slot: 29
+                  transaction-amount: 2
+                  display-item:
+                      item-type: GREEN_STAINED_GLASS_PANE
+                      name: "<green>Sell <amount></green>"
+                      lore:
+                          - "<yellow>Sell Price:</yellow> <white><sell_price></white>"
+              -   button-type: SELL
+                  slot: 30
+                  transaction-amount: 4
+                  display-item:
+                      item-type: GREEN_STAINED_GLASS_PANE
+                      name: "<green>Sell <amount></green>"
+                      lore:
+                          - "<yellow>Sell Price:</yellow> <white><sell_price></white>"
+              -   button-type: SELL
+                  slot: 31
+                  transaction-amount: 8
+                  display-item:
+                      item-type: GREEN_STAINED_GLASS_PANE
+                      name: "<green>Sell <amount></green>"
+                      lore:
+                          - "<yellow>Sell Price:</yellow> <white><sell_price></white>"
+              -   button-type: SELL
+                  slot: 32
+                  transaction-amount: 16
+                  display-item:
+                      item-type: GREEN_STAINED_GLASS_PANE
+                      name: "<green>Sell <amount></green>"
+                      lore:
+                          - "<yellow>Sell Price:</yellow> <white><sell_price></white>"
+              -   button-type: SELL
+                  slot: 33
+                  transaction-amount: 32
+                  display-item:
+                      item-type: GREEN_STAINED_GLASS_PANE
+                      name: "<green>Sell <amount></green>"
+                      lore:
+                          - "<yellow>Sell Price:</yellow> <white><sell_price></white>"
+              -   button-type: SELL
+                  slot: 34
+                  transaction-amount: 64
+                  display-item:
+                      item-type: GREEN_STAINED_GLASS_PANE
+                      name: "<green>Sell <amount></green>"
+                      lore:
+                          - "<yellow>Sell Price:</yellow> <white><sell_price></white>"
+        - buttons:
+              -   button-type: FILLER
+                  display-item:
+                      item-type: GRAY_STAINED_GLASS_PANE
+                      name: " "
+              -   button-type: SELL_GUI
+                  slot: 45
+                  display-item:
+                      item-type: CHEST
+                      name: "<yellow>Open the sell all GUI</yellow>"
+                      lore:
+                          - "<white>Opens a GUI to add items to that</white>"
+                          - "<white>will be sold when the GUI is closed.</white>"
+              -   button-type: PREVIOUS_PAGE
+                  slot: 47
+                  display-item:
+                      item-type: ARROW
+                      name: <green><bold>Previous Page</bold></green>
+              -   button-type: RETURN
+                  slot: 49
+                  display-item:
+                      item-type: BARRIER
+                      name: "<yellow>Return to the previous menu.</yellow>"
+              -   button-type: SELL_ALL
+                  slot: 53
+                  display-item:
+                      item-type: DIAMOND
+                      name: "<yellow>Sell All</yellow>"
+                      lore:
+                          - "<white>Sells all items of this type inside your inventory.</white>"
+              -   button-type: DISPLAY
+                  slot: 22
+              -   button-type: BUY
+                  slot: 9
+                  transaction-amount: 64
+                  display-item:
+                      item-type: RED_STAINED_GLASS_PANE
+                      name: "<red>Buy 1 stack</red>"
+                      lore:
+                          - "<yellow>Buy Price:</yellow> <white><buy_price></white>"
+              -   button-type: BUY
+                  slot: 9
+                  transaction-amount: 64
+                  display-item:
+                      item-type: RED_STAINED_GLASS_PANE
+                      name: "<red>Buy 1 stack</red>"
+                      lore:
+                          - "<yellow>Buy Price:</yellow> <white><buy_price></white>"
+              -   button-type: BUY
+                  slot: 10
+                  transaction-amount: 128
+                  display-item:
+                      item-type: RED_STAINED_GLASS_PANE
+                      name: "<red>Buy 2 stacks</red>"
+                      lore:
+                          - "<yellow>Buy Price:</yellow> <white><buy_price></white>"
+              -   button-type: BUY
+                  slot: 11
+                  transaction-amount: 192
+                  display-item:
+                      item-type: RED_STAINED_GLASS_PANE
+                      name: "<red>Buy 3 stacks</red>"
+                      lore:
+                          - "<yellow>Buy Price:</yellow> <white><buy_price></white>"
+              -   button-type: BUY
+                  slot: 12
+                  transaction-amount: 256
+                  display-item:
+                      item-type: RED_STAINED_GLASS_PANE
+                      name: "<red>Buy 4 stacks</red>"
+                      lore:
+                          - "<yellow>Buy Price:</yellow> <white><buy_price></white>"
+              -   button-type: BUY
+                  slot: 13
+                  transaction-amount: 320
+                  display-item:
+                      item-type: RED_STAINED_GLASS_PANE
+                      name: "<red>Buy 5 stacks</red>"
+                      lore:
+                          - "<yellow>Buy Price:</yellow> <white><buy_price></white>"
+              -   button-type: BUY
+                  slot: 14
+                  transaction-amount: 384
+                  display-item:
+                      item-type: RED_STAINED_GLASS_PANE
+                      name: "<red>Buy 6 stacks</red>"
+                      lore:
+                          - "<yellow>Buy Price:</yellow> <white><buy_price></white>"
+              -   button-type: BUY
+                  slot: 15
+                  transaction-amount: 448
+                  display-item:
+                      item-type: RED_STAINED_GLASS_PANE
+                      name: "<red>Buy 7 stacks</red>"
+                      lore:
+                          - "<yellow>Buy Price:</yellow> <white><buy_price></white>"
+              -   button-type: BUY
+                  slot: 16
+                  transaction-amount: 512
+                  display-item:
+                      item-type: RED_STAINED_GLASS_PANE
+                      name: "<red>Buy 8 stacks</red>"
+                      lore:
+                          - "<yellow>Buy Price:</yellow> <white><buy_price></white>"
+              -   button-type: BUY
+                  slot: 17
+                  transaction-amount: 576
+                  display-item:
+                      item-type: RED_STAINED_GLASS_PANE
+                      name: "<red>Buy 9 stacks</red>"
+                      lore:
+                          - "<yellow>Buy Price:</yellow> <white><buy_price></white>"
+              -   button-type: SELL
+                  slot: 27
+                  transaction-amount: 64
+                  display-item:
+                      item-type: GREEN_STAINED_GLASS_PANE
+                      name: "<green>Sell 1 stack</green>"
+                      lore:
+                          - "<yellow>Sell Price:</yellow> <white><sell_price></white>"
+              -   button-type: SELL
+                  slot: 28
+                  transaction-amount: 128
+                  display-item:
+                      item-type: GREEN_STAINED_GLASS_PANE
+                      name: "<green>Sell 2 stacks</green>"
+                      lore:
+                          - "<yellow>Sell Price:</yellow> <white><sell_price></white>"
+              -   button-type: SELL
+                  slot: 29
+                  transaction-amount: 192
+                  display-item:
+                      item-type: GREEN_STAINED_GLASS_PANE
+                      name: "<green>Sell 3 stacks</green>"
+                      lore:
+                          - "<yellow>Sell Price:</yellow> <white><sell_price></white>"
+              -   button-type: SELL
+                  slot: 30
+                  transaction-amount: 256
+                  display-item:
+                      item-type: GREEN_STAINED_GLASS_PANE
+                      name: "<green>Sell 4 stacks</green>"
+                      lore:
+                          - "<yellow>Sell Price:</yellow> <white><sell_price></white>"
+              -   button-type: SELL
+                  slot: 31
+                  transaction-amount: 320
+                  display-item:
+                      item-type: GREEN_STAINED_GLASS_PANE
+                      name: "<green>Sell 5 stacks</green>"
+                      lore:
+                          - "<yellow>Sell Price:</yellow> <white><sell_price></white>"
+              -   button-type: SELL
+                  slot: 32
+                  transaction-amount: 384
+                  display-item:
+                      item-type: GREEN_STAINED_GLASS_PANE
+                      name: "<green>Sell 6 stacks</green>"
+                      lore:
+                          - "<yellow>Sell Price:</yellow> <white><sell_price></white>"
+              -   button-type: SELL
+                  slot: 33
+                  transaction-amount: 448
+                  display-item:
+                      item-type: GREEN_STAINED_GLASS_PANE
+                      name: "<green>Sell 7 stacks</green>"
+                      lore:
+                          - "<yellow>Sell Price:</yellow> <white><sell_price></white>"
+              -   button-type: SELL
+                  slot: 34
+                  transaction-amount: 512
+                  display-item:
+                      item-type: GREEN_STAINED_GLASS_PANE
+                      name: "<green>Sell 8 stacks</green>"
+                      lore:
+                          - "<yellow>Sell Price:</yellow> <white><sell_price></white>"
+              -   button-type: SELL
+                  slot: 35
+                  transaction-amount: 576
+                  display-item:
+                      item-type: GREEN_STAINED_GLASS_PANE
+                      name: "<green>Sell 9 stacks</green>"
+                      lore:
+                          - "<yellow>Sell Price:</yellow> <white><sell_price></white>"

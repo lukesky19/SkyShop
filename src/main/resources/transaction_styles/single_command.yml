@@ -1,0 +1,27 @@
+config-version: 2.0.0.0
+gui:
+    gui-type: CHEST_54
+    name: "<aqua><bold>Transaction Menu</bold></aqua>"
+    pages:
+        - buttons:
+              -   button-type: FILLER
+                  display-item:
+                      item-type: GRAY_STAINED_GLASS_PANE
+                      name: " "
+                      lore: []
+              -   button-type: RETURN
+                  slot: 49
+                  display-item:
+                      item-type: BARRIER
+                      name: "<yellow>Return to the previous menu.</yellow>"
+                      lore: []
+              -   button-type: DISPLAY
+                  slot: 22
+              -   button-type: BUY
+                  slot: 13
+                  transaction-amount: 1
+                  display-item:
+                      item-type: RED_STAINED_GLASS_PANE
+                      name: "<red>Buy</red>"
+                      lore:
+                          - "<yellow>Buy Price:</yellow> <white><buy_price></white>"
