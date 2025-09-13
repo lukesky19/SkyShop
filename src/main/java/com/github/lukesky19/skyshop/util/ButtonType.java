@@ -1,5 +1,5 @@
 /*
-    SkyShop is a simple inventory based shop plugin with page support, sell commands, and error checking.
+    SkyShop is a GUI shop plugin with sell commands, a sell GUI, nested categories, page support, and error checking.
     Copyright (C) 2024 lukeskywlker19
 
     This program is free software: you can redistribute it and/or modify
@@ -17,8 +17,8 @@
 */
 package com.github.lukesky19.skyshop.util;
 
+import com.github.lukesky19.skyshop.gui.CategoryGUI;
 import com.github.lukesky19.skyshop.gui.SellAllGUI;
-import com.github.lukesky19.skyshop.gui.ShopGUI;
 import com.github.lukesky19.skyshop.gui.TransactionGUI;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
@@ -45,7 +45,7 @@ public enum ButtonType {
      */
     RETURN,
     /**
-     * This type is used to identify the configuration for the button to open a {@link ShopGUI}.
+     * This type is used to identify the configuration for the button to open a {@link CategoryGUI}.
      */
     OPEN_SHOP,
     /**

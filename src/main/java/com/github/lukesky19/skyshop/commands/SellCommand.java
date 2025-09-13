@@ -1,5 +1,5 @@
 /*
-    SkyShop is a simple inventory based shop plugin with page support, sell commands, and error checking.
+    SkyShop is a GUI shop plugin with sell commands, a sell GUI, nested categories, page support, and error checking.
     Copyright (C) 2024 lukeskywlker19
 
     This program is free software: you can redistribute it and/or modify
@@ -73,7 +73,7 @@ public class SellCommand {
                     ItemStack itemStack = player.getInventory().getItemInMainHand();
 
                     if(!itemStack.isEmpty() && !itemStack.getType().equals(Material.AIR)) {
-                        skyShopAPI.sellAllMatchingItemStack(player, itemStack, true);
+                        skyShopAPI.sellAllMatchingItemStack(player, player.getInventory(), itemStack, true, false, true);
 
                         return 1;
                     }
@@ -88,7 +88,7 @@ public class SellCommand {
             .executes(ctx -> {
                 Player player = (Player) ctx.getSource().getSender();
 
-                skyShopAPI.sellPlayerInventory(player, player.getInventory(), true);
+                skyShopAPI.sellInventory(player, player.getInventory(),true, false, true);
 
                 return 1;
             })

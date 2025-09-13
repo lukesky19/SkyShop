@@ -15,21 +15,22 @@
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-package com.github.lukesky19.skyshop.database;
+package com.github.lukesky19.skyshop.config.settings;
 
-import com.github.lukesky19.skylib.api.database.connection.AbstractConnectionManager;
-import com.github.lukesky19.skylib.api.database.queue.MultiThreadQueueManager;
-import org.jetbrains.annotations.NotNull;
+import com.github.lukesky19.skylib.libs.configurate.objectmapping.ConfigSerializable;
+import org.jetbrains.annotations.Nullable;
 
 /**
- * This class manages the queue for reading from and writing to the database.
+ * This record contains the plugin's settings.
+ * @param configVersion The version of the configuration file.
+ * @param locale The plugin's locale. Refers to a file in SkyShop/locale
+ * @param firstRun Is this the first time the plugin has run?
+ * @param statistics Should statistics be saved for how many items have been purchased and sold?
  */
-public class QueueManager extends MultiThreadQueueManager {
-    /**
-     * Constructor that takes a class that extends {@link AbstractConnectionManager}.
-     * @param connectionManager A class that extends {@link AbstractConnectionManager} to use.
-     */
-    public QueueManager(@NotNull AbstractConnectionManager connectionManager) {
-        super(connectionManager);
-    }
+@ConfigSerializable
+public record Settings(
+        @Nullable String configVersion,
+        @Nullable String locale,
+        boolean firstRun,
+        boolean statistics) {
 }

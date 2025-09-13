@@ -15,21 +15,20 @@
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-package com.github.lukesky19.skyshop.database;
-
-import com.github.lukesky19.skylib.api.database.connection.AbstractConnectionManager;
-import com.github.lukesky19.skylib.api.database.queue.MultiThreadQueueManager;
-import org.jetbrains.annotations.NotNull;
+package com.github.lukesky19.skyshop.hook;
 
 /**
- * This class manages the queue for reading from and writing to the database.
+ * This class is implemented to create hooks into different plugins.
  */
-public class QueueManager extends MultiThreadQueueManager {
+public interface Hook {
     /**
-     * Constructor that takes a class that extends {@link AbstractConnectionManager}.
-     * @param connectionManager A class that extends {@link AbstractConnectionManager} to use.
+     * Attempts to initialize the hook into a plugin.
      */
-    public QueueManager(@NotNull AbstractConnectionManager connectionManager) {
-        super(connectionManager);
-    }
+    void initialize();
+
+    /**
+     * Checks if the hook was initialized or not.
+     * @return true if hooked or false.
+     */
+    boolean isHooked();
 }

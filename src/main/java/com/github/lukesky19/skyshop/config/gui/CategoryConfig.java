@@ -1,5 +1,5 @@
 /*
-    SkyShop is a simple inventory based shop plugin with page support, sell commands, and error checking.
+    SkyShop is a GUI shop plugin with sell commands, a sell GUI, nested categories, page support, and error checking.
     Copyright (C) 2024 lukeskywlker19
 
     This program is free software: you can redistribute it and/or modify
@@ -15,12 +15,11 @@
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-package com.github.lukesky19.skyshop.data.gui;
+package com.github.lukesky19.skyshop.config.gui;
 
 import com.github.lukesky19.skylib.api.gui.GUIType;
 import com.github.lukesky19.skylib.api.itemstack.ItemStackConfig;
 import com.github.lukesky19.skylib.libs.configurate.objectmapping.ConfigSerializable;
-import com.github.lukesky19.skyshop.gui.ShopGUI;
 import com.github.lukesky19.skyshop.util.ButtonType;
 import com.github.lukesky19.skyshop.util.TransactionType;
 import org.bukkit.inventory.ItemStack;
@@ -30,12 +29,12 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 
 /**
- * This record contains the configuration to create a {@link ShopGUI}.
+ * This record contains the configuration to create a category GUIs.
  * @param configVersion The file's config version.
  * @param gui The {@link GuiData} configuration.
  */
 @ConfigSerializable
-public record ShopConfig(@Nullable String configVersion, @NotNull GuiData gui) {
+public record CategoryConfig(@Nullable String configVersion, @NotNull GuiData gui) {
     /**
      * This record contains the actual configuration for creating the initial GUI.
      * @param guiType The {@link GUIType}.
@@ -47,34 +46,34 @@ public record ShopConfig(@Nullable String configVersion, @NotNull GuiData gui) {
 
     /**
      * This record contains the configuration for individual pages.
-     * @param buttons The {@link List} of {@link Button}s.
+     * @param buttons The {@link List} of {@link ButtonConfig}s.
      */
     @ConfigSerializable
-    public record PageConfig(@NotNull List<@NotNull Button> buttons) {}
+    public record PageConfig(@NotNull List<@NotNull ButtonConfig> buttons) {}
 
     /**
      * This record contains the configuration to create buttons to be displayed.
      * @param buttonType The {@link ButtonType}.
      * @param slot The slot to place the button at.
+     * @param shopName If the {@link ButtonType} is that of OPEN_SHOP, this is the shop name to open. This name corresponds to a file in {@code SkyShop/categories}.
      * @param displayItem The {@link ItemStackConfig} used to create the {@link ItemStack} for the button.
      * @param transactionData The {@link TransactionData} that will be used to complete a transaction.
      */
     @ConfigSerializable
-    public record Button(
+    public record ButtonConfig(
             @Nullable ButtonType buttonType,
             @Nullable Integer slot,
+            @Nullable String shopName,
             @NotNull ItemStackConfig displayItem,
-            @NotNull TransactionData transactionData) {}
-
+            @Nullable TransactionData transactionData) {}
     /**
      * This record contains the configuration required to complete a transaction.
      * @param transactionType The {@link TransactionType}.
      * @param transactionStyle This is a file name in SkyShop/transaction_styles
-     * @param buyPrice The buy price of the item.
-     * @param sellPrice The sell price of the item.
      * @param transactionName This is the text to use in the success messages when a transaction is successful.
-     * @param displayItem This is the {@link ItemStackConfig} used to create the {@link ItemStack} to display what is being purchased or sold.
-     * @param transactionItem The is the {@link ItemStackConfig} used to create the {@link ItemStack} that will be purchased or sold.
+     * @param prices The {@link PriceConfig} for the transaction.
+     * @param displayItem This {@link ItemStackConfig} used to create the {@link ItemStack} to display what is being purchased or sold.
+     * @param transactionItem The {@link ItemStackConfig} used to create the {@link ItemStack} that will be purchased or sold.
      * @param buyCommands A {@link List} of {@link String}s to execute in console when purchased.
      * @param sellCommands A {@link List} of {@link String}s to execute in console when sold.
      */
@@ -82,11 +81,23 @@ public record ShopConfig(@Nullable String configVersion, @NotNull GuiData gui) {
     public record TransactionData(
             @Nullable TransactionType transactionType,
             @Nullable String transactionStyle,
-            @Nullable Double buyPrice,
-            @Nullable Double sellPrice,
+            @NotNull PriceConfig prices,
             @Nullable String transactionName,
             @NotNull ItemStackConfig displayItem,
             @NotNull ItemStackConfig transactionItem,
             @NotNull List<String> buyCommands,
             @NotNull List<String> sellCommands) {}
+    /**
+     * The price configuration for a transaction.
+     * @param buyPrice The buy price of the item.
+     * @param sellPrice The sell price of the item.
+     * @param buyPoints The player points required to buy an item.
+     * @param sellPoints The player points given when selling an item.
+     */
+    @ConfigSerializable
+    public record PriceConfig(
+            double buyPrice,
+            double sellPrice,
+            int buyPoints,
+            int sellPoints) {}
 }

@@ -1,5 +1,5 @@
 /*
-    SkyShop is a simple inventory based shop plugin with page support, sell commands, and error checking.
+    SkyShop is a GUI shop plugin with sell commands, a sell GUI, nested categories, page support, and error checking.
     Copyright (C) 2024 lukeskywlker19
 
     This program is free software: you can redistribute it and/or modify
@@ -15,14 +15,14 @@
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-package com.github.lukesky19.skyshop.data;
+package com.github.lukesky19.skyshop.config.locale;
 
 import com.github.lukesky19.skylib.libs.configurate.objectmapping.ConfigSerializable;
 
 import java.util.List;
 
 /**
- * The plugin's locale configuration.
+ * The 2.0.0.0 version format of the locale configuration.
  * @param configVersion The configuration's version.
  * @param prefix The plugin's prefix/
  * @param help The plugin's help message. A {@link List} of {@link String}s.
@@ -42,7 +42,7 @@ import java.util.List;
  * @param statsDisabledGuiError The message sent to the player when stats tracking is disabled, and they try to open the stats GUI.
  */
 @ConfigSerializable
-public record Locale(
+public record Locale_2_0_0_0(
         String configVersion,
         String prefix,
         List<String> help,
@@ -59,5 +59,4 @@ public record Locale(
         String unsellable,
         String inGameOnly,
         String guiOpenError,
-        String statsDisabledGuiError) {
-}
+        String statsDisabledGuiError) {}

@@ -1,5 +1,5 @@
 /*
-    SkyShop is a simple inventory based shop plugin with page support, sell commands, and error checking.
+    SkyShop is a GUI shop plugin with sell commands, a sell GUI, nested categories, page support, and error checking.
     Copyright (C) 2024 lukeskywlker19
 
     This program is free software: you can redistribute it and/or modify
@@ -20,27 +20,31 @@ package com.github.lukesky19.skyshop.manager;
 import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
 import com.github.lukesky19.skylib.api.registry.RegistryUtil;
 import com.github.lukesky19.skyshop.SkyShop;
-import com.github.lukesky19.skyshop.data.gui.ShopConfig;
+import com.github.lukesky19.skyshop.config.gui.CategoryConfig;
+import com.github.lukesky19.skyshop.data.PriceCache;
 import com.github.lukesky19.skyshop.util.ButtonType;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import org.bukkit.inventory.ItemType;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
- * This class keeps track of the appropriate sell price for each {@link ItemType} as configured in {@link ShopConfig}s.
+ * This class keeps track of the appropriate sell prices for each {@link ItemType} as configured in {@link CategoryConfig}s.
  */
 public class PriceManager {
     private final @NotNull SkyShop skyShop;
-    private final @NotNull HashMap<@NotNull ItemType, @NotNull Double> sellPrices = new HashMap<>();
+    private final @NotNull Map<@NotNull ItemType, @NotNull PriceCache> priceCache = new HashMap<>();
 
     /**
      * Default Constructor.
      * You should use {@link PriceManager#PriceManager(SkyShop)} instead.
      * @throws RuntimeException if used.
+     * @deprecated Use {@link PriceManager#PriceManager(SkyShop)} instead.
      */
     @Deprecated
     public PriceManager() {
@@ -56,62 +60,88 @@ public class PriceManager {
     }
 
     /**
-     * Get the configured sell price for the {@link ItemType}.
-     * @param itemType The {@link ItemType}
-     * @return {@link Optional} containing the sell price as a {@link Double} for the {@link ItemType}.
-     * Will return an empty {@link Optional} if no sell price is cached, which means the {@link ItemType} is not configured to be sold.
+     * Get the {@link PriceCache} for the {@link ItemType}.
+     * @param itemType The {@link ItemType}.
+     * @return The {@link PriceCache} or null if no prices are cached for the ItemType.
      */
-    @NotNull
-    public Optional<@NotNull Double> getItemTypeSellPrice(@NotNull ItemType itemType) {
-        return Optional.ofNullable(sellPrices.get(itemType));
+    public @Nullable PriceCache getCachedPrice(@NotNull ItemType itemType) {
+        return priceCache.get(itemType);
     }
 
     /**
-     * Clear cached sell prices.
+     * Clear the cached prices.
      */
-    public void clearPrices() {
-        sellPrices.clear();
+    public void clearCache() {
+        priceCache.clear();
     }
 
     /**
-     * Stores the sell prices for all buttons with a {@link ButtonType} of TRANSACTION from a {@link ShopConfig}.
-     * If multiple {@link ShopConfig} contains prices the same {@link ItemType}, the last {@link ShopConfig} processed will take priority.
-     * @param shopConfig A {@link ShopConfig}.
+     * Cache the sell prices for the provided {@link CategoryConfig}.
+     * @param categoryConfig The {@link CategoryConfig} to parse.
      */
-    public void cacheSellPrices(@NotNull ShopConfig shopConfig) {
+    public void cacheCategorySellPrices(@NotNull CategoryConfig categoryConfig) {
         ComponentLogger logger = skyShop.getComponentLogger();
 
-        List<ShopConfig.PageConfig> pages = shopConfig.gui().pages();
+        List<CategoryConfig.PageConfig> pages = categoryConfig.gui().pages();
         for(int pageNum = 0; pageNum <= (pages.size() - 1); pageNum++) {
-            ShopConfig.PageConfig pageConfig = pages.get(pageNum);
-            List<ShopConfig.Button> buttons = pageConfig.buttons();
+            CategoryConfig.PageConfig pageConfig = pages.get(pageNum);
+            List<CategoryConfig.ButtonConfig> buttons = pageConfig.buttons();
 
             for(int buttonNum = 0; buttonNum <= (buttons.size() - 1); buttonNum++) {
                 // Get the button config.
-                ShopConfig.Button buttonConfig = buttons.get(buttonNum);
+                CategoryConfig.ButtonConfig buttonConfig = buttons.get(buttonNum);
                 // Only continue if the button type is valid and of type TRANSACTION
                 if(buttonConfig.buttonType() == null || !buttonConfig.buttonType().equals(ButtonType.TRANSACTION)) continue;
                 // Get the transaction data
-                ShopConfig.TransactionData transactionData = buttonConfig.transactionData();
+                CategoryConfig.TransactionData transactionData = buttonConfig.transactionData();
 
-                // If no sell price is configured, skip to the next button.
-                if(transactionData.sellPrice() == null || transactionData.sellPrice() <= 0.0) continue;
-
-                // If the ItemType isn't configured, log an error and skip to the next button.
-                if(transactionData.transactionItem().itemType() == null) {
-                    logger.warn(AdventureUtil.serialize("Unable to cache sell price due to an invalid ItemType."));
-                    continue;
-                }
+                // If the TransactionData is null, skip to the next button.
+                if(transactionData == null) continue;
+                // If the ItemType isn't configured, skip to the next button.
+                if(transactionData.transactionItem().itemType() == null) continue;
 
                 // Get the ItemType, logging an error if no ItemType was found and skip to the next button.
                 @NotNull Optional<ItemType> optionalItemType = RegistryUtil.getItemType(logger, transactionData.transactionItem().itemType());
                 if(optionalItemType.isEmpty()) {
-                    logger.warn(AdventureUtil.serialize("Unable to cache sell price due to an invalid ItemType for ." + transactionData.transactionItem().itemType()));
+                    logger.warn(AdventureUtil.serialize("Unable to cache sell prices due to an invalid ItemType for ." + transactionData.transactionItem().itemType()));
                     continue;
                 }
+                ItemType itemType = optionalItemType.get();
 
-                // Cache the sell price
-                sellPrices.put(optionalItemType.get(), transactionData.sellPrice());
+                // Get the price config
+                CategoryConfig.PriceConfig priceConfig = transactionData.prices();
+                // If there is no sell prices configured, continue
+                if(priceConfig.sellPrice() <= 0 && priceConfig.sellPoints() <= 0) continue;
+
+                // Create a new PriceCache
+                PriceCache priceCache = new PriceCache(priceConfig.sellPrice(), priceConfig.sellPoints());
+
+                // Attempt to cache the new price cache if it is better than the existing
+                addPriceCache(itemType, priceCache);
+            }
+        }
+    }
+
+    /**
+     * Cache the {@link PriceCache} for the {@link ItemType} if there is no stored cache for that ItemType, the money is higher, or the money is equal and points is higher.
+     * @param itemType The {@link ItemType}.
+     * @param priceCache The {@link PriceCache}.
+     */
+    private void addPriceCache(@NotNull ItemType itemType, @NotNull PriceCache priceCache) {
+        @Nullable PriceCache existingCache = this.priceCache.get(itemType);
+
+        // If there is no cached price stored for the ItemType, add it to the cache or determine the better price cache to store.
+        if(existingCache == null) {
+            this.priceCache.put(itemType, priceCache);
+        } else {
+            double existingMoney = existingCache.money();
+            int existingPoints = existingCache.points();
+            double newMoney = priceCache.money();
+            int newPoints = priceCache.points();
+
+            // Store the new price cache if the money is higher or the money is equal and the points are higher.
+            if(newMoney > existingMoney || (newMoney == existingMoney && newPoints > existingPoints)) {
+                this.priceCache.put(itemType, priceCache);
             }
         }
     }

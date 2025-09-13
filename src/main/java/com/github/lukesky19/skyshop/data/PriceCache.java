@@ -1,5 +1,5 @@
 /*
-    SkyShop is a simple inventory based shop plugin with page support, sell commands, and error checking.
+    SkyShop is a GUI shop plugin with sell commands, a sell GUI, nested categories, page support, and error checking.
     Copyright (C) 2024 lukeskywlker19
 
     This program is free software: you can redistribute it and/or modify
@@ -17,20 +17,11 @@
 */
 package com.github.lukesky19.skyshop.data;
 
-import com.github.lukesky19.skylib.libs.configurate.objectmapping.ConfigSerializable;
-import org.jetbrains.annotations.Nullable;
+import org.bukkit.inventory.ItemType;
 
 /**
- * This record contains the plugin's settings.
- * @param configVersion The version of the configuration file.
- * @param locale The plugin's locale. Refers to a file in SkyShop/locale
- * @param firstRun Is this the first time the plugin has run?
- * @param statistics Should statistics be saved for how many items have been purchased and sold?
+ * This record stores the cached sell prices for a given {@link ItemType}.
+ * @param money The cached money.
+ * @param points The cached player points.
  */
-@ConfigSerializable
-public record Settings(
-        @Nullable String configVersion,
-        @Nullable String locale,
-        boolean firstRun,
-        boolean statistics) {
-}
+public record PriceCache(double money, int points) {}

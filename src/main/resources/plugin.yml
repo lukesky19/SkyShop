@@ -4,7 +4,9 @@ main: com.github.lukesky19.skyshop.SkyShop
 api-version: '1.21'
 author: lukeskywlker19
 description: A graphical shop plugin
-depend: [SkyLib, Vault]
+depend: [SkyLib]
+
+soft-depend: [PlayerPoints, Vault]
 
 permissions:
   skyshop.commands.skyshop:

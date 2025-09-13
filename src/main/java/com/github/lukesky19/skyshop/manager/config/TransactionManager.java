@@ -1,5 +1,5 @@
 /*
-    SkyShop is a simple inventory based shop plugin with page support, sell commands, and error checking.
+    SkyShop is a GUI shop plugin with sell commands, a sell GUI, nested categories, page support, and error checking.
     Copyright (C) 2024 lukeskywlker19
 
     This program is free software: you can redistribute it and/or modify
@@ -15,16 +15,15 @@
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-package com.github.lukesky19.skyshop.configuration;
+package com.github.lukesky19.skyshop.manager.config;
 
 import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
 import com.github.lukesky19.skylib.api.configurate.ConfigurationUtility;
 import com.github.lukesky19.skylib.libs.configurate.ConfigurateException;
 import com.github.lukesky19.skylib.libs.configurate.yaml.YamlConfigurationLoader;
 import com.github.lukesky19.skyshop.SkyShop;
-import com.github.lukesky19.skyshop.data.Settings;
-import com.github.lukesky19.skyshop.data.gui.ShopConfig;
-import com.github.lukesky19.skyshop.manager.PriceManager;
+import com.github.lukesky19.skyshop.config.gui.TransactionConfig;
+import com.github.lukesky19.skyshop.config.gui.legacy.ShopConfig;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import org.jetbrains.annotations.NotNull;
 
@@ -33,69 +32,51 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
 /**
- * This class manages everything related to handling the plugin's shop config files.
-*/
-public class ShopManager {
+ * This class manages everything related to handling the plugin's transaction config files.
+ */
+public class TransactionManager {
     private final @NotNull SkyShop skyShop;
-    private final @NotNull SettingsManager settingsManager;
-    private final @NotNull PriceManager priceManager;
-    private final @NotNull Map<@NotNull String, @NotNull ShopConfig> shopConfigurations = new HashMap<>();
+    private final @NotNull Map<String, TransactionConfig> transactionConfigurations = new HashMap<>();
 
     /**
      * Constructor
-     * @param skyShop A {@link SkyShop} instance.
-     * @param settingsManager A {@link SettingsManager} instance.
-     * @param priceManager A {@link PriceManager} instance.
-    */
-    public ShopManager(@NotNull SkyShop skyShop, @NotNull SettingsManager settingsManager, @NotNull PriceManager priceManager) {
+     * @param skyShop A {@link SkyShop instance}
+     */
+    public TransactionManager(@NotNull SkyShop skyShop) {
         this.skyShop = skyShop;
-        this.settingsManager = settingsManager;
-        this.priceManager = priceManager;
     }
 
     /**
-     * Get the {@link ShopConfig} for the provided shop id.
-     * @param shopId The shop id to get the configuration for.
+     * Get the {@link TransactionConfig} for the provided shop id.
+     * @param transactionStyle The id of the transaction style to get the configuration for. The transaction style is just the file name without the file extension.
      * @return An {@link Optional} containing {@link ShopConfig} for the provided shop id. Will be empty if no {@link ShopConfig} exists for that id.
      */
-    public @NotNull Optional<ShopConfig> getShopConfig(@NotNull String shopId) {
-        return Optional.ofNullable(shopConfigurations.get(shopId));
+    public @NotNull Optional<TransactionConfig> getTransactionConfig(@NotNull String transactionStyle) {
+        return Optional.ofNullable(transactionConfigurations.get(transactionStyle));
     }
 
     /**
-     * Get a {@link List} of {@link String} containing the names of shops which has configuration loaded.
-     * @return A {@link List} of {@link String} containing the names of shops which has configuration loaded.
+     * A method to reload the plugin's transaction config.
      */
-    public @NotNull List<@NotNull String> getShopNames() {
-        return shopConfigurations.keySet().stream().toList();
-    }
-
-    /**
-     * A method to reload the plugin's shop config files.
-    */
     public void reload() {
         ComponentLogger logger = skyShop.getComponentLogger();
 
-        // Clear cached sell prices.
-        priceManager.clearPrices();
-
         // Clear the current loaded configurations
-        shopConfigurations.clear();
+        transactionConfigurations.clear();
 
-        // Save example config
+        // Save default configuration that doesn't exist
         saveDefaultConfig();
 
-        // Create the path to the shops directory.
-        Path shopsPath = Path.of(skyShop.getDataFolder() + File.separator + "shops");
+        // Create the path to the transaction_styles directory.
+        Path transactionsPath = Path.of(skyShop.getDataFolder() + File.separator + "transaction_styles");
 
         // Walk through all files
-        try(Stream<Path> stream = Files.walk(shopsPath)) {
+        try(Stream<Path> stream = Files.walk(transactionsPath)) {
             // Filter to only include files and then attempt to load the configuration
             stream.filter(Files::isRegularFile).forEach(path -> {
                 // Get the file name with the extension
@@ -105,16 +86,13 @@ public class ShopManager {
                 YamlConfigurationLoader loader = ConfigurationUtility.getYamlConfigurationLoader(path);
                 try {
                     // Load the config
-                    ShopConfig shopConfig = loader.load().get(ShopConfig.class);
-                    // If non-null, store the config and attempt to cache the sell prices.
-                    if(shopConfig != null) {
-                        // Get the shop name, which is the file name without the extension
+                    TransactionConfig transactionConfig = loader.load().get(TransactionConfig.class);
+                    // If non-null, store the config
+                    if(transactionConfig != null) {
+                        // Get the transaction style name, which is the file name without the extension
                         String fileNameWithoutExtension = getFileNameWithoutExtension(path);
-                        // Store the shop configuration
-                        shopConfigurations.put(fileNameWithoutExtension, shopConfig);
-
-                        // Cache sell prices for the shop configuration
-                        priceManager.cacheSellPrices(shopConfig);
+                        // Store the transaction configuration
+                        transactionConfigurations.put(fileNameWithoutExtension, transactionConfig);
                     } else {
                         logger.warn(AdventureUtil.serialize("Failed to load " + fileNameWithExtension + " configuration."));
                     }
@@ -123,23 +101,19 @@ public class ShopManager {
                 }
             });
         } catch (IOException e) {
-            logger.error(AdventureUtil.serialize("Failed to load shop configuration files. " + e.getMessage()));
+            logger.error(AdventureUtil.serialize("Failed to load transaction configuration files. " + e.getMessage()));
         }
     }
 
     /**
-     * Save the example shop configuration if it doesn't exist.
-     * Will only save if {@link Settings#firstRun()} is true.
+     * Save the default transaction style configurations if they do not exist.
      */
     private void saveDefaultConfig() {
-        Settings settings = settingsManager.getSettingsConfig();
-        if(settings == null) return;
-        if(!settings.firstRun()) return;
+        Path itemsStylePath = Path.of(skyShop.getDataFolder() + File.separator + "transaction_styles" + File.separator + "items.yml");
+        Path singleCommandStylePath = Path.of(skyShop.getDataFolder() + File.separator + "transaction_styles" + File.separator + "single_command.yml");
 
-        Path exampleShopPath = Path.of(skyShop.getDataFolder() + File.separator + "shops" + File.separator + "example.yml");
-        if(!exampleShopPath.toFile().exists()) skyShop.saveResource("shops/example.yml", false);
-
-        settingsManager.setFirstRunFalse();
+        if(!itemsStylePath.toFile().exists()) skyShop.saveResource("transaction_styles/items.yml", false);
+        if(!singleCommandStylePath.toFile().exists()) skyShop.saveResource("transaction_styles/single_command.yml", false);
     }
 
     /**

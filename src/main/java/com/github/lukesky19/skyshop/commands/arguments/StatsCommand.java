@@ -1,5 +1,5 @@
 /*
-    SkyShop is a simple inventory based shop plugin with page support, sell commands, and error checking.
+    SkyShop is a GUI shop plugin with sell commands, a sell GUI, nested categories, page support, and error checking.
     Copyright (C) 2024 lukeskywlker19
 
     This program is free software: you can redistribute it and/or modify
@@ -20,11 +20,11 @@ package com.github.lukesky19.skyshop.commands.arguments;
 import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
 import com.github.lukesky19.skylib.api.gui.GUIType;
 import com.github.lukesky19.skyshop.SkyShop;
-import com.github.lukesky19.skyshop.configuration.LocaleManager;
-import com.github.lukesky19.skyshop.data.Locale;
-import com.github.lukesky19.skyshop.gui.GUIManager;
+import com.github.lukesky19.skyshop.config.locale.Locale;
 import com.github.lukesky19.skyshop.gui.StatsGUI;
+import com.github.lukesky19.skyshop.manager.GUIManager;
 import com.github.lukesky19.skyshop.manager.StatsManager;
+import com.github.lukesky19.skyshop.manager.config.LocaleManager;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;

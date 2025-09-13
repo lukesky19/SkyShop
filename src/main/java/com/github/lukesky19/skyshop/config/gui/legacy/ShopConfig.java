@@ -1,5 +1,5 @@
 /*
-    SkyShop is a simple inventory based shop plugin with page support, sell commands, and error checking.
+    SkyShop is a GUI shop plugin with sell commands, a sell GUI, nested categories, page support, and error checking.
     Copyright (C) 2024 lukeskywlker19
 
     This program is free software: you can redistribute it and/or modify
@@ -15,13 +15,14 @@
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-package com.github.lukesky19.skyshop.data.gui;
+package com.github.lukesky19.skyshop.config.gui.legacy;
 
 import com.github.lukesky19.skylib.api.gui.GUIType;
 import com.github.lukesky19.skylib.api.itemstack.ItemStackConfig;
 import com.github.lukesky19.skylib.libs.configurate.objectmapping.ConfigSerializable;
-import com.github.lukesky19.skyshop.gui.TransactionGUI;
+import com.github.lukesky19.skyshop.config.gui.CategoryConfig;
 import com.github.lukesky19.skyshop.util.ButtonType;
+import com.github.lukesky19.skyshop.util.TransactionType;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -29,12 +30,14 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 
 /**
- * This record contains the configuration to create the {@link TransactionGUI}.
+ * This record contains the legacy configuration for the old shop guis.
  * @param configVersion The file's config version.
  * @param gui The {@link GuiData} configuration.
+ * @deprecated The legacy configuration for shops has been replaced by {@link CategoryConfig}. Only used for data migration.
  */
+@Deprecated(since = "2.1.0.0")
 @ConfigSerializable
-public record TransactionConfig(@NotNull String configVersion, @NotNull GuiData gui) {
+public record ShopConfig(@Nullable String configVersion, @NotNull GuiData gui) {
     /**
      * This record contains the actual configuration for creating the initial GUI.
      * @param guiType The {@link GUIType}.
@@ -55,13 +58,37 @@ public record TransactionConfig(@NotNull String configVersion, @NotNull GuiData 
      * This record contains the configuration to create buttons to be displayed.
      * @param buttonType The {@link ButtonType}.
      * @param slot The slot to place the button at.
-     * @param transactionAmount This is the amount either purchased or sold when clicking buttons of type BUY and SELL.
      * @param displayItem The {@link ItemStackConfig} used to create the {@link ItemStack} for the button.
+     * @param transactionData The {@link TransactionData} that will be used to complete a transaction.
      */
     @ConfigSerializable
     public record Button(
             @Nullable ButtonType buttonType,
             @Nullable Integer slot,
-            @Nullable Integer transactionAmount,
-            @NotNull ItemStackConfig displayItem) {}
+            @NotNull ItemStackConfig displayItem,
+            @NotNull TransactionData transactionData) {}
+
+    /**
+     * This record contains the configuration required to complete a transaction.
+     * @param transactionType The {@link TransactionType}.
+     * @param transactionStyle This is a file name in SkyShop/transaction_styles
+     * @param buyPrice The buy price of the item.
+     * @param sellPrice The sell price of the item.
+     * @param transactionName This is the text to use in the success messages when a transaction is successful.
+     * @param displayItem This {@link ItemStackConfig} used to create the {@link ItemStack} to display what is being purchased or sold.
+     * @param transactionItem The {@link ItemStackConfig} used to create the {@link ItemStack} that will be purchased or sold.
+     * @param buyCommands A {@link List} of {@link String}s to execute in console when purchased.
+     * @param sellCommands A {@link List} of {@link String}s to execute in console when sold.
+     */
+    @ConfigSerializable
+    public record TransactionData(
+            @Nullable TransactionType transactionType,
+            @Nullable String transactionStyle,
+            @Nullable Double buyPrice,
+            @Nullable Double sellPrice,
+            @Nullable String transactionName,
+            @NotNull ItemStackConfig displayItem,
+            @NotNull ItemStackConfig transactionItem,
+            @NotNull List<String> buyCommands,
+            @NotNull List<String> sellCommands) {}
 }

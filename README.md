@@ -1,16 +1,19 @@
 # SkyShop
 ## Description
-* A simple inventory based shop plugin.
+* SkyShop is a GUI shop plugin with sell commands, a sell GUI, nested categories, page support, and error checking.
 ## Features
-* A simple inventory based shop plugin.
+* Supports nested categories.
 * Supports multiple pages.
 * Supports buying and selling for items and commands.
+* Supports multiple currencies.
+  * Currently, only the economy from Vault and PlayerPoints are supported.
 * Features a sellall GUI for quick selling of items.
 * Features a variety of sell commands for quick selling of items.
 * Simple stats tracking for how much of an item has been purchased or sold.
 ## Required Dependencies
 * [SkyLib](https://github.com/lukesky19/SkyLib)
-* PlaceholderAPI
+## Optional Dependencies
+* PlayerPoints
 * Vault
 ## Commands
 - /skyshop - Command to open the shop.
@@ -77,7 +80,7 @@ repositories {
 
 ```koitlin
 dependencies {
-  compileOnly("com.github.lukesky19:SkyShop:2.0.0.0")
+  compileOnly("com.github.lukesky19:SkyShop:2.1.0.0")
 }
 ```
 

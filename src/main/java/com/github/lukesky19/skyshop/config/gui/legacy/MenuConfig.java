@@ -1,5 +1,5 @@
 /*
-    SkyShop is a simple inventory based shop plugin with page support, sell commands, and error checking.
+    SkyShop is a GUI shop plugin with sell commands, a sell GUI, nested categories, page support, and error checking.
     Copyright (C) 2024 lukeskywlker19
 
     This program is free software: you can redistribute it and/or modify
@@ -15,12 +15,12 @@
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-package com.github.lukesky19.skyshop.data.gui;
+package com.github.lukesky19.skyshop.config.gui.legacy;
 
 import com.github.lukesky19.skylib.api.gui.GUIType;
 import com.github.lukesky19.skylib.api.itemstack.ItemStackConfig;
 import com.github.lukesky19.skylib.libs.configurate.objectmapping.ConfigSerializable;
-import com.github.lukesky19.skyshop.gui.MenuGUI;
+import com.github.lukesky19.skyshop.config.gui.CategoryConfig;
 import com.github.lukesky19.skyshop.util.ButtonType;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
@@ -29,10 +29,12 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 
 /**
- * This record contains the configuration to create the {@link MenuGUI}.
+ * This record contains the legacy configuration for the old menu gui.
  * @param configVersion The file's config version.
  * @param gui The {@link GuiData} configuration.
+ * @deprecated The legacy configuration for the menu has been replaced by {@link CategoryConfig}. Only used for data migration.
  */
+@Deprecated(since = "2.1.0.0")
 @ConfigSerializable
 public record MenuConfig(@Nullable String configVersion, @NotNull GuiData gui) {
     /**

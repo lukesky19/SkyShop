@@ -1,4 +1,4 @@
-package com.github.lukesky19.skyshop.gui;
+package com.github.lukesky19.skyshop.manager;
 
 import com.github.lukesky19.skylib.api.gui.AbstractGUIManager;
 import com.github.lukesky19.skyshop.SkyShop;

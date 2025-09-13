@@ -1,5 +1,5 @@
 /*
-    SkyShop is a simple inventory based shop plugin with page support, sell commands, and error checking.
+    SkyShop is a GUI shop plugin with sell commands, a sell GUI, nested categories, page support, and error checking.
     Copyright (C) 2024 lukeskywlker19
 
     This program is free software: you can redistribute it and/or modify
@@ -15,14 +15,14 @@
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-package com.github.lukesky19.skyshop.configuration;
+package com.github.lukesky19.skyshop.manager.config;
 
 import com.github.lukesky19.skylib.api.configurate.ConfigurationUtility;
 import com.github.lukesky19.skylib.libs.configurate.CommentedConfigurationNode;
 import com.github.lukesky19.skylib.libs.configurate.ConfigurateException;
 import com.github.lukesky19.skylib.libs.configurate.yaml.YamlConfigurationLoader;
 import com.github.lukesky19.skyshop.SkyShop;
-import com.github.lukesky19.skyshop.data.Settings;
+import com.github.lukesky19.skyshop.config.settings.Settings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

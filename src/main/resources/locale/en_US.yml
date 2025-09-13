@@ -1,4 +1,4 @@
-config-version: 2.0.0.0
+config-version: 2.1.0.0
 # Prefix is placed in-front of all other messages automatically.
 prefix: "<aqua><bold>SkyShop</bold></aqua><gray> ▪ </gray>"
 help:
@@ -15,19 +15,37 @@ help:
   - "<white>/<aqua>sell <yellow>hand all</yellow></white>"
 config-reload: "<aqua>Configuration files have been reloaded.</aqua>"
 not-enough-items: "<red>You do not have enough items to sell.</red>"
-insufficient-funds: "<red>Insufficient funds.</red>"
-buy-item-success: "<white>Purchased <yellow><amount> <transaction_name></yellow> for <yellow><price></yellow>. Balance: <yellow><bal></yellow></white>"
-# Placeholders: <amount>, <transaction_name>, <price>, and <bal>
-sell-item-success: "<white>Sold <yellow><amount> <transaction_name></yellow> for <yellow><price></yellow>. Balance: <yellow><bal></yellow></white>"
-# Placeholders: <amount>, <transaction_name>, <price>, and <bal>
-buy-command-success: "<white>Purchased <yellow><transaction_name></yellow> for <yellow><price></yellow>. Balance: <yellow><bal></yellow>"
-# Placeholders: <amount>, <transaction_name>, <price>, and <bal>
-sell-command-success: "<white>Sold <yellow><transaction_name></yellow> for <yellow><price></yellow>. Balance: <yellow><bal></yellow>"
-# Placeholders: <price>, and <bal>
-sellall-success: "<white>Successfully sold all items for <yellow><price></yellow>. Updated Balance: <yellow><bal></yellow></white>"
+insufficient-money: "<red>You lack the money to buy this item.</red>"
+insufficient-player-points: "<red>You lack the player points to buy this item.</red>"
+# Placeholders: <amount>, <transaction_name>, <money>, <player_points>, <money_balance>, and <player_points_balance>
+buy-item-success:
+    money-and-points: "<white>Purchased <yellow><amount> <transaction_name></yellow> for $<yellow><money></yellow> and <yellow><player_points></yellow> player points. Balance: <yellow><money_balance></yellow> Player Points: <yellow><player_points_balance></yellow></white>"
+    money: "<white>Purchased <yellow><amount> <transaction_name></yellow> for <yellow><money></yellow>. Balance: <yellow><money_balance></yellow></white>"
+    points: "<white>Purchased <yellow><amount> <transaction_name></yellow> for <yellow><player_points></yellow> player points. Player Points: <yellow><player_points_balance></yellow></white>"
+# Placeholders: <amount>, <transaction_name>, <money>, <player_points>, <money_balance>, and <player_points_balance>
+sell-item-success:
+    money-and-points: "<white>Sold <yellow><amount> <transaction_name></yellow> for $<yellow><money></yellow> and <yellow><player_points></yellow> player points. Balance: <yellow><money_balance></yellow> Player Points: <yellow><player_points_balance></yellow></white>"
+    money: "<white>Sold <yellow><amount> <transaction_name></yellow> for <yellow><money></yellow>. Balance: <yellow><money_balance></yellow></white>"
+    points: "<white>Sold <yellow><amount> <transaction_name></yellow> for <yellow><player_points></yellow> player points. Player Points: <yellow><player_points_balance></yellow></white>"
+# Placeholders: <transaction_name>, <money>, <player_points>, <money_balance>, and <player_points_balance>
+buy-command-success:
+    money-and-points: "<white>Purchased <yellow><transaction_name></yellow> for $<yellow><money></yellow> and <yellow><player_points></yellow> player points. Balance: <yellow><money_balance></yellow> Player Points: <yellow><player_points_balance></yellow></white>"
+    money: "<white>Purchased <yellow><transaction_name></yellow> for $<yellow><money></yellow>. Balance: <yellow><money_balance></yellow>"
+    points: "<white>Purchased <yellow><transaction_name></yellow> for <yellow><player_points></yellow> player points. Balance: <yellow><player_points_balance></yellow>"
+# Placeholders: <transaction_name>, <money>, <player_points>, <money_balance>, and <player_points_balance>
+sell-command-success:
+    money-and-points: "<white>Sold <yellow><transaction_name></yellow> for $<yellow><money></yellow> and <yellow><player_points></yellow> player points. Balance: <yellow><money_balance></yellow> Player Points: <yellow><player_points_balance></yellow></white>"
+    money: "<white>Sold <yellow><transaction_name></yellow> for $<yellow><money></yellow>. Balance: <yellow><money_balance></yellow>"
+    points: "<white>Sold <yellow><transaction_name></yellow> for <yellow><player_points></yellow> player points. Balance: <yellow><player_points_balance></yellow>"
+# Placeholders: <money>, <player_points>, <money_balance>, and <player_points_balance>
+sellall-success:
+    money-and-points: "<white>Successfully sold all items for $<yellow><money></yellow> and <yellow><player_points></yellow> player points. Balance: <yellow><money_balance></yellow> Player Points: <yellow><player_points_balance></yellow></white>"
+    money: "<white>Successfully sold all items for $<yellow><money></yellow>. Updated Balance: <yellow><money_balance></yellow></white>"
+    points: "<white>Successfully sold all items for <yellow><player_points></yellow> player points. Updated Balance: <yellow><player_points_balance></yellow></white>"
 sellall-unsellable: "<white>Unable to sell one or more items. It was added back to your inventory or dropped at your feet if full.</white>"
 unbuyable: "<red>This is not able to be purchased.</red>"
 unsellable: "<red>This is not able to be sold.</red>"
 in-game-only: "<red>This command can only be ran in-game.</red>"
 gui-open-error: "<red>Unable to open this GUI because of a configuration error.</red>"
 stats-disabled-gui-error: "<red>Unable to open the stats GUI as stats tracking is disabled.</red>"
+transaction-error: "<red>Unable to complete this transaction due to an error.</red>"

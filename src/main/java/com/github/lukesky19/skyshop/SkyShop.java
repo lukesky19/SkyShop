@@ -1,5 +1,5 @@
 /*
-    SkyShop is a simple inventory based shop plugin with page support, sell commands, and error checking.
+    SkyShop is a GUI shop plugin with sell commands, a sell GUI, nested categories, page support, and error checking.
     Copyright (C) 2024 lukeskywlker19
 
     This program is free software: you can redistribute it and/or modify
@@ -21,16 +21,13 @@ import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
 import com.github.lukesky19.skylib.libs.bstats.bukkit.Metrics;
 import com.github.lukesky19.skyshop.commands.SellCommand;
 import com.github.lukesky19.skyshop.commands.SkyShopCommand;
-import com.github.lukesky19.skyshop.configuration.*;
-import com.github.lukesky19.skyshop.data.Settings;
+import com.github.lukesky19.skyshop.config.settings.Settings;
 import com.github.lukesky19.skyshop.database.ConnectionManager;
 import com.github.lukesky19.skyshop.database.DatabaseManager;
 import com.github.lukesky19.skyshop.database.QueueManager;
-import com.github.lukesky19.skyshop.gui.GUIManager;
 import com.github.lukesky19.skyshop.listener.InventoryListener;
-import com.github.lukesky19.skyshop.manager.PriceManager;
-import com.github.lukesky19.skyshop.manager.StatsManager;
-import com.github.lukesky19.skyshop.manager.TaskManager;
+import com.github.lukesky19.skyshop.manager.*;
+import com.github.lukesky19.skyshop.manager.config.*;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.milkbowl.vault.economy.Economy;
@@ -53,8 +50,9 @@ public final class SkyShop extends JavaPlugin {
     // Class Instances
     private SettingsManager settingsManager;
     private LocaleManager localeManager;
-    private MenuManager menuManager;
-    private ShopManager shopManager;
+    private MenuConfigManager menuConfigManager;
+    private ShopConfigManager shopConfigManager;
+    private CategoryConfigManager categoryConfigManager;
     private TransactionManager transactionManager;
     private SellAllManager sellAllManager;
     private DatabaseManager databaseManager;
@@ -93,13 +91,17 @@ public final class SkyShop extends JavaPlugin {
         setupBStats();
 
         // Set up configuration manager classes
-        this.settingsManager = new SettingsManager(this);
-        this.localeManager = new LocaleManager(this, this.settingsManager);
+        settingsManager = new SettingsManager(this);
+        localeManager = new LocaleManager(this, this.settingsManager);
         PriceManager priceManager = new PriceManager(this);
-        this.menuManager = new MenuManager(this);
-        this.shopManager = new ShopManager(this, settingsManager, priceManager);
+        menuConfigManager = new MenuConfigManager(this);
+        shopConfigManager = new ShopConfigManager(this);
+        categoryConfigManager = new CategoryConfigManager(this, settingsManager, priceManager);
         transactionManager = new TransactionManager(this);
         sellAllManager = new SellAllManager(this);
+
+        // Setup HookManager / Hooks
+        HookManager hookManager = new HookManager(this);
 
         // Create the gui manager class
         guiManager = new GUIManager(this);
@@ -133,11 +135,11 @@ public final class SkyShop extends JavaPlugin {
         }
 
         // Create and register the SkyShopAPI
-        SkyShopAPI skyShopAPI = new SkyShopAPI(this, localeManager, priceManager, statsManager);
+        SkyShopAPI skyShopAPI = new SkyShopAPI(this, localeManager, priceManager, statsManager, hookManager);
         this.getServer().getServicesManager().register(SkyShopAPI.class, skyShopAPI, this, ServicePriority.Lowest);
 
         // Register commands
-        SkyShopCommand skyShopCommand = new SkyShopCommand(this, guiManager, localeManager, menuManager, shopManager, transactionManager, sellAllManager, statsManager, skyShopAPI);
+        SkyShopCommand skyShopCommand = new SkyShopCommand(this, guiManager, localeManager, categoryConfigManager, transactionManager, sellAllManager, statsManager, hookManager, skyShopAPI);
         SellCommand sellCommand = new SellCommand(skyShopAPI);
 
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, commands -> {
@@ -181,8 +183,9 @@ public final class SkyShop extends JavaPlugin {
 
         this.settingsManager.reload();
         this.localeManager.reload();
-        this.menuManager.reload();
-        this.shopManager.reload();
+        this.menuConfigManager.migrate();
+        this.shopConfigManager.migrate();
+        this.categoryConfigManager.reload();
         this.transactionManager.reload();
         this.sellAllManager.reload();
     }
