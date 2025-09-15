@@ -15,12 +15,11 @@
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-package com.github.lukesky19.skyshop.commands;
+package com.github.lukesky19.skyshop.commands.arguments;
 
 import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
 import com.github.lukesky19.skyshop.SkyShop;
 import com.github.lukesky19.skyshop.SkyShopAPI;
-import com.github.lukesky19.skyshop.commands.arguments.*;
 import com.github.lukesky19.skyshop.config.gui.CategoryConfig;
 import com.github.lukesky19.skyshop.config.locale.Locale;
 import com.github.lukesky19.skyshop.gui.CategoryGUI;
@@ -31,7 +30,7 @@ import com.github.lukesky19.skyshop.manager.config.CategoryConfigManager;
 import com.github.lukesky19.skyshop.manager.config.LocaleManager;
 import com.github.lukesky19.skyshop.manager.config.SellAllManager;
 import com.github.lukesky19.skyshop.manager.config.TransactionManager;
-import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
@@ -43,9 +42,9 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Optional;
 
 /**
- * This class is used to create the main skyshop command.
+ * This class is used to create the open command used to open specific shop categories.
  */
-public class SkyShopCommand {
+public class OpenCommand {
     private final @NotNull SkyShop skyShop;
     private final @NotNull LocaleManager localeManager;
     private final @NotNull CategoryConfigManager categoryConfigManager;
@@ -68,7 +67,7 @@ public class SkyShopCommand {
      * @param hookManager A {@link HookManager} instance.
      * @param skyShopAPI A {@link SkyShopAPI} instance.
      */
-    public SkyShopCommand(
+    public OpenCommand(
             @NotNull SkyShop skyShop,
             @NotNull GUIManager guiManager,
             @NotNull LocaleManager localeManager,
@@ -90,68 +89,55 @@ public class SkyShopCommand {
     }
 
     /**
-     * Builds a {@link LiteralCommandNode} of type {@link CommandSourceStack} for the skyshop command.
-     * @return A {@link LiteralCommandNode} of type {@link CommandSourceStack} representing the skyshop command.
+     * Builds a {@link LiteralCommandNode} of type {@link CommandSourceStack} for the open command argument.
+     * @return A {@link LiteralCommandNode} of type {@link CommandSourceStack} representing the open command argument.
      */
     public @NotNull LiteralCommandNode<CommandSourceStack> createCommand() {
-        LiteralArgumentBuilder<CommandSourceStack> builder = Commands.literal("skyshop");
-        builder.requires(ctx -> ctx.getSender().hasPermission("skyshop.commands.skyshop"));
-        builder.executes(ctx -> {
-            Locale locale = localeManager.getLocale();
-            ComponentLogger logger = skyShop.getComponentLogger();
+        return Commands.literal("open")
+                .requires(ctx -> ctx.getSender().hasPermission("skyshop.commands.skyshop.open") && ctx.getSender() instanceof Player)
+                .then(Commands.argument("category", StringArgumentType.word())
+                    .suggests((context, suggestionsProvider) -> {
+                        categoryConfigManager.getCategoryIds().forEach(suggestionsProvider::suggest);
+                        return suggestionsProvider.buildFuture();
+                    })
+                    .executes(ctx -> {
+                        ComponentLogger logger = skyShop.getComponentLogger();
+                        Locale locale = localeManager.getLocale();
+                        Player player = (Player) ctx.getSource().getSender();
+                        String categoryId = ctx.getArgument("category", String.class);
 
-            if (ctx.getSource().getSender() instanceof Player player) {
-                Optional<CategoryConfig> optionalMenuConfig = categoryConfigManager.getCategoryConfig("menu");
-                if(optionalMenuConfig.isPresent()) {
-                    CategoryConfig menuConfig = optionalMenuConfig.get();
-                    CategoryGUI menuGUI = new CategoryGUI(skyShop, guiManager, player, localeManager, categoryConfigManager, transactionManager, sellAllManager, statsManager, hookManager, skyShopAPI, null, menuConfig, "menu");
+                        Optional<CategoryConfig> optionalCategoryConfig = categoryConfigManager.getCategoryConfig(categoryId);
+                        if(optionalCategoryConfig.isEmpty()) {
+                            logger.error(AdventureUtil.serialize("Unable to open the category GUI for the category id " + categoryId + " for player " + player.getName() + " due to a configuration error."));
+                            player.sendMessage(AdventureUtil.serialize(locale.prefix() + locale.guiOpenError()));
+                            return 0;
+                        }
+                        CategoryConfig categoryConfig = optionalCategoryConfig.get();
 
-                    boolean creationResult = menuGUI.create();
-                    if(!creationResult) {
-                        logger.error(AdventureUtil.serialize("Unable to create the InventoryView for the menu GUI for player " + player.getName() + " due to a configuration error."));
-                        player.sendMessage(AdventureUtil.serialize(locale.prefix() + locale.guiOpenError()));
-                        return 0;
-                    }
+                        CategoryGUI categoryGUI = new CategoryGUI(skyShop, guiManager, player, localeManager, categoryConfigManager, transactionManager, sellAllManager, statsManager, hookManager, skyShopAPI, null, categoryConfig, categoryId);
 
-                    boolean updateResult = menuGUI.update();
-                    if(!updateResult) {
-                        logger.error(AdventureUtil.serialize("Unable to decorate the menu GUI for player " + player.getName() + " due to a configuration error."));
-                        player.sendMessage(AdventureUtil.serialize(locale.prefix() + locale.guiOpenError()));
-                        return 0;
-                    }
+                        boolean creationResult = categoryGUI.create();
+                        if(!creationResult) {
+                            logger.error(AdventureUtil.serialize("Unable to create the InventoryView for the category GUI for the category id " + categoryId + " for player " + player.getName() + " due to a configuration error."));
+                            player.sendMessage(AdventureUtil.serialize(locale.prefix() + locale.guiOpenError()));
+                            return 0;
+                        }
 
-                    boolean openResult = menuGUI.open();
-                    if(!openResult) {
-                        logger.error(AdventureUtil.serialize("Unable to open the menu GUI for player " + player.getName() + " due to a configuration error."));
-                        player.sendMessage(AdventureUtil.serialize(locale.prefix() + locale.guiOpenError()));
-                        return 0;
-                    }
+                        boolean updateResult = categoryGUI.update();
+                        if(!updateResult) {
+                            logger.error(AdventureUtil.serialize("Unable to decorate the category GUI for the category id " + categoryId + " for player " + player.getName() + " due to a configuration error."));
+                            player.sendMessage(AdventureUtil.serialize(locale.prefix() + locale.guiOpenError()));
+                            return 0;
+                        }
 
-                    return 1;
-                } else {
-                    player.sendMessage(AdventureUtil.serialize(locale.prefix() + locale.guiOpenError()));
+                        boolean openResult = categoryGUI.open();
+                        if(!openResult) {
+                            logger.error(AdventureUtil.serialize("Unable to open the category GUI for the category id " + categoryId + " for player " + player.getName() + " due to a configuration error."));
+                            player.sendMessage(AdventureUtil.serialize(locale.prefix() + locale.guiOpenError()));
+                            return 0;
+                        }
 
-                    return 0;
-                }
-            } else {
-                skyShop.getComponentLogger().info(AdventureUtil.serialize(locale.inGameOnly()));
-
-                return 0;
-            }
-        });
-
-        HelpCommand helpCommand = new HelpCommand(skyShop, localeManager);
-        OpenCommand openCommand = new OpenCommand(skyShop, guiManager, localeManager, categoryConfigManager, transactionManager, sellAllManager, statsManager, hookManager, skyShopAPI);
-        ReloadCommand reloadCommand = new ReloadCommand(skyShop, localeManager);
-        SellAllCommand sellAllCommand = new SellAllCommand(skyShop, localeManager, guiManager, sellAllManager, skyShopAPI);
-        StatsCommand statsCommand = new StatsCommand(skyShop, localeManager, guiManager, statsManager);
-
-        builder.then(helpCommand.createCommand());
-        builder.then(openCommand.createCommand());
-        builder.then(reloadCommand.createCommand());
-        builder.then(sellAllCommand.createCommand());
-        builder.then(statsCommand.createCommand());
-
-        return builder.build();
+                        return 1;
+                    })).build();
     }
 }

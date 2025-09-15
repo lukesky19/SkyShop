@@ -24,7 +24,7 @@ permissions:
   skyshop.commands.skyshop.sellall:
     description: Permission to access the /shop sellall GUI.
     default: op
-  skyshop.command.skyshop.stats:
+  skyshop.commands.skyshop.stats:
     description: Permission to access the /shop stats GUI.
     default: op
   skyshop.commands.sell:

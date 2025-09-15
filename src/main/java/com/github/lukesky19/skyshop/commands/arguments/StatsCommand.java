@@ -64,7 +64,7 @@ public class StatsCommand {
      */
     public LiteralCommandNode<CommandSourceStack> createCommand() {
         return Commands.literal("stats")
-            .requires(ctx -> ctx.getSender().hasPermission("skyshop.command.skyshop.stats") && ctx.getSender() instanceof Player)
+            .requires(ctx -> ctx.getSender().hasPermission("skyshop.commands.skyshop.stats") && ctx.getSender() instanceof Player)
             .executes(ctx -> {
                 Player player = (Player) ctx.getSource().getSender();
                 Locale locale = localeManager.getLocale();

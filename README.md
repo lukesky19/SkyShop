@@ -23,6 +23,7 @@
 - /skyshop reload - Reloads the plugin.
 - /skyshop sellall - Opens the sellall GUI.
 - /skyshop stats - Opens the stats GUI.
+- /skyshop open <category> - Opens the GUI for a specific category.
 - /sell all - Sells all items inside the player's inventory.
   - Aliases: 
     - /sell
@@ -36,7 +37,8 @@
 - `skyshop.commands.reload` - The permission to access /skyshop reload.
 - `skyshop.commands.skyshop.help` The permission to access /skyshop help.
 - `skyshop.commands.skyshop.sellall` - The permission to access the sellall GUI (/skyshop sellall).
-- - `skyshop.commands.skyshop.stats` - The permission to access the stats GUI (/skyshop stats).
+- `skyshop.commands.skyshop.stats` - The permission to access the stats GUI (/skyshop stats).
+- `skyshop.commands.skyshop.open` - The permission to open a specific shop category. (/skyshop open <category>)
 - `skyshop.commands.sell` - The permission to access the /sell command.
 - `skyshop.commands.sell.hand` - The permission to access the /sell hand command.
 - `skyshop.commands.sell.hand.all` - The permission to access the /sell hand all command.

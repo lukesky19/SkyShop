@@ -35,6 +35,7 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 
 /**
@@ -68,6 +69,14 @@ public class CategoryConfigManager {
      */
     public @NotNull Optional<CategoryConfig> getCategoryConfig(@NotNull String categoryId) {
         return Optional.ofNullable(categoryConfigMap.get(categoryId));
+    }
+
+    /**
+     * Get a {@link Set} of {@link String}s for the known category config ids loaded.
+     * @return A {@link Set} of {@link String}s for the known category config ids loaded.
+     */
+    public @NotNull Set<@NotNull String> getCategoryIds() {
+        return categoryConfigMap.keySet();
     }
 
     /**
