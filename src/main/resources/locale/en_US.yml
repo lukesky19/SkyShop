@@ -10,7 +10,7 @@ help:
   - "<white>/</white><aqua>shop</aqua> <yellow>help</yellow>"
   - "<white>/</white><aqua>shop</aqua> <yellow>reload</yellow>"
   - "<white>/</white><aqua>shop</aqua> <yellow>sellall</yellow>"
-  - "<white>/</white><aqua>shop</aqua><yellow>stats</yellow>"
+  - "<white>/</white><aqua>shop</aqua> <yellow>stats</yellow>"
   - "<white>/</white><aqua>shop</aqua> <yellow>open <category></yellow>"
   - "<white>/</white><aqua>sell</aqua> <yellow>all</yellow>"
   - "<white>/</white><aqua>sell</aqua> <yellow>hand</yellow>"
