@@ -18,6 +18,7 @@
 package com.github.lukesky19.skyshop;
 
 import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
+import com.github.lukesky19.skylib.api.format.FormatUtil;
 import com.github.lukesky19.skylib.api.player.PlayerUtil;
 import com.github.lukesky19.skyshop.config.locale.Locale;
 import com.github.lukesky19.skyshop.data.PriceCache;
@@ -94,6 +95,7 @@ public class SkyShopAPI {
         if(itemStack.isEmpty()) return false;
         // If the ItemType is null, return
         if(itemType == null) return false;
+        String transactionName = FormatUtil.formatItemTypeName(itemType);
         int stackSize = itemStack.getAmount();
 
         @Nullable PriceCache priceCache = priceManager.getCachedPrice(itemType);
@@ -118,7 +120,7 @@ public class SkyShopAPI {
 
             inventory.clear(slot);
 
-            processSinglePaymentAndMessage(locale, economyHook, playerPointsHook, player, finalSellPrice, finalSellPoints, message);
+            processSinglePaymentAndMessage(locale, economyHook, playerPointsHook, player, transactionName, stackSize, finalSellPrice, finalSellPoints, message);
 
             if(statsManager != null) statsManager.incrementAmountSold(itemType, itemStack.getAmount());
 
@@ -130,7 +132,7 @@ public class SkyShopAPI {
 
             inventory.clear(slot);
 
-            processSinglePaymentAndMessage(locale, economyHook, playerPointsHook, player, finalSellPrice, -1, message);
+            processSinglePaymentAndMessage(locale, economyHook, playerPointsHook, player, transactionName, stackSize, finalSellPrice, -1, message);
 
             if(statsManager != null) statsManager.incrementAmountSold(itemType, itemStack.getAmount());
 
@@ -142,7 +144,7 @@ public class SkyShopAPI {
 
             inventory.clear(slot);
 
-            processSinglePaymentAndMessage(locale, economyHook, playerPointsHook, player, -1, finalSellPoints, message);
+            processSinglePaymentAndMessage(locale, economyHook, playerPointsHook, player, transactionName, stackSize, -1, finalSellPoints, message);
 
             if(statsManager != null) statsManager.incrementAmountSold(itemType, itemStack.getAmount());
 
@@ -347,6 +349,8 @@ public class SkyShopAPI {
             @NotNull EconomyHook economyHook,
             @NotNull PlayerPointsHook playerPointsHook,
             @NotNull Player player,
+            @NotNull String transactionName,
+            int amount,
             double money,
             int points,
             boolean message) {
@@ -354,7 +358,7 @@ public class SkyShopAPI {
 
         givePayment(economyHook, playerPointsHook, player, money, points);
 
-        if(message) sendSingleItemSoldPlayerMessage(locale, economyHook, playerPointsHook, player, money, points);
+        if(message) sendSingleItemSoldPlayerMessage(locale, economyHook, playerPointsHook, player, transactionName, amount, money, points);
     }
 
     /**
@@ -409,6 +413,8 @@ public class SkyShopAPI {
      * @param economyHook The {@link EconomyHook}.
      * @param playerPointsHook The {@link PlayerPointsHook}.
      * @param player The {@link Player} to send the message to.
+     * @param transactionName The transaction name.
+     * @param amount The amount sold.
      * @param money The money given.
      * @param points The player points given.
      */
@@ -417,9 +423,11 @@ public class SkyShopAPI {
             @NotNull EconomyHook economyHook,
             @NotNull PlayerPointsHook playerPointsHook,
             @NotNull Player player,
+            @NotNull String transactionName,
+            int amount,
             double money,
             int points) {
-        List<TagResolver.Single> placeholders = buildPlaceholders(economyHook, playerPointsHook, player, money, points);
+        List<TagResolver.Single> placeholders = buildPlaceholders(economyHook, playerPointsHook, player, transactionName, amount, money, points);
 
         if(money > 0.0 && points > 0) {
             player.sendMessage(AdventureUtil.serialize(player, locale.prefix() + locale.sellItemSuccess().moneyAndPoints(), placeholders));
@@ -473,6 +481,65 @@ public class SkyShopAPI {
             double money,
             int points) {
         List<TagResolver.Single> placeholders = new ArrayList<>();
+
+        if(money > 0.0 && points > 0) {
+            DecimalFormat df = new DecimalFormat("#.##");
+            df.setRoundingMode(RoundingMode.CEILING);
+
+            BigDecimal bigPrice = BigDecimal.valueOf(money);
+            String formattedSellPrice = df.format(bigPrice);
+            placeholders.add(Placeholder.parsed("money", formattedSellPrice));
+
+            BigDecimal bigBalance = BigDecimal.valueOf(economyHook.getBalance(player));
+            placeholders.add(Placeholder.parsed("money_balance", df.format(bigBalance)));
+
+            placeholders.add(Placeholder.parsed("player_points", String.valueOf(points)));
+            placeholders.add(Placeholder.parsed("player_points_balance", String.valueOf(playerPointsHook.getBalance(player))));
+        } else if(money > 0.0) {
+            DecimalFormat df = new DecimalFormat("#.##");
+            df.setRoundingMode(RoundingMode.CEILING);
+
+            BigDecimal bigPrice = BigDecimal.valueOf(money);
+            String formattedSellPrice = df.format(bigPrice);
+            placeholders.add(Placeholder.parsed("money", formattedSellPrice));
+
+            BigDecimal bigBalance = BigDecimal.valueOf(economyHook.getBalance(player));
+            placeholders.add(Placeholder.parsed("money_balance", df.format(bigBalance)));
+
+            placeholders.add(Placeholder.parsed("player_points", "0"));
+            placeholders.add(Placeholder.parsed("player_points_balance", "0"));
+        } else if(points > 0) {
+            placeholders.add(Placeholder.parsed("player_points", String.valueOf(points)));
+            placeholders.add(Placeholder.parsed("player_points_balance", String.valueOf(playerPointsHook.getBalance(player))));
+
+            placeholders.add(Placeholder.parsed("money", "0"));
+            placeholders.add(Placeholder.parsed("money_balance", "0"));
+        }
+
+        return placeholders;
+    }
+
+    /**
+     * Create the list of placeholders for success messages.
+     * @param economyHook The {@link EconomyHook}.
+     * @param playerPointsHook The {@link PlayerPointsHook}.
+     * @param player The {@link Player}.
+     * @param money The money.
+     * @param points The player points.
+     * @return A {@link List} of {@link TagResolver.Single}.
+     */
+    private List<TagResolver.Single> buildPlaceholders(
+            @NotNull EconomyHook economyHook,
+            @NotNull PlayerPointsHook playerPointsHook,
+            @NotNull Player player,
+            @NotNull String transactionName,
+            int amount,
+            double money,
+            int points) {
+        List<TagResolver.Single> placeholders = new ArrayList<>();
+
+        placeholders.add(Placeholder.parsed("amount", String.valueOf(amount)));
+        placeholders.add(Placeholder.parsed("transaction_name", transactionName));
 
         if(money > 0.0 && points > 0) {
             DecimalFormat df = new DecimalFormat("#.##");
