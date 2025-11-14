@@ -206,7 +206,7 @@ public class SkyShopAPI {
         ItemType matchingType = matchingStack.getType().asItemType();
         if(matchingType == null) return false;
 
-        double[] totalPrices = getTotalPrices(locale, player, sellInventory, matchingType, ignoreArmorSlots, returnUnsoldToPlayer, message);
+        double[] totalPrices = getTotalPrices(locale, player, sellInventory, matchingType, ignoreArmorSlots, returnUnsoldToPlayer, false);
         double money = totalPrices[0];
         int points = (int) totalPrices[1];
         if(money <= 0 && points <= 0) return false;
