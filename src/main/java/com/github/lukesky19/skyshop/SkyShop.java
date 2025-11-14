@@ -29,15 +29,11 @@ import com.github.lukesky19.skyshop.listener.InventoryListener;
 import com.github.lukesky19.skyshop.manager.*;
 import com.github.lukesky19.skyshop.manager.config.*;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
-import net.kyori.adventure.text.minimessage.MiniMessage;
-import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
-import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -60,22 +56,10 @@ public final class SkyShop extends JavaPlugin {
     private TaskManager taskManager;
     private GUIManager guiManager;
 
-    // The plugin is disabled if the Economy fails to be created so Economy will always be non-null.
-    @SuppressWarnings("NotNullFieldNotInitialized")
-    private @NotNull Economy economy;
-
     /**
      * Default Constructor.
      */
     public SkyShop() {}
-
-    /**
-     * Get the {@link Economy} for the server.
-     * @return The server's {@link Economy}.
-     */
-    public @NotNull Economy getEconomy() {
-        return this.economy;
-    }
 
     /**
      * Startup logic
@@ -84,8 +68,6 @@ public final class SkyShop extends JavaPlugin {
     public void onEnable() {
         // Check the version of SkyLib running on the server.
         if(!checkSkyLibVersion()) return;
-        // Check for and set up Vault/Economy.
-        if(!setupEconomy()) return;
 
         // Set up bstats.
         setupBStats();
@@ -188,24 +170,6 @@ public final class SkyShop extends JavaPlugin {
         this.categoryConfigManager.reload();
         this.transactionManager.reload();
         this.sellAllManager.reload();
-    }
-
-    /**
-     * Checks for Vault as a dependency and sets up the Economy instance.
-    */
-    private boolean setupEconomy() {
-        if(getServer().getPluginManager().getPlugin("Vault") != null) {
-            RegisteredServiceProvider<Economy> rsp = getServer().getServicesManager().getRegistration(Economy.class);
-            if (rsp != null) {
-                this.economy = rsp.getProvider();
-
-                return true;
-            }
-        }
-
-        this.getComponentLogger().error(MiniMessage.miniMessage().deserialize("<red>SkyShop has been disabled due to no Vault dependency found!</red>"));
-        this.getServer().getPluginManager().disablePlugin(this);
-        return false;
     }
 
     /**
