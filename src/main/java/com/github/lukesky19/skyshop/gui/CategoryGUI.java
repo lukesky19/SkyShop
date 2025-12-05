@@ -18,10 +18,10 @@
 package com.github.lukesky19.skyshop.gui;
 
 import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
-import com.github.lukesky19.skylib.api.gui.AbstractGUIManager;
 import com.github.lukesky19.skylib.api.gui.GUIButton;
 import com.github.lukesky19.skylib.api.gui.GUIType;
-import com.github.lukesky19.skylib.api.gui.abstracts.ChestGUI;
+import com.github.lukesky19.skylib.api.gui.interfaces.IGUIManager;
+import com.github.lukesky19.skylib.api.gui.templates.ChestGUI;
 import com.github.lukesky19.skylib.api.itemstack.ItemStackBuilder;
 import com.github.lukesky19.skylib.api.itemstack.ItemStackConfig;
 import com.github.lukesky19.skyshop.SkyShop;
@@ -48,16 +48,13 @@ import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * This class is called to create a gui for a player to access a shop category.
  * This could be a navigation category, a shop category, or both mixed together.
  */
-public class CategoryGUI extends ChestGUI {
+public class CategoryGUI extends ChestGUI<UUID> {
     private final @NotNull SkyShop skyShop;
     private final @NotNull LocaleManager localeManager;
     private final @NotNull CategoryConfigManager categoryConfigManager;
@@ -77,7 +74,7 @@ public class CategoryGUI extends ChestGUI {
      * Constructor
      *
      * @param skyShop A {@link SkyShop} instance.
-     * @param guiManager An {@link AbstractGUIManager} instance.
+     * @param guiManager An {@link IGUIManager} instance.
      * @param player The {@link Player} viewing the GUI/Inventory.
      * @param localeManager A {@link LocaleManager} instance.
      * @param categoryConfigManager A {@link CategoryConfigManager} instance.
@@ -92,7 +89,7 @@ public class CategoryGUI extends ChestGUI {
      */
     public CategoryGUI(
             @NotNull SkyShop skyShop,
-            @NotNull AbstractGUIManager guiManager,
+            @NotNull IGUIManager<UUID> guiManager,
             @NotNull Player player,
             @NotNull LocaleManager localeManager,
             @NotNull CategoryConfigManager categoryConfigManager,
@@ -104,7 +101,7 @@ public class CategoryGUI extends ChestGUI {
             @Nullable CategoryGUI previousGUI,
             @NotNull CategoryConfig categoryConfig,
             @NotNull String shopName) {
-        super(skyShop, guiManager, player);
+        super(skyShop, guiManager, player.getUniqueId(), player);
 
         this.skyShop = skyShop;
         this.localeManager = localeManager;
@@ -126,7 +123,7 @@ public class CategoryGUI extends ChestGUI {
     public boolean create() {
         GUIType guiType = categoryConfig.gui().guiType();
         if(guiType == null) {
-            logger.warn(AdventureUtil.serialize("Unable to create the InventoryView for a ShopGUI due to an invalid GUIType"));
+            logger.warn(AdventureUtil.deserialize("Unable to create the InventoryView for a ShopGUI due to an invalid GUIType"));
             return false;
         }
 
@@ -195,7 +192,7 @@ public class CategoryGUI extends ChestGUI {
 
         // If the InventoryView was not created, log a warning and return false.
         if(inventoryView == null) {
-            logger.warn(AdventureUtil.serialize("Unable to add GUIButton ItemStacks to the InventoryView as it was not created."));
+            logger.warn(AdventureUtil.deserialize("Unable to add GUIButton ItemStacks to the InventoryView as it was not created."));
             return false;
         }
 
@@ -208,7 +205,7 @@ public class CategoryGUI extends ChestGUI {
         // Check if at least 1 page is configured.
         List<CategoryConfig.PageConfig> pages = categoryConfig.gui().pages();
         if(pages.isEmpty()) {
-            logger.error(AdventureUtil.serialize("Unable to decorate the shop GUI for file " + shopName + ".yml due to no pages configured."));
+            logger.error(AdventureUtil.deserialize("Unable to decorate the shop GUI for file " + shopName + ".yml due to no pages configured."));
             return false;
         }
 
@@ -218,7 +215,7 @@ public class CategoryGUI extends ChestGUI {
         // Check if at least 1 button is configured.
         List<CategoryConfig.ButtonConfig> entries  = page.buttons();
         if(entries.isEmpty()) {
-            logger.error(AdventureUtil.serialize("Unable to decorate the shop GUI for page " + pageNum + " and file " + shopName + ".yml due to no buttons configured."));
+            logger.error(AdventureUtil.deserialize("Unable to decorate the shop GUI for page " + pageNum + " and file " + shopName + ".yml due to no buttons configured."));
             return false;
         }
 
@@ -228,7 +225,7 @@ public class CategoryGUI extends ChestGUI {
 
             // Check if the button type is null and send a warning if so, then skipping to the next button.
             if(buttonType == null) {
-                logger.warn(AdventureUtil.serialize("Unable to add a button due to an invalid button type. Button Num: " + buttonNum));
+                logger.warn(AdventureUtil.deserialize("Unable to add a button due to an invalid button type. Button Num: " + buttonNum));
                 continue;
             }
 
@@ -259,7 +256,7 @@ public class CategoryGUI extends ChestGUI {
                 case PREVIOUS_PAGE -> {
                     // Check if the slot is not configured and send a warning.
                     if(buttonConfig.slot() == null) {
-                        logger.warn(AdventureUtil.serialize("Unable to add a button due to a null slot. Button Num: " + buttonNum + " and type: " + buttonConfig.buttonType()));
+                        logger.warn(AdventureUtil.deserialize("Unable to add a button due to a null slot. Button Num: " + buttonNum + " and type: " + buttonConfig.buttonType()));
                         continue;
                     }
 
@@ -290,7 +287,7 @@ public class CategoryGUI extends ChestGUI {
                 case NEXT_PAGE -> {
                     // Check if the slot is not configured and send a warning.
                     if(buttonConfig.slot() == null) {
-                        logger.warn(AdventureUtil.serialize("Unable to add a button due to a null slot. Button Num: " + buttonNum + " and type: " + buttonConfig.buttonType()));
+                        logger.warn(AdventureUtil.deserialize("Unable to add a button due to a null slot. Button Num: " + buttonNum + " and type: " + buttonConfig.buttonType()));
                         continue;
                     }
 
@@ -321,7 +318,7 @@ public class CategoryGUI extends ChestGUI {
                 case RETURN -> {
                     // Check if the slot is not configured and send a warning.
                     if(buttonConfig.slot() == null) {
-                        logger.warn(AdventureUtil.serialize("Unable to add a button due to a null slot. Button Num: " + buttonNum + " and type: " + buttonConfig.buttonType()));
+                        logger.warn(AdventureUtil.deserialize("Unable to add a button due to a null slot. Button Num: " + buttonNum + " and type: " + buttonConfig.buttonType()));
                         continue;
                     }
 
@@ -346,7 +343,7 @@ public class CategoryGUI extends ChestGUI {
                 case TRANSACTION -> {
                     // Check if the slot is not configured and send a warning.
                     if(buttonConfig.slot() == null) {
-                        logger.warn(AdventureUtil.serialize("Unable to add a button due to a null slot. Button Num: " + buttonNum + " and type: " + buttonConfig.buttonType()));
+                        logger.warn(AdventureUtil.deserialize("Unable to add a button due to a null slot. Button Num: " + buttonNum + " and type: " + buttonConfig.buttonType()));
                         continue;
                     }
 
@@ -368,16 +365,16 @@ public class CategoryGUI extends ChestGUI {
                             // Get the transaction style name and check if it is null
                             String transactionStyle = transactionData.transactionStyle();
                             if(transactionStyle == null) {
-                                logger.error(AdventureUtil.serialize("Unable to open transaction GUI for player " + player.getName() + " due to an invalid transaction style."));
-                                player.sendMessage(AdventureUtil.serialize(locale.prefix() + locale.guiOpenError()));
+                                logger.error(AdventureUtil.deserialize("Unable to open transaction GUI for player " + player.getName() + " due to an invalid transaction style."));
+                                player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.guiOpenError()));
                                 if(isOpen) close();
                                 return;
                             }
 
                             String transactionName = transactionData.transactionName();
                             if(transactionName == null) {
-                                logger.error(AdventureUtil.serialize("Unable to open transaction GUI for player " + player.getName() + " due to an invalid transaction name."));
-                                player.sendMessage(AdventureUtil.serialize(locale.prefix() + locale.guiOpenError()));
+                                logger.error(AdventureUtil.deserialize("Unable to open transaction GUI for player " + player.getName() + " due to an invalid transaction name."));
+                                player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.guiOpenError()));
                                 if(isOpen) close();
                                 return;
                             }
@@ -385,8 +382,8 @@ public class CategoryGUI extends ChestGUI {
                             // Get the TransactionConfig for the transaction style and check if it is valid
                             @NotNull Optional<TransactionConfig> optionalTransactionConfig = transactionManager.getTransactionConfig(transactionStyle);
                             if(optionalTransactionConfig.isEmpty()) {
-                                logger.error(AdventureUtil.serialize("Unable to open transaction GUI for player " + player.getName() + " due to no transaction style config found for " + transactionStyle + "."));
-                                player.sendMessage(AdventureUtil.serialize(locale.prefix() + locale.guiOpenError()));
+                                logger.error(AdventureUtil.deserialize("Unable to open transaction GUI for player " + player.getName() + " due to no transaction style config found for " + transactionStyle + "."));
+                                player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.guiOpenError()));
                                 if(isOpen) close();
                                 return;
                             }
@@ -414,24 +411,24 @@ public class CategoryGUI extends ChestGUI {
 
                             boolean creationResult = transactionGUI.create();
                             if(!creationResult) {
-                                logger.error(AdventureUtil.serialize("Unable to create the InventoryView for the transaction GUI for player " + player.getName() + " due to a configuration error."));
-                                player.sendMessage(AdventureUtil.serialize(locale.prefix() + locale.guiOpenError()));
+                                logger.error(AdventureUtil.deserialize("Unable to create the InventoryView for the transaction GUI for player " + player.getName() + " due to a configuration error."));
+                                player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.guiOpenError()));
                                 if(isOpen) close();
                                 return;
                             }
 
                             boolean updateFuture = transactionGUI.update();
                             if(!updateFuture) {
-                                logger.error(AdventureUtil.serialize("Unable to decorate the transaction GUI for player " + player.getName() + " due to a configuration error."));
-                                player.sendMessage(AdventureUtil.serialize(locale.prefix() + locale.guiOpenError()));
+                                logger.error(AdventureUtil.deserialize("Unable to decorate the transaction GUI for player " + player.getName() + " due to a configuration error."));
+                                player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.guiOpenError()));
                                 if(isOpen) close();
                                 return;
                             }
 
                             boolean openResult = transactionGUI.open();
                             if(!openResult) {
-                                logger.error(AdventureUtil.serialize("Unable to open the transaction GUI for player " + player.getName() + " due to a configuration error."));
-                                player.sendMessage(AdventureUtil.serialize(locale.prefix() + locale.guiOpenError()));
+                                logger.error(AdventureUtil.deserialize("Unable to open the transaction GUI for player " + player.getName() + " due to a configuration error."));
+                                player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.guiOpenError()));
                                 if(isOpen) close();
                             }
                         });
@@ -443,7 +440,7 @@ public class CategoryGUI extends ChestGUI {
                 case OPEN_SHOP -> {
                     // Check if the slot is not configured and send a warning.
                     if(buttonConfig.slot() == null) {
-                        logger.warn(AdventureUtil.serialize("Unable to add a button due to a null slot. Button Num: " + buttonNum + " and type: " + buttonConfig.buttonType()));
+                        logger.warn(AdventureUtil.deserialize("Unable to add a button due to a null slot. Button Num: " + buttonNum + " and type: " + buttonConfig.buttonType()));
                         continue;
                     }
 
@@ -462,14 +459,14 @@ public class CategoryGUI extends ChestGUI {
                         guiButtonBuilder.setAction(event -> {
                             String shopName = buttonConfig.shopName();
                             if(shopName == null) {
-                                logger.error(AdventureUtil.serialize("Unable to open shop GUI for player " + player.getName() + " due to no configured shop name."));
+                                logger.error(AdventureUtil.deserialize("Unable to open shop GUI for player " + player.getName() + " due to no configured shop name."));
                                 return;
                             }
 
                             @NotNull Optional<CategoryConfig> optionalCategoryConfig = categoryConfigManager.getCategoryConfig(shopName);
                             if(optionalCategoryConfig.isEmpty()) {
-                                logger.error(AdventureUtil.serialize("Unable to open shop GUI " + shopName + " for player " + player.getName() + " due to no configuration found for shop name " + shopName + "."));
-                                player.sendMessage(AdventureUtil.serialize(locale.prefix() + locale.guiOpenError()));
+                                logger.error(AdventureUtil.deserialize("Unable to open shop GUI " + shopName + " for player " + player.getName() + " due to no configuration found for shop name " + shopName + "."));
+                                player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.guiOpenError()));
                                 if(isOpen) close();
                                 return;
                             }
@@ -479,24 +476,24 @@ public class CategoryGUI extends ChestGUI {
 
                             boolean creationResult = categoryGUI.create();
                             if(!creationResult) {
-                                logger.error(AdventureUtil.serialize("Unable to create the InventoryView for the GUI " + shopName + " for player " + player.getName() + " due to a configuration error."));
-                                player.sendMessage(AdventureUtil.serialize(locale.prefix() + locale.guiOpenError()));
+                                logger.error(AdventureUtil.deserialize("Unable to create the InventoryView for the GUI " + shopName + " for player " + player.getName() + " due to a configuration error."));
+                                player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.guiOpenError()));
                                 if(isOpen) close();
                                 return;
                             }
 
                             boolean updateResult = categoryGUI.update();
                             if(!updateResult) {
-                                logger.error(AdventureUtil.serialize("Unable to decorate the GUI " + shopName + " for player " + player.getName() + " due to a configuration error."));
-                                player.sendMessage(AdventureUtil.serialize(locale.prefix() + locale.guiOpenError()));
+                                logger.error(AdventureUtil.deserialize("Unable to decorate the GUI " + shopName + " for player " + player.getName() + " due to a configuration error."));
+                                player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.guiOpenError()));
                                 if(isOpen) close();
                                 return;
                             }
 
                             boolean openResult = categoryGUI.open();
                             if(!openResult) {
-                                logger.error(AdventureUtil.serialize("Unable to open the GUI " + shopName + " for player " + player.getName() + " due to a configuration error."));
-                                player.sendMessage(AdventureUtil.serialize(locale.prefix() + locale.guiOpenError()));
+                                logger.error(AdventureUtil.deserialize("Unable to open the GUI " + shopName + " for player " + player.getName() + " due to a configuration error."));
+                                player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.guiOpenError()));
                                 if(isOpen) close();
                             }
                         });
@@ -508,7 +505,7 @@ public class CategoryGUI extends ChestGUI {
                 case DUMMY -> {
                     // Check if the slot is not configured and send a warning.
                     if(buttonConfig.slot() == null) {
-                        logger.warn(AdventureUtil.serialize("Unable to add a button due to a null slot. Button Num: " + buttonNum + " and type: " + buttonConfig.buttonType()));
+                        logger.warn(AdventureUtil.deserialize("Unable to add a button due to a null slot. Button Num: " + buttonNum + " and type: " + buttonConfig.buttonType()));
                         continue;
                     }
 
@@ -529,7 +526,7 @@ public class CategoryGUI extends ChestGUI {
                     });
                 }
 
-                default -> logger.error(AdventureUtil.serialize("Unsupported ButtonType for " + buttonNum + " on page " + pageNum + " and file " + shopName + ".yml due to no buttons configured."));
+                default -> logger.error(AdventureUtil.deserialize("Unsupported ButtonType for " + buttonNum + " on page " + pageNum + " and file " + shopName + ".yml due to no buttons configured."));
             }
         }
 

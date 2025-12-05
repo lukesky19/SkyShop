@@ -106,7 +106,7 @@ public class StatsManager {
      */
     public void incrementAmountPurchased(@NotNull ItemType itemType, long incrementAmount) {
         if(incrementAmount <= 0) {
-            logger.warn(AdventureUtil.serialize("Unable to increment the amount purchased for " + FormatUtil.formatItemTypeName(itemType) + ". The increment amount must be greater than 0."));
+            logger.warn(AdventureUtil.deserialize("Unable to increment the amount purchased for " + FormatUtil.formatItemTypeName(itemType) + ". The increment amount must be greater than 0."));
             return;
         }
 
@@ -130,7 +130,7 @@ public class StatsManager {
      */
     public void incrementAmountSold(@NotNull ItemType itemType, long incrementAmount) {
         if(incrementAmount <= 0) {
-            logger.warn(AdventureUtil.serialize("Unable to increment the amount sold for " + FormatUtil.formatItemTypeName(itemType) + ". The increment amount must be greater than 0."));
+            logger.warn(AdventureUtil.deserialize("Unable to increment the amount sold for " + FormatUtil.formatItemTypeName(itemType) + ". The increment amount must be greater than 0."));
             return;
         }
 

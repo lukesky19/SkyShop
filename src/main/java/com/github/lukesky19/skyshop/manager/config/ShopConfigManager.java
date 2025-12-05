@@ -95,7 +95,7 @@ public class ShopConfigManager {
                     // Delete the legacy file.
                     legacyPath.toFile().delete();
                 } catch (ConfigurateException e) {
-                    logger.error(AdventureUtil.serialize("Failed to migrate the legacy shop configuration for file " + fileNameWithExtension + ". " + e.getMessage()));
+                    logger.error(AdventureUtil.deserialize("Failed to migrate the legacy shop configuration for file " + fileNameWithExtension + ". " + e.getMessage()));
                 }
             }
 
@@ -107,7 +107,7 @@ public class ShopConfigManager {
                 shopsPath.toFile().delete();
             }
         } catch (IOException e) {
-            logger.error(AdventureUtil.serialize("Failed to migrate legacy shop configuration files. " + e.getMessage()));
+            logger.error(AdventureUtil.deserialize("Failed to migrate legacy shop configuration files. " + e.getMessage()));
         }
     }
 

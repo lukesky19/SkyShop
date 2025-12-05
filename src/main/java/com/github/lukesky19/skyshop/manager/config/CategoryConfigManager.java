@@ -119,14 +119,14 @@ public class CategoryConfigManager {
                         // Cache sell prices for the category configuration
                         priceManager.cacheCategorySellPrices(categoryConfig);
                     } else {
-                        logger.warn(AdventureUtil.serialize("Failed to load " + fileNameWithExtension + " configuration."));
+                        logger.warn(AdventureUtil.deserialize("Failed to load " + fileNameWithExtension + " configuration."));
                     }
                 } catch (ConfigurateException e) {
-                    logger.warn(AdventureUtil.serialize("Failed to load " + fileNameWithExtension + " configuration. " + e.getMessage()));
+                    logger.warn(AdventureUtil.deserialize("Failed to load " + fileNameWithExtension + " configuration. " + e.getMessage()));
                 }
             });
         } catch (IOException e) {
-            logger.error(AdventureUtil.serialize("Failed to load category configuration files. " + e.getMessage()));
+            logger.error(AdventureUtil.deserialize("Failed to load category configuration files. " + e.getMessage()));
         }
     }
 

@@ -57,9 +57,9 @@ public class ReloadCommand {
                     Locale locale = localeManager.getLocale();
 
                     if(ctx.getSource().getSender() instanceof Player player) {
-                        player.sendMessage(AdventureUtil.serialize(player, locale.prefix() + locale.configReload()));
+                        player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.configReload()));
                     } else {
-                        skyShop.getComponentLogger().info(AdventureUtil.serialize(locale.configReload()));
+                        skyShop.getComponentLogger().info(AdventureUtil.deserialize(locale.configReload()));
                     }
 
                     return 1;

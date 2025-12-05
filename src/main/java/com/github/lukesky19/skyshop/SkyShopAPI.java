@@ -101,7 +101,7 @@ public class SkyShopAPI {
         @Nullable PriceCache priceCache = priceManager.getCachedPrice(itemType);
         if(priceCache == null || (priceCache.money() == 0 && priceCache.points() == 0)) {
             if(message) {
-                player.sendMessage(AdventureUtil.serialize(player, locale.prefix() + locale.unsellable()));
+                player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.unsellable()));
             }
 
             return false;
@@ -151,7 +151,7 @@ public class SkyShopAPI {
             return true;
         } else {
             if(message) {
-                player.sendMessage(AdventureUtil.serialize(player, locale.prefix() + locale.unsellable()));
+                player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.unsellable()));
             }
 
             return false;
@@ -256,7 +256,7 @@ public class SkyShopAPI {
             // Check if matchingType is provided and if it matches the invType
             if(matchingType != null && !invType.equals(matchingType)) {
                 if(!sent && message) {
-                    player.sendMessage(AdventureUtil.serialize(player, locale.prefix() + locale.sellallUnsellable()));
+                    player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.sellallUnsellable()));
                     sent = true;
                 }
 
@@ -275,7 +275,7 @@ public class SkyShopAPI {
             @Nullable PriceCache priceCache = priceManager.getCachedPrice(invType);
             if(priceCache == null) {
                 if(!sent && message) {
-                    player.sendMessage(AdventureUtil.serialize(player, locale.prefix() + locale.sellallUnsellable()));
+                    player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.sellallUnsellable()));
                     sent = true;
                 }
 
@@ -317,7 +317,7 @@ public class SkyShopAPI {
                 points += priceCache.points() * stackSize;
             } else {
                 if(!sent && message) {
-                    player.sendMessage(AdventureUtil.serialize(player, locale.prefix() + locale.sellallUnsellable()));
+                    player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.sellallUnsellable()));
                     sent = true;
                 }
 
@@ -430,11 +430,11 @@ public class SkyShopAPI {
         List<TagResolver.Single> placeholders = buildPlaceholders(economyHook, playerPointsHook, player, transactionName, amount, money, points);
 
         if(money > 0.0 && points > 0) {
-            player.sendMessage(AdventureUtil.serialize(player, locale.prefix() + locale.sellItemSuccess().moneyAndPoints(), placeholders));
+            player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.sellItemSuccess().moneyAndPoints(), placeholders));
         } else if(money > 0.0) {
-            player.sendMessage(AdventureUtil.serialize(player, locale.prefix() + locale.sellItemSuccess().money(), placeholders));
+            player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.sellItemSuccess().money(), placeholders));
         } else if(points > 0) {
-            player.sendMessage(AdventureUtil.serialize(player, locale.prefix() + locale.sellItemSuccess().points(), placeholders));
+            player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.sellItemSuccess().points(), placeholders));
         }
     }
 
@@ -457,11 +457,11 @@ public class SkyShopAPI {
         List<TagResolver.Single> placeholders = buildPlaceholders(economyHook, playerPointsHook, player, money, points);
 
         if(money > 0 && points > 0) {
-            player.sendMessage(AdventureUtil.serialize(player, locale.prefix() + locale.sellallSuccess().moneyAndPoints(), placeholders));
+            player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.sellallSuccess().moneyAndPoints(), placeholders));
         } else if(money > 0) {
-            player.sendMessage(AdventureUtil.serialize(player, locale.prefix() + locale.sellallSuccess().money(), placeholders));
+            player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.sellallSuccess().money(), placeholders));
         } else if(points > 0) {
-            player.sendMessage(AdventureUtil.serialize(player, locale.prefix() + locale.sellallSuccess().points(), placeholders));
+            player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.sellallSuccess().points(), placeholders));
         }
     }
 

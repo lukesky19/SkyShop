@@ -56,11 +56,11 @@ public class HelpCommand {
 
                     if(ctx.getSource().getSender() instanceof Player player) {
                         for(String msg : locale.help()) {
-                            player.sendMessage(AdventureUtil.serialize(player, msg));
+                            player.sendMessage(AdventureUtil.deserialize(player, msg));
                         }
                     } else {
                         for(String msg : locale.help()) {
-                            skyShop.getComponentLogger().info(AdventureUtil.serialize(msg));
+                            skyShop.getComponentLogger().info(AdventureUtil.deserialize(msg));
                         }
                     }
 

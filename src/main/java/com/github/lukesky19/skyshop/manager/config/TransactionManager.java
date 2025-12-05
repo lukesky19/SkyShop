@@ -94,14 +94,14 @@ public class TransactionManager {
                         // Store the transaction configuration
                         transactionConfigurations.put(fileNameWithoutExtension, transactionConfig);
                     } else {
-                        logger.warn(AdventureUtil.serialize("Failed to load " + fileNameWithExtension + " configuration."));
+                        logger.warn(AdventureUtil.deserialize("Failed to load " + fileNameWithExtension + " configuration."));
                     }
                 } catch (ConfigurateException e) {
-                    logger.warn(AdventureUtil.serialize("Failed to load " + fileNameWithExtension + " configuration. " + e.getMessage()));
+                    logger.warn(AdventureUtil.deserialize("Failed to load " + fileNameWithExtension + " configuration. " + e.getMessage()));
                 }
             });
         } catch (IOException e) {
-            logger.error(AdventureUtil.serialize("Failed to load transaction configuration files. " + e.getMessage()));
+            logger.error(AdventureUtil.deserialize("Failed to load transaction configuration files. " + e.getMessage()));
         }
     }
 

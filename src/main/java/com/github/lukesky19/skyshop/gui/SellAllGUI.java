@@ -18,10 +18,11 @@
 package com.github.lukesky19.skyshop.gui;
 
 import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
-import com.github.lukesky19.skylib.api.gui.AbstractGUIManager;
 import com.github.lukesky19.skylib.api.gui.GUIButton;
 import com.github.lukesky19.skylib.api.gui.GUIType;
-import com.github.lukesky19.skylib.api.gui.abstracts.ChestGUI;
+import com.github.lukesky19.skylib.api.gui.impl.UUIDGUIManager;
+import com.github.lukesky19.skylib.api.gui.interfaces.IGUIManager;
+import com.github.lukesky19.skylib.api.gui.templates.ChestGUI;
 import com.github.lukesky19.skylib.api.itemstack.ItemStackBuilder;
 import com.github.lukesky19.skylib.api.itemstack.ItemStackConfig;
 import com.github.lukesky19.skyshop.SkyShop;
@@ -40,30 +41,31 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * This class is called to create a sellall gui for a player to sell items.
 */
-public class SellAllGUI extends ChestGUI {
-    private final @NotNull AbstractGUIManager guiManager;
+public class SellAllGUI extends ChestGUI<UUID> {
+    private final @NotNull IGUIManager<UUID> guiManager;
     private final @NotNull SkyShopAPI skyShopAPI;
     private final @NotNull SellAllConfig sellAllConfig;
 
     /**
      * Constructor
      * @param skyShop A {@link SkyShop} instance.
-     * @param guiManager A {@link AbstractGUIManager} instance.
+     * @param guiManager A {@link UUIDGUIManager} instance.
      * @param sellAllConfig The {@link SellAllConfig} to create the GUI with.
      * @param skyShopAPI A {@link SkyShopAPI} instance.
      * @param player The {@link Player} who opened the GUI.
      */
     public SellAllGUI(
             @NotNull SkyShop skyShop,
-            @NotNull AbstractGUIManager guiManager,
+            @NotNull IGUIManager<UUID> guiManager,
             @NotNull SellAllConfig sellAllConfig,
             @NotNull SkyShopAPI skyShopAPI,
             @NotNull Player player) {
-        super(skyShop, guiManager, player);
+        super(skyShop, guiManager, player.getUniqueId(), player);
 
         this.guiManager = guiManager;
         this.skyShopAPI = skyShopAPI;
@@ -77,7 +79,7 @@ public class SellAllGUI extends ChestGUI {
     public boolean create() {
         GUIType guiType = sellAllConfig.gui().guiType();
         if(guiType == null) {
-            logger.warn(AdventureUtil.serialize("Unable to create the InventoryView for a ShopGUI due to an invalid GUIType"));
+            logger.warn(AdventureUtil.deserialize("Unable to create the InventoryView for a ShopGUI due to an invalid GUIType"));
             return false;
         }
 
@@ -93,7 +95,7 @@ public class SellAllGUI extends ChestGUI {
     public boolean update() {
         // If the InventoryView was not created, log a warning and return false.
         if (inventoryView == null) {
-            logger.warn(AdventureUtil.serialize("Unable to add GUIButton ItemStacks to the InventoryView as it was not created."));
+            logger.warn(AdventureUtil.deserialize("Unable to add GUIButton ItemStacks to the InventoryView as it was not created."));
             return false;
         }
 
@@ -107,13 +109,13 @@ public class SellAllGUI extends ChestGUI {
 
             // Check if the button type is null and send a warning if so, then skipping to the next button.
             if(buttonType == null) {
-                logger.warn(AdventureUtil.serialize("Unable to add a button due to an invalid button type. Button Num: " + buttonNum));
+                logger.warn(AdventureUtil.deserialize("Unable to add a button due to an invalid button type. Button Num: " + buttonNum));
                 continue;
             }
 
             // Check if the slot is not configured and send a warning.
             if(buttonConfig.slot() == null) {
-                logger.warn(AdventureUtil.serialize("Unable to add a button due to a null slot. Button Num: " + buttonNum + " and type: " + buttonType));
+                logger.warn(AdventureUtil.deserialize("Unable to add a button due to a null slot. Button Num: " + buttonNum + " and type: " + buttonType));
                 continue;
             }
 
@@ -155,7 +157,7 @@ public class SellAllGUI extends ChestGUI {
                     });
                 }
 
-                default -> logger.warn(AdventureUtil.serialize("Unsupported ButtonType in the sellall GUI for " + buttonNum + " and button type " + buttonType + "."));
+                default -> logger.warn(AdventureUtil.deserialize("Unsupported ButtonType in the sellall GUI for " + buttonNum + " and button type " + buttonType + "."));
             }
         }
 
@@ -213,17 +215,6 @@ public class SellAllGUI extends ChestGUI {
 
     @Override
     public void handleGlobalDrag(@NotNull InventoryDragEvent inventoryDragEvent) {}
-
-    @Override
-    public void handleTopClick(@NotNull InventoryClickEvent event) {
-        int slot = event.getSlot();
-        GUIButton button = slotButtons.get(slot);
-        if(button != null) {
-            event.setCancelled(true);
-
-            button.action().accept(event);
-        }
-    }
 
     @Override
     public void handleBottomClick(@NotNull InventoryClickEvent inventoryClickEvent) {}

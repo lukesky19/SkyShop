@@ -103,7 +103,7 @@ public class PriceManager {
                 // Get the ItemType, logging an error if no ItemType was found and skip to the next button.
                 @NotNull Optional<ItemType> optionalItemType = RegistryUtil.getItemType(logger, transactionData.transactionItem().itemType());
                 if(optionalItemType.isEmpty()) {
-                    logger.warn(AdventureUtil.serialize("Unable to cache sell prices due to an invalid ItemType for ." + transactionData.transactionItem().itemType()));
+                    logger.warn(AdventureUtil.deserialize("Unable to cache sell prices due to an invalid ItemType for ." + transactionData.transactionItem().itemType()));
                     continue;
                 }
                 ItemType itemType = optionalItemType.get();

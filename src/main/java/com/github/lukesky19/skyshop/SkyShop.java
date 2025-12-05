@@ -18,6 +18,8 @@
 package com.github.lukesky19.skyshop;
 
 import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
+import com.github.lukesky19.skylib.api.gui.impl.UUIDGUIListener;
+import com.github.lukesky19.skylib.api.gui.impl.UUIDGUIManager;
 import com.github.lukesky19.skylib.libs.bstats.bukkit.Metrics;
 import com.github.lukesky19.skyshop.commands.SellCommand;
 import com.github.lukesky19.skyshop.commands.SkyShopCommand;
@@ -25,11 +27,12 @@ import com.github.lukesky19.skyshop.config.settings.Settings;
 import com.github.lukesky19.skyshop.database.ConnectionManager;
 import com.github.lukesky19.skyshop.database.DatabaseManager;
 import com.github.lukesky19.skyshop.database.QueueManager;
-import com.github.lukesky19.skyshop.listener.InventoryListener;
-import com.github.lukesky19.skyshop.manager.*;
+import com.github.lukesky19.skyshop.manager.HookManager;
+import com.github.lukesky19.skyshop.manager.PriceManager;
+import com.github.lukesky19.skyshop.manager.StatsManager;
+import com.github.lukesky19.skyshop.manager.TaskManager;
 import com.github.lukesky19.skyshop.manager.config.*;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
-import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.ServicePriority;
@@ -54,7 +57,7 @@ public final class SkyShop extends JavaPlugin {
     private DatabaseManager databaseManager;
     private StatsManager statsManager;
     private TaskManager taskManager;
-    private GUIManager guiManager;
+    private UUIDGUIManager guiManager;
 
     /**
      * Default Constructor.
@@ -86,10 +89,10 @@ public final class SkyShop extends JavaPlugin {
         HookManager hookManager = new HookManager(this);
 
         // Create the gui manager class
-        guiManager = new GUIManager(this);
+        guiManager = new UUIDGUIManager();
 
         // Register listeners
-        Bukkit.getPluginManager().registerEvents(new InventoryListener(guiManager), this);
+        this.getServer().getPluginManager().registerEvents(new UUIDGUIListener(guiManager), this);
 
         // Reload the plugin data
         reload();
@@ -146,11 +149,11 @@ public final class SkyShop extends JavaPlugin {
                 if (finalResult) {
                     databaseManager.handlePluginDisable();
                 } else {
-                    this.getComponentLogger().warn(AdventureUtil.serialize("Failed to save stats on plugin disable. Data loss will occur."));
+                    this.getComponentLogger().warn(AdventureUtil.deserialize("Failed to save stats on plugin disable. Data loss will occur."));
                     databaseManager.handlePluginDisable();
                 }
             }).exceptionally(ex -> {
-                this.getComponentLogger().warn(AdventureUtil.serialize("Failed to save stats on plugin disable. Data loss will occur."));
+                this.getComponentLogger().warn(AdventureUtil.deserialize("Failed to save stats on plugin disable. Data loss will occur."));
                 databaseManager.handlePluginDisable();
                 return null;
             });
@@ -184,12 +187,12 @@ public final class SkyShop extends JavaPlugin {
             String[] splitVersion = version.split("\\.");
             int second = Integer.parseInt(splitVersion[1]);
 
-            if(second >= 3) {
+            if(second >= 4) {
                 return true;
             }
         }
 
-        this.getComponentLogger().error(AdventureUtil.serialize("SkyLib Version 1.3.0.0 or newer is required to run this plugin."));
+        this.getComponentLogger().error(AdventureUtil.deserialize("SkyLib Version 1.4.0.0 or newer is required to run this plugin."));
         this.getServer().getPluginManager().disablePlugin(this);
         return false;
     }

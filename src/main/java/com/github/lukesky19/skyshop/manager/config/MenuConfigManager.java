@@ -81,7 +81,7 @@ public class MenuConfigManager {
             // Delete the legacy file.
             legacyPath.toFile().delete();
         } catch (ConfigurateException e) {
-            logger.error(AdventureUtil.serialize("Failed to migrate the legacy <yellow>menu.yml</yellow> configuration. " + e.getMessage()));
+            logger.error(AdventureUtil.deserialize("Failed to migrate the legacy <yellow>menu.yml</yellow> configuration. " + e.getMessage()));
         }
     }
 

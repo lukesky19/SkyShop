@@ -75,7 +75,7 @@ public class SellAllManager {
         try {
             sellAllGuiConfig = loader.load().get(SellAllConfig.class);
         } catch (ConfigurateException e) {
-            logger.error(AdventureUtil.serialize("Failed to load <yellow>sellall.yml</yellow> configuration. " + e.getMessage()));
+            logger.error(AdventureUtil.deserialize("Failed to load <yellow>sellall.yml</yellow> configuration. " + e.getMessage()));
         }
     }
 }

@@ -18,10 +18,10 @@
 package com.github.lukesky19.skyshop.gui;
 
 import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
-import com.github.lukesky19.skylib.api.gui.AbstractGUIManager;
 import com.github.lukesky19.skylib.api.gui.GUIButton;
 import com.github.lukesky19.skylib.api.gui.GUIType;
-import com.github.lukesky19.skylib.api.gui.abstracts.ChestGUI;
+import com.github.lukesky19.skylib.api.gui.interfaces.IGUIManager;
+import com.github.lukesky19.skylib.api.gui.templates.ChestGUI;
 import com.github.lukesky19.skylib.api.itemstack.ItemStackBuilder;
 import com.github.lukesky19.skylib.api.itemstack.ItemStackConfig;
 import com.github.lukesky19.skylib.api.placeholderapi.PlaceholderAPIUtil;
@@ -61,15 +61,12 @@ import org.jetbrains.annotations.Nullable;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * This class is called to create a transaction inventory for a player to buy and sell items.
  */
-public class TransactionGUI extends ChestGUI {
+public class TransactionGUI extends ChestGUI<UUID> {
     private final @NotNull SkyShop skyShop;
     private final @NotNull LocaleManager localeManager;
     private final @NotNull SellAllManager sellAllManager;
@@ -102,7 +99,7 @@ public class TransactionGUI extends ChestGUI {
     /**
      * Constructor
      * @param skyShop A {@link SkyShop} instance.
-     * @param guiManager An {@link AbstractGUIManager} instance.
+     * @param guiManager An {@link IGUIManager} instance.
      * @param player The {@link Player} to create the GUI for.
      * @param localeManager A {@link SkyShop} instance.
      * @param sellAllManager A {@link LocaleManager} instance.
@@ -122,7 +119,7 @@ public class TransactionGUI extends ChestGUI {
      */
     public TransactionGUI(
             @NotNull SkyShop skyShop,
-            @NotNull AbstractGUIManager guiManager,
+            @NotNull IGUIManager<UUID> guiManager,
             @NotNull Player player,
             @NotNull LocaleManager localeManager,
             @NotNull SellAllManager sellAllManager,
@@ -139,7 +136,7 @@ public class TransactionGUI extends ChestGUI {
             @Nullable String transactionName,
             @NotNull List<String> buyCommands,
             @NotNull List<String> sellCommands) {
-        super(skyShop, guiManager, player);
+        super(skyShop, guiManager, player.getUniqueId(), player);
 
         this.skyShop = skyShop;
         this.localeManager = localeManager;
@@ -169,7 +166,7 @@ public class TransactionGUI extends ChestGUI {
     public boolean create() {
         GUIType guiType = transactionConfig.gui().guiType();
         if(guiType == null) {
-            logger.warn(AdventureUtil.serialize("Unable to create the InventoryView for a ShopGUI due to an invalid GUIType"));
+            logger.warn(AdventureUtil.deserialize("Unable to create the InventoryView for a ShopGUI due to an invalid GUIType"));
             return false;
         }
 
@@ -237,7 +234,7 @@ public class TransactionGUI extends ChestGUI {
 
         // If the InventoryView was not created, log a warning and return false.
         if(inventoryView == null) {
-            logger.warn(AdventureUtil.serialize("Unable to add GUIButton ItemStacks to the InventoryView as it was not created."));
+            logger.warn(AdventureUtil.deserialize("Unable to add GUIButton ItemStacks to the InventoryView as it was not created."));
             if(isOpen) close();
             return false;
         }
@@ -251,7 +248,7 @@ public class TransactionGUI extends ChestGUI {
         // Check if at least 1 page is configured.
         List<TransactionConfig.PageConfig> pages = transactionConfig.gui().pages();
         if(pages.isEmpty()) {
-            logger.error(AdventureUtil.serialize("Unable to decorate the transaction GUI due to no pages configured."));
+            logger.error(AdventureUtil.deserialize("Unable to decorate the transaction GUI due to no pages configured."));
             if(isOpen) close();
             return false;
         }
@@ -262,7 +259,7 @@ public class TransactionGUI extends ChestGUI {
         // Check if at least 1 button is configured.
         List<TransactionConfig.Button> entries = page.buttons();
         if(entries.isEmpty()) {
-            logger.error(AdventureUtil.serialize("Unable to decorate the transaction GUI for page " + pageNum + " due to no buttons configured."));
+            logger.error(AdventureUtil.deserialize("Unable to decorate the transaction GUI for page " + pageNum + " due to no buttons configured."));
             if(isOpen) close();
             return false;
         }
@@ -293,9 +290,9 @@ public class TransactionGUI extends ChestGUI {
 
                 case DUMMY -> createDummyButton(buttonConfig, buttonNum, buttonType);
 
-                case null -> logger.warn(AdventureUtil.serialize("Unable to add a button due to an invalid button type. Button Num: " + buttonNum));
+                case null -> logger.warn(AdventureUtil.deserialize("Unable to add a button due to an invalid button type. Button Num: " + buttonNum));
 
-                default -> logger.warn(AdventureUtil.serialize("Unsupported ButtonType in the transaction GUI for " + buttonNum + " on page " + pageNum + " and style " + transactionStyle + "."));
+                default -> logger.warn(AdventureUtil.deserialize("Unsupported ButtonType in the transaction GUI for " + buttonNum + " on page " + pageNum + " and style " + transactionStyle + "."));
             }
         }
 
@@ -386,7 +383,7 @@ public class TransactionGUI extends ChestGUI {
         if(pageNum >= 1) {
             // Check if the slot is not configured and send a warning.
             if(buttonConfig.slot() == null) {
-                logger.warn(AdventureUtil.serialize("Unable to add a button due to a null slot. Button Num: " + buttonNum + " and type: " + buttonType));
+                logger.warn(AdventureUtil.deserialize("Unable to add a button due to a null slot. Button Num: " + buttonNum + " and type: " + buttonType));
                 return;
             }
 
@@ -428,7 +425,7 @@ public class TransactionGUI extends ChestGUI {
         if(pageNum < (pageSize - 1)) {
             // Check if the slot is not configured and send a warning.
             if(buttonConfig.slot() == null) {
-                logger.warn(AdventureUtil.serialize("Unable to add a button due to a null slot. Button Num: " + buttonNum + " and type: " + buttonType));
+                logger.warn(AdventureUtil.deserialize("Unable to add a button due to a null slot. Button Num: " + buttonNum + " and type: " + buttonType));
                 return;
             }
 
@@ -466,7 +463,7 @@ public class TransactionGUI extends ChestGUI {
             @NotNull ButtonType buttonType) {
         // Check if the slot is not configured and send a warning.
         if(buttonConfig.slot() == null) {
-            logger.warn(AdventureUtil.serialize("Unable to add a button due to a null slot. Button Num: " + buttonNum + " and type: " + buttonType));
+            logger.warn(AdventureUtil.deserialize("Unable to add a button due to a null slot. Button Num: " + buttonNum + " and type: " + buttonType));
             return;
         }
 
@@ -500,7 +497,7 @@ public class TransactionGUI extends ChestGUI {
             @NotNull ButtonType buttonType) {
         // Check if the slot is not configured and send a warning.
         if(buttonConfig.slot() == null) {
-            logger.warn(AdventureUtil.serialize("Unable to add a button due to a null slot. Button Num: " + buttonNum + " and type: " + buttonType));
+            logger.warn(AdventureUtil.deserialize("Unable to add a button due to a null slot. Button Num: " + buttonNum + " and type: " + buttonType));
             return;
         }
 
@@ -531,7 +528,7 @@ public class TransactionGUI extends ChestGUI {
             @NotNull ButtonType buttonType) {
         // Check if the slot is not configured and send a warning.
         if(buttonConfig.slot() == null) {
-            logger.warn(AdventureUtil.serialize("Unable to add a button due to a null slot. Button Num: " + buttonNum + " and type: " + buttonType));
+            logger.warn(AdventureUtil.deserialize("Unable to add a button due to a null slot. Button Num: " + buttonNum + " and type: " + buttonType));
             return;
         }
 
@@ -575,7 +572,7 @@ public class TransactionGUI extends ChestGUI {
             @NotNull ButtonType buttonType) {
         // Check if the slot is not configured and send a warning.
         if(buttonConfig.slot() == null) {
-            logger.warn(AdventureUtil.serialize("Unable to add a button due to a null slot. Button Num: " + buttonNum + " and type: " + buttonType));
+            logger.warn(AdventureUtil.deserialize("Unable to add a button due to a null slot. Button Num: " + buttonNum + " and type: " + buttonType));
             return;
         }
 
@@ -594,8 +591,8 @@ public class TransactionGUI extends ChestGUI {
             guiButtonBuilder.setAction(event -> {
                 @NotNull Optional<@NotNull SellAllConfig> optionalGUIConfig = sellAllManager.getSellAllGuiConfig();
                 if(optionalGUIConfig.isEmpty()) {
-                    logger.error(AdventureUtil.serialize("Unable to open sellall GUI for player " + player.getName() + " due to invalid sellall config."));
-                    player.sendMessage(AdventureUtil.serialize(locale.prefix() + locale.guiOpenError()));
+                    logger.error(AdventureUtil.deserialize("Unable to open sellall GUI for player " + player.getName() + " due to invalid sellall config."));
+                    player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.guiOpenError()));
                     if(isOpen) close();
                     return;
                 }
@@ -605,24 +602,24 @@ public class TransactionGUI extends ChestGUI {
 
                 boolean creationResult = sellAllGUI.create();
                 if(!creationResult) {
-                    logger.error(AdventureUtil.serialize("Unable to create the InventoryView for the sellall GUI for player " + player.getName() + " due to a configuration error."));
-                    player.sendMessage(AdventureUtil.serialize(locale.prefix() + locale.guiOpenError()));
+                    logger.error(AdventureUtil.deserialize("Unable to create the InventoryView for the sellall GUI for player " + player.getName() + " due to a configuration error."));
+                    player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.guiOpenError()));
                     if(isOpen) close();
                     return;
                 }
 
                 boolean updateResult = sellAllGUI.update();
                 if(!updateResult) {
-                    logger.error(AdventureUtil.serialize("Unable to decorate the sellall GUI for player " + player.getName() + " due to a configuration error."));
-                    player.sendMessage(AdventureUtil.serialize(locale.prefix() + locale.guiOpenError()));
+                    logger.error(AdventureUtil.deserialize("Unable to decorate the sellall GUI for player " + player.getName() + " due to a configuration error."));
+                    player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.guiOpenError()));
                     if(isOpen) close();
                     return;
                 }
 
                 boolean openResult = sellAllGUI.open();
                 if(!openResult) {
-                    logger.error(AdventureUtil.serialize("Unable to open the sellall GUI for player " + player.getName() + " due to a configuration error."));
-                    player.sendMessage(AdventureUtil.serialize(locale.prefix() + locale.guiOpenError()));
+                    logger.error(AdventureUtil.deserialize("Unable to open the sellall GUI for player " + player.getName() + " due to a configuration error."));
+                    player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.guiOpenError()));
                     if(isOpen) close();
                 }
             });
@@ -645,13 +642,13 @@ public class TransactionGUI extends ChestGUI {
 
         // Check if the slot is not configured and send a warning.
         if(buttonConfig.slot() == null) {
-            logger.warn(AdventureUtil.serialize("Unable to add a buy button due to a null slot. Button Num: " + buttonNum + " and type: " + buttonType));
+            logger.warn(AdventureUtil.deserialize("Unable to add a buy button due to a null slot. Button Num: " + buttonNum + " and type: " + buttonType));
             return;
         }
 
         ItemStackConfig itemConfig = buttonConfig.displayItem();
         if(buttonConfig.transactionAmount() == null || buttonConfig.transactionAmount() <= 0) {
-            logger.warn(AdventureUtil.serialize("Unable to add a buy button due to an invalid transaction amount."));
+            logger.warn(AdventureUtil.deserialize("Unable to add a buy button due to an invalid transaction amount."));
             return;
         }
 
@@ -701,14 +698,14 @@ public class TransactionGUI extends ChestGUI {
 
         // Check if the slot is not configured and send a warning.
         if(buttonConfig.slot() == null) {
-            logger.warn(AdventureUtil.serialize("Unable to add a sell button due to a null slot. Button Num: " + buttonNum + " and type: " + buttonType));
+            logger.warn(AdventureUtil.deserialize("Unable to add a sell button due to a null slot. Button Num: " + buttonNum + " and type: " + buttonType));
             return;
         }
 
         // Get the ItemStackConfig
         ItemStackConfig itemConfig = buttonConfig.displayItem();
         if(buttonConfig.transactionAmount() == null || buttonConfig.transactionAmount() <= 0) {
-            logger.warn(AdventureUtil.serialize("Unable to add a sell button due to an invalid transaction amount."));
+            logger.warn(AdventureUtil.deserialize("Unable to add a sell button due to an invalid transaction amount."));
             return;
         }
 
@@ -756,7 +753,7 @@ public class TransactionGUI extends ChestGUI {
             @NotNull ButtonType buttonType) {
         // Check if the slot is not configured and send a warning.
         if(buttonConfig.slot() == null) {
-            logger.warn(AdventureUtil.serialize("Unable to add a dummy button due to a null slot. Button Num: " + buttonNum + " and type: " + buttonType));
+            logger.warn(AdventureUtil.deserialize("Unable to add a dummy button due to a null slot. Button Num: " + buttonNum + " and type: " + buttonType));
             return;
         }
 
@@ -791,14 +788,14 @@ public class TransactionGUI extends ChestGUI {
 
         if(money > 0) {
             if(!economyHook.isHooked()) {
-                logger.error(AdventureUtil.serialize("Unable to buy this item due to no economy found."));
-                player.sendMessage(AdventureUtil.serialize(locale.prefix() + locale.transactionError()));
+                logger.error(AdventureUtil.deserialize("Unable to buy this item due to no economy found."));
+                player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.transactionError()));
                 close();
                 return;
             }
 
             if(economyHook.getBalance(player) < money) {
-                player.sendMessage(AdventureUtil.serialize(player, locale.prefix() + locale.insufficientMoney()));
+                player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.insufficientMoney()));
                 close();
                 return;
             }
@@ -806,8 +803,8 @@ public class TransactionGUI extends ChestGUI {
 
         if(points > 0) {
             if(!playerPointsHook.isHooked()) {
-                logger.error(AdventureUtil.serialize("Unable to buy this item due to no player points dependency found."));
-                player.sendMessage(AdventureUtil.serialize(locale.prefix() + locale.transactionError()));
+                logger.error(AdventureUtil.deserialize("Unable to buy this item due to no player points dependency found."));
+                player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.transactionError()));
                 close();
                 return;
             }
@@ -820,8 +817,8 @@ public class TransactionGUI extends ChestGUI {
         // Build the ItemStack that will be given to the player on successful purchase.
         Optional<ItemStack> optionalItemStack = itemStackBuilder.buildItemStack();
         if(optionalItemStack.isEmpty()) {
-            logger.error(AdventureUtil.serialize("Unable to buy item due the transaction ItemStack being failed to be created from the transaction item config."));
-            player.sendMessage(AdventureUtil.serialize(locale.prefix() + locale.transactionError()));
+            logger.error(AdventureUtil.deserialize("Unable to buy item due the transaction ItemStack being failed to be created from the transaction item config."));
+            player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.transactionError()));
             close();
             return;
         }
@@ -850,11 +847,11 @@ public class TransactionGUI extends ChestGUI {
 
         // Send the message that the transaction was a success
         if(money > 0 && points > 0) {
-            player.sendMessage(AdventureUtil.serialize(player, locale.prefix() + locale.buyItemSuccess().moneyAndPoints(), successPlaceholders));
+            player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.buyItemSuccess().moneyAndPoints(), successPlaceholders));
         } else if(money > 0) {
-            player.sendMessage(AdventureUtil.serialize(player, locale.prefix() + locale.buyItemSuccess().money(), successPlaceholders));
+            player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.buyItemSuccess().money(), successPlaceholders));
         } else { // Points only
-            player.sendMessage(AdventureUtil.serialize(player, locale.prefix() + locale.buyItemSuccess().points(), successPlaceholders));
+            player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.buyItemSuccess().points(), successPlaceholders));
         }
 
         // Increment stats if statsManager is not null
@@ -880,8 +877,8 @@ public class TransactionGUI extends ChestGUI {
         // Build the ItemStack that will be taken to the player on successful selling.
         Optional<ItemStack> optionalItemStack = itemStackBuilder.buildItemStack();
         if(optionalItemStack.isEmpty()) {
-            logger.error(AdventureUtil.serialize("Unable to sell this item due the transaction ItemStack being failed to be created from the transaction item config."));
-            player.sendMessage(AdventureUtil.serialize(locale.prefix() + locale.transactionError()));
+            logger.error(AdventureUtil.deserialize("Unable to sell this item due the transaction ItemStack being failed to be created from the transaction item config."));
+            player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.transactionError()));
             close();
             return;
         }
@@ -894,7 +891,7 @@ public class TransactionGUI extends ChestGUI {
 
         // Check if the player has the required amount to sell
         if(!player.getInventory().containsAtLeast(sellItem, amount)) {
-            player.sendMessage(AdventureUtil.serialize(player, locale.prefix() + locale.notEnoughItems()));
+            player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.notEnoughItems()));
             close();
             return;
         }
@@ -917,11 +914,11 @@ public class TransactionGUI extends ChestGUI {
 
         // Send the message that the transaction was a success
         if(money > 0 && points > 0) {
-            player.sendMessage(AdventureUtil.serialize(player, locale.prefix() + locale.sellItemSuccess().moneyAndPoints(), successPlaceholders));
+            player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.sellItemSuccess().moneyAndPoints(), successPlaceholders));
         } else if(money > 0) {
-            player.sendMessage(AdventureUtil.serialize(player, locale.prefix() + locale.sellItemSuccess().money(), successPlaceholders));
+            player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.sellItemSuccess().money(), successPlaceholders));
         } else { // Points only
-            player.sendMessage(AdventureUtil.serialize(player, locale.prefix() + locale.sellItemSuccess().points(), successPlaceholders));
+            player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.sellItemSuccess().points(), successPlaceholders));
         }
 
         // Increment stats if statsManager is not null
@@ -942,14 +939,14 @@ public class TransactionGUI extends ChestGUI {
 
         if(money > 0) {
             if(!economyHook.isHooked()) {
-                logger.error(AdventureUtil.serialize("Unable to buy these command(s) due to no economy found."));
-                player.sendMessage(AdventureUtil.serialize(locale.prefix() + locale.transactionError()));
+                logger.error(AdventureUtil.deserialize("Unable to buy these command(s) due to no economy found."));
+                player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.transactionError()));
                 close();
                 return;
             }
 
             if(economyHook.getBalance(player) < money) {
-                player.sendMessage(AdventureUtil.serialize(player, locale.prefix() + locale.insufficientMoney()));
+                player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.insufficientMoney()));
                 close();
                 return;
             }
@@ -957,14 +954,14 @@ public class TransactionGUI extends ChestGUI {
 
         if(points > 0) {
             if(!playerPointsHook.isHooked()) {
-                logger.error(AdventureUtil.serialize("Unable to buy these command(s) due to no player points dependency found."));
-                player.sendMessage(AdventureUtil.serialize(locale.prefix() + locale.transactionError()));
+                logger.error(AdventureUtil.deserialize("Unable to buy these command(s) due to no player points dependency found."));
+                player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.transactionError()));
                 close();
                 return;
             }
 
             if(playerPointsHook.getBalance(player) < points) {
-                player.sendMessage(AdventureUtil.serialize(player, locale.prefix() + locale.insufficientPlayerPoints()));
+                player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.insufficientPlayerPoints()));
                 close();
                 return;
             }
@@ -994,11 +991,11 @@ public class TransactionGUI extends ChestGUI {
 
         // Send the message that the transaction was a success
         if(money > 0 && points > 0) {
-            player.sendMessage(AdventureUtil.serialize(player, locale.prefix() + locale.buyCommandSuccess().moneyAndPoints(), successPlaceholders));
+            player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.buyCommandSuccess().moneyAndPoints(), successPlaceholders));
         } else if(money > 0) {
-            player.sendMessage(AdventureUtil.serialize(player, locale.prefix() + locale.buyCommandSuccess().money(), successPlaceholders));
+            player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.buyCommandSuccess().money(), successPlaceholders));
         } else { // Points only
-            player.sendMessage(AdventureUtil.serialize(player, locale.prefix() + locale.buyCommandSuccess().points(), successPlaceholders));
+            player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.buyCommandSuccess().points(), successPlaceholders));
         }
     }
 
@@ -1038,11 +1035,11 @@ public class TransactionGUI extends ChestGUI {
 
         // Send the message that the transaction was a success
         if(money > 0 && points > 0) {
-            player.sendMessage(AdventureUtil.serialize(player, locale.prefix() + locale.sellCommandSuccess().moneyAndPoints(), successPlaceholders));
+            player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.sellCommandSuccess().moneyAndPoints(), successPlaceholders));
         } else if(money > 0) {
-            player.sendMessage(AdventureUtil.serialize(player, locale.prefix() + locale.sellCommandSuccess().money(), successPlaceholders));
+            player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.sellCommandSuccess().money(), successPlaceholders));
         } else { // Points only
-            player.sendMessage(AdventureUtil.serialize(player, locale.prefix() + locale.sellCommandSuccess().points(), successPlaceholders));
+            player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.sellCommandSuccess().points(), successPlaceholders));
         }
     }
 

@@ -144,7 +144,7 @@ public class LocaleManager {
 
             validateLocale();
         } catch (ConfigurateException e) {
-            logger.error(AdventureUtil.serialize("Failed to load locale configuration. " + e.getMessage()));
+            logger.error(AdventureUtil.deserialize("Failed to load locale configuration. " + e.getMessage()));
         }
     }
 
@@ -165,7 +165,7 @@ public class LocaleManager {
             case "2.0.0.0" -> {
                 @Nullable Locale_2_0_0_0 legacyLocale = loadLegacyLocale(localeName);
                 if(legacyLocale == null) {
-                    logger.warn(AdventureUtil.serialize("Unable to migrate legacy locale as it failed to load."));
+                    logger.warn(AdventureUtil.deserialize("Unable to migrate legacy locale as it failed to load."));
                     return;
                 }
 
@@ -220,7 +220,7 @@ public class LocaleManager {
                 saveLocale(logger, localeName);
             }
 
-            default -> logger.warn(AdventureUtil.serialize("Unable to migrate the locale config as the config version is an unknown value."));
+            default -> logger.warn(AdventureUtil.deserialize("Unable to migrate the locale config as the config version is an unknown value."));
         }
     }
 
@@ -241,7 +241,7 @@ public class LocaleManager {
 
             loader.save(node);
         } catch (ConfigurateException e) {
-            logger.error(AdventureUtil.serialize("Failed to save locale configuration. " + e.getMessage()));
+            logger.error(AdventureUtil.deserialize("Failed to save locale configuration. " + e.getMessage()));
         }
     }
 
@@ -269,7 +269,7 @@ public class LocaleManager {
         try {
             return loader.load().get(Locale_2_0_0_0.class);
         } catch (ConfigurateException e) {
-            logger.error(AdventureUtil.serialize("Failed to load legacy locale configuration. " + e.getMessage()));
+            logger.error(AdventureUtil.deserialize("Failed to load legacy locale configuration. " + e.getMessage()));
             return null;
         }
     }
@@ -324,7 +324,7 @@ public class LocaleManager {
                 || locale.transactionError() == null) {
             locale = null;
 
-            skyShop.getComponentLogger().warn(AdventureUtil.serialize("Your locale configuration contains an invalid message. The default locale will be used."));
+            skyShop.getComponentLogger().warn(AdventureUtil.deserialize("Your locale configuration contains an invalid message. The default locale will be used."));
         }
     }
 }
