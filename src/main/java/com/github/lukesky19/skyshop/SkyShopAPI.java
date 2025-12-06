@@ -114,7 +114,7 @@ public class SkyShopAPI {
         int finalSellPoints = priceCache.points() * stackSize;
 
         if(finalSellPrice > 0.0 && finalSellPoints > 0) {
-            ItemSoldEvent itemSoldEvent = new ItemSoldEvent(itemStack);
+            ItemSoldEvent itemSoldEvent = new ItemSoldEvent(player, itemStack);
             skyShop.getServer().getPluginManager().callEvent(itemSoldEvent);
             if(itemSoldEvent.isCancelled()) return false;
 
@@ -126,7 +126,7 @@ public class SkyShopAPI {
 
             return true;
         } else if(finalSellPrice > 0.0) {
-            ItemSoldEvent itemSoldEvent = new ItemSoldEvent(itemStack);
+            ItemSoldEvent itemSoldEvent = new ItemSoldEvent(player, itemStack);
             skyShop.getServer().getPluginManager().callEvent(itemSoldEvent);
             if(itemSoldEvent.isCancelled()) return false;
 
@@ -138,7 +138,7 @@ public class SkyShopAPI {
 
             return true;
         } else if(finalSellPoints > 0) {
-            ItemSoldEvent itemSoldEvent = new ItemSoldEvent(itemStack);
+            ItemSoldEvent itemSoldEvent = new ItemSoldEvent(player, itemStack);
             skyShop.getServer().getPluginManager().callEvent(itemSoldEvent);
             if(itemSoldEvent.isCancelled()) return false;
 
@@ -291,7 +291,7 @@ public class SkyShopAPI {
             }
 
             if(priceCache.money() > 0 && priceCache.points() > 0) {
-                ItemSoldEvent itemSoldEvent = new ItemSoldEvent(invStack);
+                ItemSoldEvent itemSoldEvent = new ItemSoldEvent(player, invStack);
                 skyShop.getServer().getPluginManager().callEvent(itemSoldEvent);
                 if(itemSoldEvent.isCancelled()) continue;
 
@@ -300,7 +300,7 @@ public class SkyShopAPI {
                 money += priceCache.money() * stackSize;
                 points += priceCache.points() * stackSize;
             } else if(priceCache.money() > 0) {
-                ItemSoldEvent itemSoldEvent = new ItemSoldEvent(invStack);
+                ItemSoldEvent itemSoldEvent = new ItemSoldEvent(player, invStack);
                 skyShop.getServer().getPluginManager().callEvent(itemSoldEvent);
                 if(itemSoldEvent.isCancelled()) continue;
 
@@ -308,7 +308,7 @@ public class SkyShopAPI {
 
                 money += priceCache.money() * stackSize;
             } else if(priceCache.points() > 0) {
-                ItemSoldEvent itemSoldEvent = new ItemSoldEvent(invStack);
+                ItemSoldEvent itemSoldEvent = new ItemSoldEvent(player, invStack);
                 skyShop.getServer().getPluginManager().callEvent(itemSoldEvent);
                 if(itemSoldEvent.isCancelled()) continue;
 

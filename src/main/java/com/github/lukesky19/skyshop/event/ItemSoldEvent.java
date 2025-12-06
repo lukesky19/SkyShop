@@ -1,5 +1,6 @@
 package com.github.lukesky19.skyshop.event;
 
+import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
@@ -12,14 +13,25 @@ import org.jetbrains.annotations.NotNull;
 public class ItemSoldEvent extends Event implements Cancellable {
     private static final @NotNull HandlerList HANDLERS = new HandlerList();
     private boolean isCancelled = false;
+    private final @NotNull Player player;
     private final @NotNull ItemStack itemStack; // Item sold
 
     /**
      * Constructor
+     * @param player The player selling the item.
      * @param itemStack The {@link ItemStack} being sold.
      */
-    public ItemSoldEvent(@NotNull ItemStack itemStack) {
+    public ItemSoldEvent(@NotNull Player player, @NotNull ItemStack itemStack) {
+        this.player = player;
         this.itemStack = itemStack;
+    }
+
+    /**
+     * Get the {@link Player} selling.
+     * @return The {@link Player} selling.
+     */
+    public @NotNull Player getPlayer() {
+        return player;
     }
 
     /**

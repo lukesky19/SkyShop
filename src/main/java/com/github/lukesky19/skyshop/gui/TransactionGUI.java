@@ -830,7 +830,7 @@ public class TransactionGUI extends ChestGUI<UUID> {
         if(itemType == null) return;
 
         // Create and call the ItemPurchasedEvent
-        ItemPurchasedEvent itemPurchasedEvent = new ItemPurchasedEvent(buyItem);
+        ItemPurchasedEvent itemPurchasedEvent = new ItemPurchasedEvent(player, buyItem);
         skyShop.getServer().getPluginManager().callEvent(itemPurchasedEvent);
         // If the event was cancelled, cancel the purchase.
         if(itemPurchasedEvent.isCancelled()) return;
@@ -897,7 +897,7 @@ public class TransactionGUI extends ChestGUI<UUID> {
         }
 
         // Create and call the ItemSoldEvent
-        ItemSoldEvent itemSoldEvent = new ItemSoldEvent(sellItem);
+        ItemSoldEvent itemSoldEvent = new ItemSoldEvent(player, sellItem);
         skyShop.getServer().getPluginManager().callEvent(itemSoldEvent);
         // If the event was cancelled, cancel the transaction.
         if(itemSoldEvent.isCancelled()) return;
@@ -968,7 +968,7 @@ public class TransactionGUI extends ChestGUI<UUID> {
         }
 
         // Create and call the CommandPurchasedEvent
-        CommandPurchasedEvent commandPurchasedEvent = new CommandPurchasedEvent(buyCommands);
+        CommandPurchasedEvent commandPurchasedEvent = new CommandPurchasedEvent(player, buyCommands);
         skyShop.getServer().getPluginManager().callEvent(commandPurchasedEvent);
         // If the event was cancelled, cancel the purchase.
         if(commandPurchasedEvent.isCancelled()) return;
@@ -1012,7 +1012,7 @@ public class TransactionGUI extends ChestGUI<UUID> {
         PlayerPointsHook playerPointsHook = hookManager.getHook(PlayerPointsHook.class);
 
         // Create and call the CommandSoldEvent
-        CommandSoldEvent commandSoldEvent = new CommandSoldEvent(sellCommands);
+        CommandSoldEvent commandSoldEvent = new CommandSoldEvent(player, sellCommands);
         skyShop.getServer().getPluginManager().callEvent(commandSoldEvent);
         // If the event was cancelled, cancel the transaction.
         if(commandSoldEvent.isCancelled()) return;

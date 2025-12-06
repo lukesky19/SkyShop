@@ -1,5 +1,6 @@
 package com.github.lukesky19.skyshop.event;
 
+import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
@@ -13,14 +14,25 @@ import java.util.List;
 public class CommandPurchasedEvent extends Event implements Cancellable {
     private static final @NotNull HandlerList HANDLERS = new HandlerList();
     private boolean isCancelled = false;
+    private final @NotNull Player player;
     private final @NotNull List<String> commands;
 
     /**
      * Constructor
+     * @param player The {@link Player} buying the commands.
      * @param commands A {@link List} of {@link String} for the commands being purchased.
      */
-    public CommandPurchasedEvent(@NotNull List<String> commands) {
+    public CommandPurchasedEvent(@NotNull Player player, @NotNull List<String> commands) {
+        this.player = player;
         this.commands = commands;
+    }
+
+    /**
+     * Get the {@link Player} making the purchase.
+     * @return The {@link Player} making the purchase.
+     */
+    public @NotNull Player getPlayer() {
+        return player;
     }
 
     /**
