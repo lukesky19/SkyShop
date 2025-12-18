@@ -34,6 +34,8 @@ import java.util.List;
  * @param sellItemSuccess The message when the player successfully completes selling an item.
  * @param buyCommandSuccess The message when the player successfully completes buying a command.
  * @param sellCommandSuccess The message when the player successfully completes selling a command.
+ * @param otherBuySuccess The message sent when a player successfully completes a non-item and non-command buy transaction.
+ * @param otherSellSuccess The message sent when a player successfully completes a non-item and non-command sell transaction.
  * @param sellallSuccess The message sent to the player when they successfully sell all items.
  * @param sellallUnsellable The message sent to the player when an item is unsellable.
  * @param unbuyable The message sent to the player when an item is unbuyable.
@@ -42,6 +44,11 @@ import java.util.List;
  * @param guiOpenError The message sent to the player when a GUI fails to open.
  * @param statsDisabledGuiError The message sent to the player when stats tracking is disabled, and they try to open the stats GUI.
  * @param transactionError The message sent to the player when buying or selling fails due to an error.
+ * @param notOnIsland The message sent to a player when they are not on their island to buy or sell island size.
+ * @param islandTooSmall The message sent to a player when their island is too small to sell a portion of their island size.
+ * @param islandMaxSize The message sent to a player when their island is at the maximum size and an expansion can be purchased.
+ * @param categoryNoPermission The message sent to a player when they don't have permission to access a shop category.
+ * @param buttonNoPermission The message sent to a player when they don't have permission to use a button.
  */
 @ConfigSerializable
 public record Locale(
@@ -56,6 +63,8 @@ public record Locale(
         SuccessMessages sellItemSuccess,
         SuccessMessages buyCommandSuccess,
         SuccessMessages sellCommandSuccess,
+        SuccessMessages otherBuySuccess,
+        SuccessMessages otherSellSuccess,
         SuccessMessages sellallSuccess,
         String sellallUnsellable,
         String unbuyable,
@@ -63,7 +72,12 @@ public record Locale(
         String inGameOnly,
         String guiOpenError,
         String statsDisabledGuiError,
-        String transactionError) {
+        String transactionError,
+        String notOnIsland,
+        String islandTooSmall,
+        String islandMaxSize,
+        String categoryNoPermission,
+        String buttonNoPermission) {
     /**
      * This record contains the messages used when an item or command is purchased or sold successfully.
      * @param moneyAndPoints The message sent when an item or command is purchased ors old for money and points.

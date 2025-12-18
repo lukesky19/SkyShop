@@ -81,6 +81,14 @@ public class LocaleManager {
                     "<white>Sold <yellow><transaction_name></yellow> for $<yellow><money></yellow>. Balance: <yellow><money_balance></yellow>",
                     "<white>Sold <yellow><transaction_name></yellow> for <yellow><player_points></yellow> player points. Balance: <yellow><player_points_balance></yellow>"),
             new Locale.SuccessMessages(
+                    "<white>Purchased <yellow><transaction_name></yellow> for $<yellow><money></yellow> and <yellow><player_points></yellow> player points. Balance: <yellow><money_balance></yellow> Player Points: <yellow><player_points_balance></yellow></white>",
+                    "<white>Purchased <yellow><transaction_name></yellow> for $<yellow><money></yellow>. Balance: <yellow><money_balance></yellow>",
+                    "<white>Purchased <yellow><transaction_name></yellow> for <yellow><player_points></yellow> player points. Balance: <yellow><player_points_balance></yellow>"),
+            new Locale.SuccessMessages(
+                    "<white>Sold <yellow><transaction_name></yellow> for $<yellow><money></yellow> and <yellow><player_points></yellow> player points. Balance: <yellow><money_balance></yellow> Player Points: <yellow><player_points_balance></yellow></white>",
+                    "<white>Sold <yellow><transaction_name></yellow> for $<yellow><money></yellow>. Balance: <yellow><money_balance></yellow>",
+                    "<white>Sold <yellow><transaction_name></yellow> for <yellow><player_points></yellow> player points. Balance: <yellow><player_points_balance></yellow>"),
+            new Locale.SuccessMessages(
                     "<white>Successfully sold all items for $<yellow><money></yellow> and <yellow><player_points></yellow> player points. Balance: <yellow><money_balance></yellow> Player Points: <yellow><player_points_balance></yellow></white>",
                     "<white>Successfully sold all items for $<yellow><money></yellow>. Updated Balance: <yellow><money_Balance></yellow></white>",
                     "<white>Successfully sold all items for <yellow><player_points></yellow> player points. Updated Balance: <yellow><player_points_balance></yellow></white>"),
@@ -90,7 +98,12 @@ public class LocaleManager {
             "<red>This command can only be ran in-game.</red>",
             "<red>Unable to open this GUI because of a configuration error.</red>",
             "<red>Unable to open the stats GUI as stats tracking is disabled.</red>",
-            "<red>Unable to complete this transaction due to an error.</red>");
+            "<red>Unable to complete this transaction due to an error.</red>",
+            "<red>You must be on your island to buy or sell island size.</red>",
+            "<red>Your island is too small to sell any island size.</red>",
+            "<red>Your island is at the maximum size it can be expanded to.</red>",
+            "<red>You do not have permission to access this shop category.</red>",
+            "<red>You do not have permission to access this button.</red>");
 
     /**
      * Constructor
@@ -123,7 +136,7 @@ public class LocaleManager {
         saveDefaultLocales();
 
         // Don't load anything if the plugin's settings or locale option are invalid.
-        Settings settings = settingsManager.getSettingsConfig();
+        Settings settings = settingsManager.getConfiguration();
         if(settings == null) {
             logger.warn("Failed to load locale configuration due to invalid plugin settings.");
             return;
@@ -206,6 +219,14 @@ public class LocaleManager {
                                 updatePlaceholders(legacyLocale.sellCommandSuccess()),
                                 "<white>Sold <yellow><transaction_name></yellow> for <yellow><player_points></yellow> player points. Balance: <yellow><player_points_balance></yellow>"),
                         new Locale.SuccessMessages(
+                                "<white>Purchased <yellow><transaction_name></yellow> for $<yellow><money></yellow> and <yellow><player_points></yellow> player points. Balance: <yellow><money_balance></yellow> Player Points: <yellow><player_points_balance></yellow></white>",
+                                "<white>Purchased <yellow><transaction_name></yellow> for $<yellow><money></yellow>. Balance: <yellow><money_balance></yellow>",
+                                "<white>Purchased <yellow><transaction_name></yellow> for <yellow><player_points></yellow> player points. Balance: <yellow><player_points_balance></yellow>"),
+                        new Locale.SuccessMessages(
+                                "<white>Sold <yellow><transaction_name></yellow> for $<yellow><money></yellow> and <yellow><player_points></yellow> player points. Balance: <yellow><money_balance></yellow> Player Points: <yellow><player_points_balance></yellow></white>",
+                                "<white>Sold <yellow><transaction_name></yellow> for $<yellow><money></yellow>. Balance: <yellow><money_balance></yellow>",
+                                "<white>Sold <yellow><transaction_name></yellow> for <yellow><player_points></yellow> player points. Balance: <yellow><player_points_balance></yellow>"),
+                        new Locale.SuccessMessages(
                                 "<white>Successfully sold all items for $<yellow><money></yellow> and <yellow><player_points></yellow> player points. Balance: <yellow><money_balance></yellow> Player Points: <yellow><player_points_balance></yellow></white>",
                                 updatePlaceholders(legacyLocale.sellallSuccess()),
                                 "<white>Successfully sold all items for <yellow><player_points></yellow> player points. Updated Balance: <yellow><player_points_balance></yellow></white>"),
@@ -215,7 +236,12 @@ public class LocaleManager {
                         locale.inGameOnly(),
                         locale.guiOpenError(),
                         locale.statsDisabledGuiError(),
-                        "<red>Unable to complete this transaction due to an error.</red>");
+                        "<red>Unable to complete this transaction due to an error.</red>",
+                        "<red>You must be on your island to buy or sell island size.</red>",
+                        "<red>Your island is too small to sell any island size.</red>",
+                        "<red>Your island is at the maximum size it can be expanded to.</red>",
+                        "<red>You do not have permission to access this shop category.</red>",
+                        "<red>You do not have permission to access this button.</red>");
 
                 saveLocale(logger, localeName);
             }
@@ -312,6 +338,12 @@ public class LocaleManager {
                 || locale.sellCommandSuccess().moneyAndPoints() == null
                 || locale.sellCommandSuccess().money() == null
                 || locale.sellCommandSuccess().points() == null
+                || locale.otherBuySuccess().moneyAndPoints() == null
+                || locale.otherBuySuccess().money() == null
+                || locale.otherBuySuccess().points() == null
+                || locale.otherSellSuccess().moneyAndPoints() == null
+                || locale.otherSellSuccess().money() == null
+                || locale.otherSellSuccess().points() == null
                 || locale.sellallSuccess().moneyAndPoints() == null
                 || locale.sellallSuccess().money() == null
                 || locale.sellallSuccess().points() == null
@@ -321,7 +353,12 @@ public class LocaleManager {
                 || locale.inGameOnly() == null
                 || locale.guiOpenError() == null
                 || locale.statsDisabledGuiError() == null
-                || locale.transactionError() == null) {
+                || locale.transactionError() == null
+                || locale.notOnIsland() == null
+                || locale.islandTooSmall() == null
+                || locale.islandMaxSize() == null
+                || locale.categoryNoPermission() == null
+                || locale.buttonNoPermission() == null) {
             locale = null;
 
             skyShop.getComponentLogger().warn(AdventureUtil.deserialize("Your locale configuration contains an invalid message. The default locale will be used."));

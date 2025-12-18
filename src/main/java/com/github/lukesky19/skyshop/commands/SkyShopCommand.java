@@ -27,10 +27,11 @@ import com.github.lukesky19.skyshop.config.locale.Locale;
 import com.github.lukesky19.skyshop.gui.CategoryGUI;
 import com.github.lukesky19.skyshop.manager.HookManager;
 import com.github.lukesky19.skyshop.manager.StatsManager;
+import com.github.lukesky19.skyshop.manager.TransactionManager;
 import com.github.lukesky19.skyshop.manager.config.CategoryConfigManager;
 import com.github.lukesky19.skyshop.manager.config.LocaleManager;
 import com.github.lukesky19.skyshop.manager.config.SellAllManager;
-import com.github.lukesky19.skyshop.manager.config.TransactionManager;
+import com.github.lukesky19.skyshop.manager.config.TransactionConfigManager;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
@@ -49,6 +50,7 @@ public class SkyShopCommand {
     private final @NotNull SkyShop skyShop;
     private final @NotNull LocaleManager localeManager;
     private final @NotNull CategoryConfigManager categoryConfigManager;
+    private final @NotNull TransactionConfigManager transactionConfigManager;
     private final @NotNull TransactionManager transactionManager;
     private final @NotNull SellAllManager sellAllManager;
     private final @Nullable StatsManager statsManager;
@@ -62,6 +64,7 @@ public class SkyShopCommand {
      * @param guiManager A {@link UUIDGUIManager} instance.
      * @param localeManager A {@link LocaleManager} instance.
      * @param categoryConfigManager A {@link CategoryConfigManager} instance.
+     * @param transactionConfigManager A {@link TransactionConfigManager} instance.
      * @param transactionManager A {@link TransactionManager} instance.
      * @param sellAllManager A {@link SellAllManager} instance.
      * @param statsManager A {@link StatsManager} instance.
@@ -73,6 +76,7 @@ public class SkyShopCommand {
             @NotNull UUIDGUIManager guiManager,
             @NotNull LocaleManager localeManager,
             @NotNull CategoryConfigManager categoryConfigManager,
+            @NotNull TransactionConfigManager transactionConfigManager,
             @NotNull TransactionManager transactionManager,
             @NotNull SellAllManager sellAllManager,
             @Nullable StatsManager statsManager,
@@ -81,6 +85,7 @@ public class SkyShopCommand {
         this.skyShop = skyShop;
         this.localeManager = localeManager;
         this.categoryConfigManager = categoryConfigManager;
+        this.transactionConfigManager = transactionConfigManager;
         this.transactionManager = transactionManager;
         this.sellAllManager = sellAllManager;
         this.statsManager = statsManager;
@@ -104,7 +109,7 @@ public class SkyShopCommand {
                 Optional<CategoryConfig> optionalMenuConfig = categoryConfigManager.getCategoryConfig("menu");
                 if(optionalMenuConfig.isPresent()) {
                     CategoryConfig menuConfig = optionalMenuConfig.get();
-                    CategoryGUI menuGUI = new CategoryGUI(skyShop, guiManager, player, localeManager, categoryConfigManager, transactionManager, sellAllManager, statsManager, hookManager, skyShopAPI, null, menuConfig, "menu");
+                    CategoryGUI menuGUI = new CategoryGUI(skyShop, guiManager, player, localeManager, categoryConfigManager, transactionConfigManager, transactionManager, sellAllManager, statsManager, hookManager, skyShopAPI, null, menuConfig, "menu");
 
                     boolean creationResult = menuGUI.create();
                     if(!creationResult) {
@@ -141,7 +146,7 @@ public class SkyShopCommand {
         });
 
         HelpCommand helpCommand = new HelpCommand(skyShop, localeManager);
-        OpenCommand openCommand = new OpenCommand(skyShop, guiManager, localeManager, categoryConfigManager, transactionManager, sellAllManager, statsManager, hookManager, skyShopAPI);
+        OpenCommand openCommand = new OpenCommand(skyShop, guiManager, localeManager, categoryConfigManager, transactionConfigManager, transactionManager, sellAllManager, statsManager, hookManager, skyShopAPI);
         ReloadCommand reloadCommand = new ReloadCommand(skyShop, localeManager);
         SellAllCommand sellAllCommand = new SellAllCommand(skyShop, localeManager, guiManager, sellAllManager, skyShopAPI);
         StatsCommand statsCommand = new StatsCommand(skyShop, localeManager, guiManager, statsManager);

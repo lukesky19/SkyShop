@@ -104,7 +104,7 @@ public class MenuConfigManager {
                 menuConfig.gui().name(),
                 pageConfigList);
 
-        return new CategoryConfig("2.1.0.0", guiData);
+        return new CategoryConfig("2.1.0.0", null, guiData);
     }
 
     /**
@@ -121,6 +121,7 @@ public class MenuConfigManager {
                     legacyButtonConfig.slot(),
                     legacyButtonConfig.shopName(),
                     legacyButtonConfig.displayItem(),
+                    null,
                     null);
 
             buttonConfigList.add(categoryButtonConfig);

@@ -14,6 +14,9 @@ repositories {
     maven("https://oss.sonatype.org/content/groups/public/") {
         name = "sonatype"
     }
+    maven("https://repo.codemc.org/repository/maven-public/") {
+        name = "codemc"
+    }
     maven("https://jitpack.io") {
         name = "jitpack"
     }
@@ -30,6 +33,7 @@ dependencies {
     // Hooks
     compileOnly("com.github.MilkBowl:VaultAPI:1.7.1")
     compileOnly("org.black_ixx:playerpoints:3.3.3")
+    compileOnly("world.bentobox:bentobox:2.7.0-SNAPSHOT")
 }
 
 java {

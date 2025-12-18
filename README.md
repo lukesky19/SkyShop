@@ -4,7 +4,7 @@
 ## Features
 * Supports nested categories.
 * Supports multiple pages.
-* Supports buying and selling for items and commands.
+* Supports buying and selling for items, commands, and island size.
 * Supports multiple currencies.
   * Currently, only the economy from Vault and PlayerPoints are supported.
 * Features a sellall GUI for quick selling of items.
@@ -13,6 +13,7 @@
 ## Required Dependencies
 * [SkyLib](https://github.com/lukesky19/SkyLib)
 ## Optional Dependencies
+* BentoBox
 * PlayerPoints
 * Vault
 ## Commands

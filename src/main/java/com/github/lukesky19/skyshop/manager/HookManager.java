@@ -19,6 +19,7 @@ package com.github.lukesky19.skyshop.manager;
 
 import com.github.lukesky19.skyshop.SkyShop;
 import com.github.lukesky19.skyshop.hook.Hook;
+import com.github.lukesky19.skyshop.hook.impl.BentoBoxHook;
 import com.github.lukesky19.skyshop.hook.impl.EconomyHook;
 import com.github.lukesky19.skyshop.hook.impl.PlayerPointsHook;
 import org.jetbrains.annotations.NotNull;
@@ -37,11 +38,11 @@ public class HookManager {
      * @param skyShop A {@link SkyShop} instance.
      */
     public HookManager(@NotNull SkyShop skyShop) {
-        EconomyHook economyHook = new EconomyHook(skyShop);
-        registerHook(EconomyHook.class, economyHook);
+        registerHook(BentoBoxHook.class, new BentoBoxHook());
 
-        PlayerPointsHook playerPointsHook = new PlayerPointsHook(skyShop);
-        registerHook(PlayerPointsHook.class, playerPointsHook);
+        registerHook(EconomyHook.class, new EconomyHook(skyShop));
+
+        registerHook(PlayerPointsHook.class, new PlayerPointsHook(skyShop));
     }
 
     /**

@@ -135,7 +135,7 @@ public class CategoryConfigManager {
      * Will only save if {@link Settings#firstRun()} is true.
      */
     private void saveDefaultConfig() {
-        Settings settings = settingsManager.getSettingsConfig();
+        Settings settings = settingsManager.getConfiguration();
         if(settings == null) return;
         if(!settings.firstRun()) return;
 

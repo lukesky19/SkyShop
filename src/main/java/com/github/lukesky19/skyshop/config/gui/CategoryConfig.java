@@ -31,10 +31,11 @@ import java.util.List;
 /**
  * This record contains the configuration to create a category GUIs.
  * @param configVersion The file's config version.
+ * @param permission The permission required to access the category.
  * @param gui The {@link GuiData} configuration.
  */
 @ConfigSerializable
-public record CategoryConfig(@Nullable String configVersion, @NotNull GuiData gui) {
+public record CategoryConfig(@Nullable String configVersion, @Nullable String permission, @NotNull GuiData gui) {
     /**
      * This record contains the actual configuration for creating the initial GUI.
      * @param guiType The {@link GUIType}.
@@ -58,6 +59,7 @@ public record CategoryConfig(@Nullable String configVersion, @NotNull GuiData gu
      * @param shopName If the {@link ButtonType} is that of OPEN_SHOP, this is the shop name to open. This name corresponds to a file in {@code SkyShop/categories}.
      * @param displayItem The {@link ItemStackConfig} used to create the {@link ItemStack} for the button.
      * @param transactionData The {@link TransactionData} that will be used to complete a transaction.
+     * @param permission The permission the player needs to see/access this button.
      */
     @ConfigSerializable
     public record ButtonConfig(
@@ -65,7 +67,8 @@ public record CategoryConfig(@Nullable String configVersion, @NotNull GuiData gu
             @Nullable Integer slot,
             @Nullable String shopName,
             @NotNull ItemStackConfig displayItem,
-            @Nullable TransactionData transactionData) {}
+            @Nullable TransactionData transactionData,
+            @Nullable String permission) {}
     /**
      * This record contains the configuration required to complete a transaction.
      * @param transactionType The {@link TransactionType}.
@@ -76,17 +79,19 @@ public record CategoryConfig(@Nullable String configVersion, @NotNull GuiData gu
      * @param transactionItem The {@link ItemStackConfig} used to create the {@link ItemStack} that will be purchased or sold.
      * @param buyCommands A {@link List} of {@link String}s to execute in console when purchased.
      * @param sellCommands A {@link List} of {@link String}s to execute in console when sold.
+     * @param islandSize The island size to add to or remove from the island when a transaction occurs.
      */
     @ConfigSerializable
     public record TransactionData(
             @Nullable TransactionType transactionType,
             @Nullable String transactionStyle,
-            @NotNull PriceConfig prices,
             @Nullable String transactionName,
+            @NotNull PriceConfig prices,
             @NotNull ItemStackConfig displayItem,
             @NotNull ItemStackConfig transactionItem,
             @NotNull List<String> buyCommands,
-            @NotNull List<String> sellCommands) {}
+            @NotNull List<String> sellCommands,
+            @Nullable Integer islandSize) {}
     /**
      * The price configuration for a transaction.
      * @param buyPrice The buy price of the item.

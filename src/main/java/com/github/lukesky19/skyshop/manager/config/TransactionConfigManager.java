@@ -39,7 +39,7 @@ import java.util.stream.Stream;
 /**
  * This class manages everything related to handling the plugin's transaction config files.
  */
-public class TransactionManager {
+public class TransactionConfigManager {
     private final @NotNull SkyShop skyShop;
     private final @NotNull Map<String, TransactionConfig> transactionConfigurations = new HashMap<>();
 
@@ -47,7 +47,7 @@ public class TransactionManager {
      * Constructor
      * @param skyShop A {@link SkyShop instance}
      */
-    public TransactionManager(@NotNull SkyShop skyShop) {
+    public TransactionConfigManager(@NotNull SkyShop skyShop) {
         this.skyShop = skyShop;
     }
 

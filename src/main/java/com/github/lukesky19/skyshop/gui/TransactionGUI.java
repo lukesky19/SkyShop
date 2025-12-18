@@ -24,44 +24,30 @@ import com.github.lukesky19.skylib.api.gui.interfaces.IGUIManager;
 import com.github.lukesky19.skylib.api.gui.templates.ChestGUI;
 import com.github.lukesky19.skylib.api.itemstack.ItemStackBuilder;
 import com.github.lukesky19.skylib.api.itemstack.ItemStackConfig;
-import com.github.lukesky19.skylib.api.placeholderapi.PlaceholderAPIUtil;
-import com.github.lukesky19.skylib.api.player.PlayerUtil;
 import com.github.lukesky19.skyshop.SkyShop;
 import com.github.lukesky19.skyshop.SkyShopAPI;
 import com.github.lukesky19.skyshop.config.gui.CategoryConfig;
 import com.github.lukesky19.skyshop.config.gui.SellAllConfig;
 import com.github.lukesky19.skyshop.config.gui.TransactionConfig;
 import com.github.lukesky19.skyshop.config.locale.Locale;
-import com.github.lukesky19.skyshop.event.CommandPurchasedEvent;
-import com.github.lukesky19.skyshop.event.CommandSoldEvent;
-import com.github.lukesky19.skyshop.event.ItemPurchasedEvent;
-import com.github.lukesky19.skyshop.event.ItemSoldEvent;
-import com.github.lukesky19.skyshop.hook.impl.EconomyHook;
-import com.github.lukesky19.skyshop.hook.impl.PlayerPointsHook;
-import com.github.lukesky19.skyshop.manager.HookManager;
-import com.github.lukesky19.skyshop.manager.StatsManager;
+import com.github.lukesky19.skyshop.manager.TransactionManager;
 import com.github.lukesky19.skyshop.manager.config.LocaleManager;
 import com.github.lukesky19.skyshop.manager.config.SellAllManager;
 import com.github.lukesky19.skyshop.util.ButtonType;
 import com.github.lukesky19.skyshop.util.TransactionType;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
-import org.bukkit.Server;
-import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.ItemType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.text.DecimalFormat;
 import java.util.*;
+import java.util.function.Consumer;
 
 /**
  * This class is called to create a transaction inventory for a player to buy and sell items.
@@ -70,8 +56,7 @@ public class TransactionGUI extends ChestGUI<UUID> {
     private final @NotNull SkyShop skyShop;
     private final @NotNull LocaleManager localeManager;
     private final @NotNull SellAllManager sellAllManager;
-    private final @Nullable StatsManager statsManager;
-    private final @NotNull HookManager hookManager;
+    private final @NotNull TransactionManager transactionManager;
     private final @NotNull SkyShopAPI skyShopAPI;
     private final @NotNull CategoryGUI categoryGUI;
 
@@ -86,6 +71,8 @@ public class TransactionGUI extends ChestGUI<UUID> {
     // Command Data
     private final @NotNull List<String> buyCommands;
     private final @NotNull List<String> sellCommands;
+    // Island Size Data
+    private final @Nullable Integer islandSize;
     // Price Data
     private final double buyPrice;
     private final double sellPrice;
@@ -94,17 +81,15 @@ public class TransactionGUI extends ChestGUI<UUID> {
 
     // Page Data
     private int pageNum = 0;
-    private boolean isOpen = false;
 
     /**
      * Constructor
      * @param skyShop A {@link SkyShop} instance.
      * @param guiManager An {@link IGUIManager} instance.
      * @param player The {@link Player} to create the GUI for.
-     * @param localeManager A {@link SkyShop} instance.
-     * @param sellAllManager A {@link LocaleManager} instance.
-     * @param statsManager A {@link SellAllManager} instance.
-     * @param hookManager A {@link HookManager} instance.
+     * @param localeManager A {@link LocaleManager} instance.
+     * @param sellAllManager A {@link SellAllManager} instance.
+     * @param transactionManager A {@link TransactionManager} instance.
      * @param skyShopAPI A {@link SkyShopAPI} instance.
      * @param categoryGUI The {@link CategoryGUI} the player came from.
      * @param transactionType The {@link TransactionType}.
@@ -116,6 +101,7 @@ public class TransactionGUI extends ChestGUI<UUID> {
      * @param transactionName The name to use when displaying a successful transaction message.
      * @param buyCommands A {@link List} of {@link String} containing the commands to execute in console when a successful buy transaction is made.
      * @param sellCommands A {@link List} of {@link String} containing the commands to execute in console when a successful sell transaction is made.
+     * @param islandSize The island size being purchased or sold.
      */
     public TransactionGUI(
             @NotNull SkyShop skyShop,
@@ -123,8 +109,7 @@ public class TransactionGUI extends ChestGUI<UUID> {
             @NotNull Player player,
             @NotNull LocaleManager localeManager,
             @NotNull SellAllManager sellAllManager,
-            @Nullable StatsManager statsManager,
-            @NotNull HookManager hookManager,
+            @NotNull TransactionManager transactionManager,
             @NotNull SkyShopAPI skyShopAPI,
             @NotNull CategoryGUI categoryGUI,
             @NotNull TransactionType transactionType,
@@ -135,14 +120,14 @@ public class TransactionGUI extends ChestGUI<UUID> {
             @NotNull CategoryConfig.PriceConfig priceConfig,
             @Nullable String transactionName,
             @NotNull List<String> buyCommands,
-            @NotNull List<String> sellCommands) {
+            @NotNull List<String> sellCommands,
+            @Nullable Integer islandSize) {
         super(skyShop, guiManager, player.getUniqueId(), player);
 
         this.skyShop = skyShop;
         this.localeManager = localeManager;
         this.sellAllManager = sellAllManager;
-        this.statsManager = statsManager;
-        this.hookManager = hookManager;
+        this.transactionManager = transactionManager;
         this.skyShopAPI = skyShopAPI;
         this.categoryGUI = categoryGUI;
         this.transactionType = transactionType;
@@ -157,6 +142,7 @@ public class TransactionGUI extends ChestGUI<UUID> {
         this.buyCommands = buyCommands;
         this.sellCommands = sellCommands;
         this.transactionName = Objects.requireNonNullElse(transactionName, "");
+        this.islandSize = islandSize;
     }
 
     /**
@@ -176,53 +162,17 @@ public class TransactionGUI extends ChestGUI<UUID> {
     }
 
     /**
-     * Set the {@link #isOpen} boolean to true and run the super method.
-     * @return true if opened successfully, otherwise false.
-     */
-    @Override
-    public boolean open() {
-        isOpen = true;
-
-        return super.open();
-    }
-
-    /**
      * Close the current inventory/gui with an OPEN_NEW reason and open the {@link #categoryGUI}.
      */
     @Override
     public void close() {
         plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
-            isOpen = false;
-
             player.closeInventory(InventoryCloseEvent.Reason.OPEN_NEW);
 
             guiManager.removeOpenGUI(player.getUniqueId());
 
             categoryGUI.open();
         }, 1L);
-    }
-
-    /**
-     * Close the current inventory/gui with an UNLOADED reason.
-     * @param onDisable Is the plugin being disabled?
-     */
-    @Override
-    public void unload(boolean onDisable) {
-        if(!onDisable) {
-            plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
-                isOpen = false;
-
-                player.closeInventory(InventoryCloseEvent.Reason.UNLOADED);
-
-                guiManager.removeOpenGUI(player.getUniqueId());
-            }, 1L);
-        } else {
-            isOpen = false;
-
-            player.closeInventory(InventoryCloseEvent.Reason.UNLOADED);
-
-            guiManager.removeOpenGUI(player.getUniqueId());
-        }
     }
 
     /**
@@ -235,7 +185,7 @@ public class TransactionGUI extends ChestGUI<UUID> {
         // If the InventoryView was not created, log a warning and return false.
         if(inventoryView == null) {
             logger.warn(AdventureUtil.deserialize("Unable to add GUIButton ItemStacks to the InventoryView as it was not created."));
-            if(isOpen) close();
+            close();
             return false;
         }
 
@@ -249,7 +199,7 @@ public class TransactionGUI extends ChestGUI<UUID> {
         List<TransactionConfig.PageConfig> pages = transactionConfig.gui().pages();
         if(pages.isEmpty()) {
             logger.error(AdventureUtil.deserialize("Unable to decorate the transaction GUI due to no pages configured."));
-            if(isOpen) close();
+            close();
             return false;
         }
 
@@ -260,7 +210,7 @@ public class TransactionGUI extends ChestGUI<UUID> {
         List<TransactionConfig.Button> entries = page.buttons();
         if(entries.isEmpty()) {
             logger.error(AdventureUtil.deserialize("Unable to decorate the transaction GUI for page " + pageNum + " due to no buttons configured."));
-            if(isOpen) close();
+            close();
             return false;
         }
 
@@ -278,7 +228,11 @@ public class TransactionGUI extends ChestGUI<UUID> {
 
                 case RETURN -> createExitButton(buttonConfig, buttonNum, buttonType);
 
-                case DISPLAY -> createDisplayButton(buttonConfig, buttonNum, buttonType);
+                case DISPLAY -> createButton(
+                        buttonType,
+                        new TransactionConfig.Button(ButtonType.DISPLAY, buttonConfig.slot(), null, displayItemConfig),
+                        List.of(),
+                        null);
 
                 case SELL_ALL -> createSellAllButton(buttonConfig, buttonNum, buttonType);
 
@@ -288,7 +242,7 @@ public class TransactionGUI extends ChestGUI<UUID> {
 
                 case SELL -> createSellButton(buttonConfig, buttonNum, buttonType);
 
-                case DUMMY -> createDummyButton(buttonConfig, buttonNum, buttonType);
+                case DUMMY -> createButton(buttonType, buttonConfig, List.of(), null);
 
                 case null -> logger.warn(AdventureUtil.deserialize("Unable to add a button due to an invalid button type. Button Num: " + buttonNum));
 
@@ -345,9 +299,7 @@ public class TransactionGUI extends ChestGUI<UUID> {
      * @param guiSize The size of the GUI.
      * @param buttonConfig The {@link TransactionConfig.Button} config.
      */
-    private void createFilterButton(
-            int guiSize,
-            @NotNull TransactionConfig.Button buttonConfig) {
+    private void createFilterButton(int guiSize, @NotNull TransactionConfig.Button buttonConfig) {
         // Get the ItemStackConfig
         ItemStackConfig itemConfig = buttonConfig.displayItem();
 
@@ -383,28 +335,13 @@ public class TransactionGUI extends ChestGUI<UUID> {
         if(pageNum >= 1) {
             // Check if the slot is not configured and send a warning.
             if(buttonConfig.slot() == null) {
-                logger.warn(AdventureUtil.deserialize("Unable to add a button due to a null slot. Button Num: " + buttonNum + " and type: " + buttonType));
+                logger.warn(AdventureUtil.deserialize("Unable to add a previous page button due to a null slot. Button Num: " + buttonNum + " and type: " + buttonType));
                 return;
             }
 
-            // Get the ItemStackConfig
-            ItemStackConfig itemConfig = buttonConfig.displayItem();
-
-            // Create the ItemStackBuilder and pass the ItemStackConfig.
-            ItemStackBuilder itemStackBuilder = new ItemStackBuilder(logger);
-            itemStackBuilder.fromItemStackConfig(itemConfig, player, null, List.of());
-
-            // If an ItemStack was created, create the GUIButton and add it to the GUI.
-            Optional<ItemStack> optionalItemStack = itemStackBuilder.buildItemStack();
-            optionalItemStack.ifPresent(itemStack -> {
-                GUIButton.Builder guiButtonBuilder = new GUIButton.Builder();
-                guiButtonBuilder.setItemStack(itemStack);
-                guiButtonBuilder.setAction(event -> {
-                    pageNum = pageNum - 1;
-                    update();
-                });
-
-                setButton(buttonConfig.slot(), guiButtonBuilder.build());
+            createButton(buttonType, buttonConfig, List.of(), inventoryClickEvent -> {
+                pageNum = pageNum - 1;
+                update();
             });
         }
     }
@@ -425,28 +362,13 @@ public class TransactionGUI extends ChestGUI<UUID> {
         if(pageNum < (pageSize - 1)) {
             // Check if the slot is not configured and send a warning.
             if(buttonConfig.slot() == null) {
-                logger.warn(AdventureUtil.deserialize("Unable to add a button due to a null slot. Button Num: " + buttonNum + " and type: " + buttonType));
+                logger.warn(AdventureUtil.deserialize("Unable to add a next page button due to a null slot. Button Num: " + buttonNum + " and type: " + buttonType));
                 return;
             }
 
-            // Get the ItemStackConfig
-            ItemStackConfig itemConfig = buttonConfig.displayItem();
-
-            // Create the ItemStackBuilder and pass the ItemStackConfig.
-            ItemStackBuilder itemStackBuilder = new ItemStackBuilder(logger);
-            itemStackBuilder.fromItemStackConfig(itemConfig, player, null, List.of());
-
-            // If an ItemStack was created, create the GUIButton and add it to the GUI.
-            Optional<ItemStack> optionalItemStack = itemStackBuilder.buildItemStack();
-            optionalItemStack.ifPresent(itemStack -> {
-                GUIButton.Builder guiButtonBuilder = new GUIButton.Builder();
-                guiButtonBuilder.setItemStack(itemStack);
-                guiButtonBuilder.setAction(event -> {
-                    pageNum = pageNum + 1;
-                    update();
-                });
-
-                setButton(buttonConfig.slot(), guiButtonBuilder.build());
+            createButton(buttonType, buttonConfig, List.of(), inventoryClickEvent -> {
+                pageNum = pageNum + 1;
+                update();
             });
         }
     }
@@ -467,53 +389,7 @@ public class TransactionGUI extends ChestGUI<UUID> {
             return;
         }
 
-        // Get the ItemStackConfig
-        ItemStackConfig itemConfig = buttonConfig.displayItem();
-
-        // Create the ItemStackBuilder and pass the ItemStackConfig.
-        ItemStackBuilder itemStackBuilder = new ItemStackBuilder(logger);
-        itemStackBuilder.fromItemStackConfig(itemConfig, player, null, List.of());
-
-        // If an ItemStack was created, create the GUIButton and add it to the GUI.
-        Optional<ItemStack> optionalItemStack = itemStackBuilder.buildItemStack();
-        optionalItemStack.ifPresent(itemStack -> {
-            GUIButton.Builder guiButtonBuilder = new GUIButton.Builder();
-            guiButtonBuilder.setItemStack(itemStack);
-            guiButtonBuilder.setAction(event -> close());
-
-            setButton(buttonConfig.slot(), guiButtonBuilder.build());
-        });
-    }
-
-    /**
-     * Create and add a display button.
-     * @param buttonConfig The {@link TransactionConfig.Button} config.
-     * @param buttonNum The button number.
-     * @param buttonType The {@link ButtonType}
-     */
-    private void createDisplayButton(
-            @NotNull TransactionConfig.Button buttonConfig,
-            int buttonNum,
-            @NotNull ButtonType buttonType) {
-        // Check if the slot is not configured and send a warning.
-        if(buttonConfig.slot() == null) {
-            logger.warn(AdventureUtil.deserialize("Unable to add a button due to a null slot. Button Num: " + buttonNum + " and type: " + buttonType));
-            return;
-        }
-
-        // Create the ItemStackBuilder and pass the ItemStackConfig.
-        ItemStackBuilder itemStackBuilder = new ItemStackBuilder(logger);
-        itemStackBuilder.fromItemStackConfig(displayItemConfig, player, null, List.of());
-
-        // If an ItemStack was created, create the GUIButton and add it to the GUI.
-        Optional<ItemStack> optionalItemStack = itemStackBuilder.buildItemStack();
-        optionalItemStack.ifPresent(itemStack -> {
-            GUIButton.Builder guiButtonBuilder = new GUIButton.Builder();
-            guiButtonBuilder.setItemStack(itemStack);
-            guiButtonBuilder.setAction(event -> close());
-
-            setButton(buttonConfig.slot(), guiButtonBuilder.build());
-        });
+        createButton(buttonType, buttonConfig, List.of(), inventoryClickEvent -> close());
     }
 
     /**
@@ -532,30 +408,15 @@ public class TransactionGUI extends ChestGUI<UUID> {
             return;
         }
 
-        // Get the ItemStackConfig
-        ItemStackConfig itemConfig = buttonConfig.displayItem();
+        createButton(buttonType, buttonConfig, List.of(), inventoryClickEvent -> {
+            ItemStackBuilder transactionItemBuilder = new ItemStackBuilder(logger);
+            transactionItemBuilder.fromItemStackConfig(transactionItemConfig, player, null, List.of());
+            Optional<ItemStack> optionalTransactionItemStack = transactionItemBuilder.buildItemStack();
+            if(optionalTransactionItemStack.isEmpty()) return;
 
-        // Create the ItemStackBuilder and pass the ItemStackConfig.
-        ItemStackBuilder itemStackBuilder = new ItemStackBuilder(logger);
-        itemStackBuilder.fromItemStackConfig(itemConfig, player, null, List.of());
+            ItemStack transactionItemStack = optionalTransactionItemStack.get();
 
-        // If an ItemStack was created, create the GUIButton and add it to the GUI.
-        Optional<ItemStack> optionalItemStack = itemStackBuilder.buildItemStack();
-        optionalItemStack.ifPresent(itemStack -> {
-            GUIButton.Builder guiButtonBuilder = new GUIButton.Builder();
-            guiButtonBuilder.setItemStack(itemStack);
-            guiButtonBuilder.setAction(event -> {
-                ItemStackBuilder transactionItemBuilder = new ItemStackBuilder(logger);
-                transactionItemBuilder.fromItemStackConfig(transactionItemConfig, player, null, List.of());
-                Optional<ItemStack> optionalTransactionItemStack = transactionItemBuilder.buildItemStack();
-                if(optionalTransactionItemStack.isEmpty()) return;
-
-                ItemStack transactionItemStack = optionalTransactionItemStack.get();
-
-                skyShopAPI.sellAllMatchingItemStack(player, player.getInventory(), transactionItemStack, true, false, true);
-            });
-
-            setButton(buttonConfig.slot(), guiButtonBuilder.build());
+            skyShopAPI.sellAllMatchingItemStack(player, player.getInventory(), transactionItemStack, true, false, true);
         });
     }
 
@@ -576,55 +437,40 @@ public class TransactionGUI extends ChestGUI<UUID> {
             return;
         }
 
-        // Get the ItemStackConfig
-        ItemStackConfig itemConfig = buttonConfig.displayItem();
+        createButton(buttonType, buttonConfig, List.of(), inventoryClickEvent -> {
+            @NotNull Optional<@NotNull SellAllConfig> optionalGUIConfig = sellAllManager.getSellAllGuiConfig();
+            if(optionalGUIConfig.isEmpty()) {
+                logger.error(AdventureUtil.deserialize("Unable to open sellall GUI for player " + player.getName() + " due to invalid sellall config."));
+                player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.guiOpenError()));
+                close();
+                return;
+            }
 
-        // Create the ItemStackBuilder and pass the ItemStackConfig.
-        ItemStackBuilder itemStackBuilder = new ItemStackBuilder(logger);
-        itemStackBuilder.fromItemStackConfig(itemConfig, player, null, List.of());
+            SellAllConfig sellAllGuiConfig = optionalGUIConfig.get();
+            SellAllGUI sellAllGUI = new SellAllGUI(skyShop, guiManager, sellAllGuiConfig, skyShopAPI, player);
 
-        // If an ItemStack was created, create the GUIButton and add it to the GUI.
-        Optional<ItemStack> optionalItemStack = itemStackBuilder.buildItemStack();
-        optionalItemStack.ifPresent(itemStack -> {
-            GUIButton.Builder guiButtonBuilder = new GUIButton.Builder();
-            guiButtonBuilder.setItemStack(itemStack);
-            guiButtonBuilder.setAction(event -> {
-                @NotNull Optional<@NotNull SellAllConfig> optionalGUIConfig = sellAllManager.getSellAllGuiConfig();
-                if(optionalGUIConfig.isEmpty()) {
-                    logger.error(AdventureUtil.deserialize("Unable to open sellall GUI for player " + player.getName() + " due to invalid sellall config."));
-                    player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.guiOpenError()));
-                    if(isOpen) close();
-                    return;
-                }
+            boolean creationResult = sellAllGUI.create();
+            if(!creationResult) {
+                logger.error(AdventureUtil.deserialize("Unable to create the InventoryView for the sellall GUI for player " + player.getName() + " due to a configuration error."));
+                player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.guiOpenError()));
+                close();
+                return;
+            }
 
-                SellAllConfig sellAllGuiConfig = optionalGUIConfig.get();
-                SellAllGUI sellAllGUI = new SellAllGUI(skyShop, guiManager, sellAllGuiConfig, skyShopAPI, player);
+            boolean updateResult = sellAllGUI.update();
+            if(!updateResult) {
+                logger.error(AdventureUtil.deserialize("Unable to decorate the sellall GUI for player " + player.getName() + " due to a configuration error."));
+                player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.guiOpenError()));
+                close();
+                return;
+            }
 
-                boolean creationResult = sellAllGUI.create();
-                if(!creationResult) {
-                    logger.error(AdventureUtil.deserialize("Unable to create the InventoryView for the sellall GUI for player " + player.getName() + " due to a configuration error."));
-                    player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.guiOpenError()));
-                    if(isOpen) close();
-                    return;
-                }
-
-                boolean updateResult = sellAllGUI.update();
-                if(!updateResult) {
-                    logger.error(AdventureUtil.deserialize("Unable to decorate the sellall GUI for player " + player.getName() + " due to a configuration error."));
-                    player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.guiOpenError()));
-                    if(isOpen) close();
-                    return;
-                }
-
-                boolean openResult = sellAllGUI.open();
-                if(!openResult) {
-                    logger.error(AdventureUtil.deserialize("Unable to open the sellall GUI for player " + player.getName() + " due to a configuration error."));
-                    player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.guiOpenError()));
-                    if(isOpen) close();
-                }
-            });
-
-            setButton(buttonConfig.slot(), guiButtonBuilder.build());
+            boolean openResult = sellAllGUI.open();
+            if(!openResult) {
+                logger.error(AdventureUtil.deserialize("Unable to open the sellall GUI for player " + player.getName() + " due to a configuration error."));
+                player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.guiOpenError()));
+                close();
+            }
         });
     }
 
@@ -646,7 +492,6 @@ public class TransactionGUI extends ChestGUI<UUID> {
             return;
         }
 
-        ItemStackConfig itemConfig = buttonConfig.displayItem();
         if(buttonConfig.transactionAmount() == null || buttonConfig.transactionAmount() <= 0) {
             logger.warn(AdventureUtil.deserialize("Unable to add a buy button due to an invalid transaction amount."));
             return;
@@ -664,24 +509,13 @@ public class TransactionGUI extends ChestGUI<UUID> {
         itemStackPlaceholders.add(Placeholder.parsed("buy_points", String.valueOf(finalBuyPoints)));
         itemStackPlaceholders.add(Placeholder.parsed("amount", String.valueOf(purchaseAmount)));
 
-        // Create the ItemStackBuilder and pass the ItemStackConfig.
-        ItemStackBuilder itemStackBuilder = new ItemStackBuilder(logger);
-        itemStackBuilder.fromItemStackConfig(itemConfig, player, null, itemStackPlaceholders);
+        Consumer<InventoryClickEvent> action = switch(transactionType) {
+            case ITEM -> inventoryClickEvent -> transactionManager.buyItem(player, this, transactionItemConfig, transactionName, purchaseAmount, finalBuyPrice, finalBuyPoints);
+            case COMMAND -> inventoryClickEvent -> transactionManager.buyCommand(player, this, transactionName, buyCommands, purchaseAmount, finalBuyPrice, finalBuyPoints);
+            case ISLAND_SIZE -> inventoryClickEvent -> transactionManager.buyIslandSize(player, this, transactionName, islandSize, purchaseAmount, finalBuyPrice, finalBuyPoints);
+        };
 
-        // If an ItemStack was created, create the GUIButton and add it to the GUI.
-        Optional<ItemStack> optionalItemStack = itemStackBuilder.buildItemStack();
-        optionalItemStack.ifPresent(itemStack -> {
-            GUIButton.Builder guiButtonBuilder = new GUIButton.Builder();
-            guiButtonBuilder.setItemStack(itemStack);
-
-            if(transactionType.equals(TransactionType.ITEM)) {
-                guiButtonBuilder.setAction(inventoryClickEvent -> buyItem(purchaseAmount, finalBuyPrice, finalBuyPoints));
-            } else if(transactionType.equals(TransactionType.COMMAND)) {
-                guiButtonBuilder.setAction(inventoryClickEvent -> buyCommand(purchaseAmount, finalBuyPrice, finalBuyPoints));
-            }
-
-            setButton(buttonConfig.slot(), guiButtonBuilder.build());
-        });
+        createButton(buttonType, buttonConfig, itemStackPlaceholders, action);
     }
 
     /**
@@ -702,8 +536,7 @@ public class TransactionGUI extends ChestGUI<UUID> {
             return;
         }
 
-        // Get the ItemStackConfig
-        ItemStackConfig itemConfig = buttonConfig.displayItem();
+        // Check if the transaction amount is valid
         if(buttonConfig.transactionAmount() == null || buttonConfig.transactionAmount() <= 0) {
             logger.warn(AdventureUtil.deserialize("Unable to add a sell button due to an invalid transaction amount."));
             return;
@@ -721,385 +554,41 @@ public class TransactionGUI extends ChestGUI<UUID> {
         itemStackPlaceholders.add(Placeholder.parsed("sell_points", String.valueOf(finalSellPoints)));
         itemStackPlaceholders.add(Placeholder.parsed("amount", String.valueOf(sellAmount)));
 
-        // Create the ItemStackBuilder and pass the ItemStackConfig.
-        ItemStackBuilder itemStackBuilder = new ItemStackBuilder(logger);
-        itemStackBuilder.fromItemStackConfig(itemConfig, player, null, itemStackPlaceholders);
+        Consumer<InventoryClickEvent> action = switch(transactionType) {
+            case ITEM -> inventoryClickEvent -> transactionManager.sellItem(player, this, transactionItemConfig, transactionName, sellAmount, finalSellPrice, finalSellPoints);
+            case COMMAND -> inventoryClickEvent -> transactionManager.sellCommand(player, this, transactionName, sellCommands, sellAmount, finalSellPrice, finalSellPoints);
+            case ISLAND_SIZE -> inventoryClickEvent -> transactionManager.sellIslandSize(player, this, transactionName, islandSize, sellAmount, finalSellPrice, finalSellPoints);
+        };
 
-        // If an ItemStack was created, create the GUIButton and add it to the GUI.
-        Optional<ItemStack> optionalItemStack = itemStackBuilder.buildItemStack();
-        optionalItemStack.ifPresent(itemStack -> {
-            GUIButton.Builder guiButtonBuilder = new GUIButton.Builder();
-            guiButtonBuilder.setItemStack(itemStack);
-
-            if(transactionType.equals(TransactionType.ITEM)) {
-                guiButtonBuilder.setAction(inventoryClickEvent -> sellItem(sellAmount, finalSellPrice, finalSellPoints));
-            } else if(transactionType.equals(TransactionType.COMMAND)) {
-                guiButtonBuilder.setAction(inventoryClickEvent -> sellCommand(sellAmount, finalSellPrice, finalSellPoints));
-            }
-
-            setButton(buttonConfig.slot(), guiButtonBuilder.build());
-        });
+        createButton(buttonType, buttonConfig, itemStackPlaceholders, action);
     }
 
     /**
-     * Create and add a dummy button.
+     * Create and add a button.
+     * @param buttonType The {@link ButtonType}.
      * @param buttonConfig The {@link TransactionConfig.Button} config.
-     * @param buttonNum The button number.
-     * @param buttonType The {@link ButtonType}
+     * @param placeholders A {@link List} of {@link TagResolver.Single} for placeholders.
+     * @param action A {@link Consumer} consuming an {@link InventoryClickEvent} that is used when the button is clicked.
      */
-    private void createDummyButton(
+    private void createButton(
+            @NotNull ButtonType buttonType,
             @NotNull TransactionConfig.Button buttonConfig,
-            int buttonNum,
-            @NotNull ButtonType buttonType) {
-        // Check if the slot is not configured and send a warning.
+            @NotNull List<TagResolver.Single> placeholders,
+            @Nullable Consumer<InventoryClickEvent> action) {
         if(buttonConfig.slot() == null) {
-            logger.warn(AdventureUtil.deserialize("Unable to add a dummy button due to a null slot. Button Num: " + buttonNum + " and type: " + buttonType));
+            logger.warn(AdventureUtil.deserialize("Unable to add a button due to a null slot. ButtonType: " + buttonType));
             return;
         }
 
-        // Get the ItemStackConfig
-        ItemStackConfig itemConfig = buttonConfig.displayItem();
-
-        // Create the ItemStackBuilder and pass the ItemStackConfig.
         ItemStackBuilder itemStackBuilder = new ItemStackBuilder(logger);
-        itemStackBuilder.fromItemStackConfig(itemConfig, player, null, List.of());
-
-        // If an ItemStack was created, create the GUIButton and add it to the GUI.
+        itemStackBuilder.fromItemStackConfig(buttonConfig.displayItem(), player, null, placeholders);
         Optional<ItemStack> optionalItemStack = itemStackBuilder.buildItemStack();
         optionalItemStack.ifPresent(itemStack -> {
             GUIButton.Builder guiButtonBuilder = new GUIButton.Builder();
             guiButtonBuilder.setItemStack(itemStack);
+            if(action != null) guiButtonBuilder.setAction(action);
 
             setButton(buttonConfig.slot(), guiButtonBuilder.build());
         });
-    }
-
-    /**
-     * Initiate the buying of an item.
-     * @param amount The amount involved.
-     * @param money The money.
-     * @param points The player points.
-     */
-    private void buyItem(int amount, double money, int points) {
-        if(money < 0 && points < 0) return;
-        Locale locale = localeManager.getLocale();
-        EconomyHook economyHook = hookManager.getHook(EconomyHook.class);
-        PlayerPointsHook playerPointsHook = hookManager.getHook(PlayerPointsHook.class);
-
-        if(money > 0) {
-            if(!economyHook.isHooked()) {
-                logger.error(AdventureUtil.deserialize("Unable to buy this item due to no economy found."));
-                player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.transactionError()));
-                close();
-                return;
-            }
-
-            if(economyHook.getBalance(player) < money) {
-                player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.insufficientMoney()));
-                close();
-                return;
-            }
-        }
-
-        if(points > 0) {
-            if(!playerPointsHook.isHooked()) {
-                logger.error(AdventureUtil.deserialize("Unable to buy this item due to no player points dependency found."));
-                player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.transactionError()));
-                close();
-                return;
-            }
-        }
-
-        // Create the ItemStackBuilder and pass the config to use to create the ItemStack.
-        ItemStackBuilder itemStackBuilder = new ItemStackBuilder(logger);
-        itemStackBuilder.fromItemStackConfig(transactionItemConfig, player, null, List.of());
-
-        // Build the ItemStack that will be given to the player on successful purchase.
-        Optional<ItemStack> optionalItemStack = itemStackBuilder.buildItemStack();
-        if(optionalItemStack.isEmpty()) {
-            logger.error(AdventureUtil.deserialize("Unable to buy item due the transaction ItemStack being failed to be created from the transaction item config."));
-            player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.transactionError()));
-            close();
-            return;
-        }
-
-        // Get the ItemStack and set the proper amount
-        ItemStack buyItem = optionalItemStack.get();
-        buyItem.setAmount(amount);
-        ItemType itemType = buyItem.getType().asItemType();
-        if(itemType == null) return;
-
-        // Create and call the ItemPurchasedEvent
-        ItemPurchasedEvent itemPurchasedEvent = new ItemPurchasedEvent(player, buyItem);
-        skyShop.getServer().getPluginManager().callEvent(itemPurchasedEvent);
-        // If the event was cancelled, cancel the purchase.
-        if(itemPurchasedEvent.isCancelled()) return;
-
-        // Remove the prices from the player's balances
-        if(money > 0) economyHook.removeFromBalance(player, money);
-        if(points > 0) playerPointsHook.removeFromBalance(player, points);
-
-        // Give the player the ItemStack they purchased.
-        PlayerUtil.giveItem(player.getInventory(), buyItem, amount, player.getLocation());
-
-        // Create the necessary placeholders
-        List<TagResolver.Single> successPlaceholders = buildPlaceholders(economyHook, playerPointsHook, player, transactionName, amount, money, points);
-
-        // Send the message that the transaction was a success
-        if(money > 0 && points > 0) {
-            player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.buyItemSuccess().moneyAndPoints(), successPlaceholders));
-        } else if(money > 0) {
-            player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.buyItemSuccess().money(), successPlaceholders));
-        } else { // Points only
-            player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.buyItemSuccess().points(), successPlaceholders));
-        }
-
-        // Increment stats if statsManager is not null
-        if(statsManager != null) statsManager.incrementAmountPurchased(itemType, amount);
-    }
-
-    /**
-     * Initiate the selling of an item.
-     * @param amount The amount involved.
-     * @param money The money.
-     * @param points The player points.
-     */
-    private void sellItem(int amount, double money, int points) {
-        if(money < 0 && points < 0) return;
-        Locale locale = localeManager.getLocale();
-        EconomyHook economyHook = hookManager.getHook(EconomyHook.class);
-        PlayerPointsHook playerPointsHook = hookManager.getHook(PlayerPointsHook.class);
-
-        // Create the ItemStack that will be taken from the player if they have enough of said ItemStack.
-        ItemStackBuilder itemStackBuilder = new ItemStackBuilder(logger);
-        itemStackBuilder.fromItemStackConfig(transactionItemConfig, player, null, List.of());
-
-        // Build the ItemStack that will be taken to the player on successful selling.
-        Optional<ItemStack> optionalItemStack = itemStackBuilder.buildItemStack();
-        if(optionalItemStack.isEmpty()) {
-            logger.error(AdventureUtil.deserialize("Unable to sell this item due the transaction ItemStack being failed to be created from the transaction item config."));
-            player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.transactionError()));
-            close();
-            return;
-        }
-
-        // Get the ItemStack and set the proper amount
-        ItemStack sellItem = optionalItemStack.get();
-        sellItem.setAmount(amount);
-        ItemType itemType = sellItem.getType().asItemType();
-        if(itemType == null) return;
-
-        // Check if the player has the required amount to sell
-        if(!player.getInventory().containsAtLeast(sellItem, amount)) {
-            player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.notEnoughItems()));
-            close();
-            return;
-        }
-
-        // Create and call the ItemSoldEvent
-        ItemSoldEvent itemSoldEvent = new ItemSoldEvent(player, sellItem);
-        skyShop.getServer().getPluginManager().callEvent(itemSoldEvent);
-        // If the event was cancelled, cancel the transaction.
-        if(itemSoldEvent.isCancelled()) return;
-
-        // Remove the sold item from the player's inventory.
-        player.getInventory().removeItem(sellItem);
-
-        // Add the prices to the player's balances
-        if(money > 0) economyHook.addToBalance(player, money);
-        if(points > 0) playerPointsHook.addToBalance(player, points);
-
-        // Create the necessary placeholders
-        List<TagResolver.Single> successPlaceholders = buildPlaceholders(economyHook, playerPointsHook, player, transactionName, amount, money, points);
-
-        // Send the message that the transaction was a success
-        if(money > 0 && points > 0) {
-            player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.sellItemSuccess().moneyAndPoints(), successPlaceholders));
-        } else if(money > 0) {
-            player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.sellItemSuccess().money(), successPlaceholders));
-        } else { // Points only
-            player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.sellItemSuccess().points(), successPlaceholders));
-        }
-
-        // Increment stats if statsManager is not null
-        if(statsManager != null) statsManager.incrementAmountSold(itemType, amount);
-    }
-
-    /**
-     * Initiate the buying of a command.
-     * @param amount The amount involved.
-     * @param money The money.
-     * @param points The player points.
-     */
-    private void buyCommand(int amount, double money, int points) {
-        if(money < 0 && points < 0) return;
-        Locale locale = localeManager.getLocale();
-        EconomyHook economyHook = hookManager.getHook(EconomyHook.class);
-        PlayerPointsHook playerPointsHook = hookManager.getHook(PlayerPointsHook.class);
-
-        if(money > 0) {
-            if(!economyHook.isHooked()) {
-                logger.error(AdventureUtil.deserialize("Unable to buy these command(s) due to no economy found."));
-                player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.transactionError()));
-                close();
-                return;
-            }
-
-            if(economyHook.getBalance(player) < money) {
-                player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.insufficientMoney()));
-                close();
-                return;
-            }
-        }
-
-        if(points > 0) {
-            if(!playerPointsHook.isHooked()) {
-                logger.error(AdventureUtil.deserialize("Unable to buy these command(s) due to no player points dependency found."));
-                player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.transactionError()));
-                close();
-                return;
-            }
-
-            if(playerPointsHook.getBalance(player) < points) {
-                player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.insufficientPlayerPoints()));
-                close();
-                return;
-            }
-        }
-
-        // Create and call the CommandPurchasedEvent
-        CommandPurchasedEvent commandPurchasedEvent = new CommandPurchasedEvent(player, buyCommands);
-        skyShop.getServer().getPluginManager().callEvent(commandPurchasedEvent);
-        // If the event was cancelled, cancel the purchase.
-        if(commandPurchasedEvent.isCancelled()) return;
-
-        // Remove the prices from the player's balances
-        if(money > 0) economyHook.removeFromBalance(player, money);
-        if(points > 0) playerPointsHook.removeFromBalance(player, points);
-
-        // Execute the commands for this transaction
-        Server server = skyShop.getServer();
-        ConsoleCommandSender commandSender = server.getConsoleSender();
-        for(String command : buyCommands) {
-            for(int i = 1; i <= amount; i++) {
-                server.dispatchCommand(commandSender, PlaceholderAPIUtil.parsePlaceholders(player, command));
-            }
-        }
-
-        // Create the necessary placeholders
-        List<TagResolver.Single> successPlaceholders = buildPlaceholders(economyHook, playerPointsHook, player, transactionName, amount, money, points);
-
-        // Send the message that the transaction was a success
-        if(money > 0 && points > 0) {
-            player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.buyCommandSuccess().moneyAndPoints(), successPlaceholders));
-        } else if(money > 0) {
-            player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.buyCommandSuccess().money(), successPlaceholders));
-        } else { // Points only
-            player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.buyCommandSuccess().points(), successPlaceholders));
-        }
-    }
-
-    /**
-     * Initiate the selling of a command.
-     * @param amount The amount involved.
-     * @param money The money.
-     * @param points The player points.
-     */
-    private void sellCommand(int amount, double money, int points) {
-        if(money < 0 && points < 0) return;
-        Locale locale = localeManager.getLocale();
-        EconomyHook economyHook = hookManager.getHook(EconomyHook.class);
-        PlayerPointsHook playerPointsHook = hookManager.getHook(PlayerPointsHook.class);
-
-        // Create and call the CommandSoldEvent
-        CommandSoldEvent commandSoldEvent = new CommandSoldEvent(player, sellCommands);
-        skyShop.getServer().getPluginManager().callEvent(commandSoldEvent);
-        // If the event was cancelled, cancel the transaction.
-        if(commandSoldEvent.isCancelled()) return;
-
-        // Add the prices to the player's balances
-        if(money > 0) economyHook.addToBalance(player, money);
-        if(points > 0) playerPointsHook.addToBalance(player, points);
-
-        // Execute the commands for this transaction
-        Server server = skyShop.getServer();
-        ConsoleCommandSender commandSender = skyShop.getServer().getConsoleSender();
-        for(String command : sellCommands) {
-            for(int i = 1; i <= amount; i++) {
-                server.dispatchCommand(commandSender, PlaceholderAPIUtil.parsePlaceholders(player, command));
-            }
-        }
-
-        // Create the necessary placeholders
-        List<TagResolver.Single> successPlaceholders = buildPlaceholders(economyHook, playerPointsHook, player, transactionName, amount, money, points);
-
-        // Send the message that the transaction was a success
-        if(money > 0 && points > 0) {
-            player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.sellCommandSuccess().moneyAndPoints(), successPlaceholders));
-        } else if(money > 0) {
-            player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.sellCommandSuccess().money(), successPlaceholders));
-        } else { // Points only
-            player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.sellCommandSuccess().points(), successPlaceholders));
-        }
-    }
-
-    /**
-     * Create the list of placeholders for success messages.
-     * @param economyHook The {@link EconomyHook}.
-     * @param playerPointsHook The {@link PlayerPointsHook}.
-     * @param player The {@link Player}.
-     * @param transactionName The transaction name.
-     * @param amount The amount.
-     * @param money The money.
-     * @param points The player points.
-     * @return A {@link List} of {@link TagResolver.Single}.
-     */
-    private @NotNull List<TagResolver.Single> buildPlaceholders(
-            @NotNull EconomyHook economyHook,
-            @NotNull PlayerPointsHook playerPointsHook,
-            @NotNull Player player,
-            @NotNull String transactionName,
-            int amount,
-            double money,
-            int points) {
-        List<TagResolver.Single> placeholders = new ArrayList<>();
-        placeholders.add(Placeholder.parsed("amount", String.valueOf(amount)));
-        placeholders.add(Placeholder.parsed("transaction_name", transactionName));
-
-        if(money > 0 && points > 0) {
-            DecimalFormat df = new DecimalFormat("#.##");
-            df.setRoundingMode(RoundingMode.CEILING);
-
-            BigDecimal bigPrice = BigDecimal.valueOf(money);
-            String formattedSellPrice = df.format(bigPrice);
-            placeholders.add(Placeholder.parsed("money", formattedSellPrice));
-
-            BigDecimal bigBalance = BigDecimal.valueOf(economyHook.getBalance(player));
-            placeholders.add(Placeholder.parsed("money_balance", df.format(bigBalance)));
-
-            placeholders.add(Placeholder.parsed("player_points", String.valueOf(points)));
-            placeholders.add(Placeholder.parsed("player_points_balance", String.valueOf(playerPointsHook.getBalance(player))));
-        } else if(money > 0) {
-            DecimalFormat df = new DecimalFormat("#.##");
-            df.setRoundingMode(RoundingMode.CEILING);
-
-            BigDecimal bigPrice = BigDecimal.valueOf(money);
-            String formattedSellPrice = df.format(bigPrice);
-            placeholders.add(Placeholder.parsed("money", formattedSellPrice));
-
-            BigDecimal bigBalance = BigDecimal.valueOf(economyHook.getBalance(player));
-            placeholders.add(Placeholder.parsed("money_balance", df.format(bigBalance)));
-
-            placeholders.add(Placeholder.parsed("player_points", "0"));
-            placeholders.add(Placeholder.parsed("player_points_balance", "0"));
-        } else if(points > 0) {
-            placeholders.add(Placeholder.parsed("player_points", String.valueOf(points)));
-            placeholders.add(Placeholder.parsed("player_points_balance", String.valueOf(playerPointsHook.getBalance(player))));
-
-            placeholders.add(Placeholder.parsed("money", "0"));
-            placeholders.add(Placeholder.parsed("money_balance", "0"));
-        }
-
-        return placeholders;
     }
 }

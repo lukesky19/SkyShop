@@ -127,7 +127,7 @@ public class ShopConfigManager {
 
         CategoryConfig.GuiData guiData = new CategoryConfig.GuiData(shopConfig.gui().guiType(), shopConfig.gui().name(), pageConfigList);
 
-        return new CategoryConfig("2.1.0.0", guiData);
+        return new CategoryConfig("2.1.0.0", null, guiData);
     }
 
     /**
@@ -146,7 +146,8 @@ public class ShopConfigManager {
                     legacyButtonConfig.slot(),
                     null,
                     legacyButtonConfig.displayItem(),
-                    transactionData);
+                    transactionData,
+                    null);
 
             buttonConfigList.add(categoryButtonConfig);
         }
@@ -163,11 +164,12 @@ public class ShopConfigManager {
         return new CategoryConfig.TransactionData(
                 legacyTransactionData.transactionType(),
                 legacyTransactionData.transactionStyle(),
-                new CategoryConfig.PriceConfig(Objects.requireNonNullElse(legacyTransactionData.buyPrice(), -1.0), Objects.requireNonNullElse(legacyTransactionData.sellPrice(), -1.0), -1, -1),
                 legacyTransactionData.transactionName(),
+                new CategoryConfig.PriceConfig(Objects.requireNonNullElse(legacyTransactionData.buyPrice(), -1.0), Objects.requireNonNullElse(legacyTransactionData.sellPrice(), -1.0), -1, -1),
                 legacyTransactionData.displayItem(),
                 legacyTransactionData.transactionItem(),
                 legacyTransactionData.buyCommands(),
-                legacyTransactionData.sellCommands());
+                legacyTransactionData.sellCommands(),
+                null);
     }
 }

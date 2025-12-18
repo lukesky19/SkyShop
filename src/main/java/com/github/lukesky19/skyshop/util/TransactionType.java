@@ -32,5 +32,9 @@ public enum TransactionType {
     /**
      * This type identifies when a {@link List} of {@link String} for the commands being purchased or sold.
      */
-    COMMAND
+    COMMAND,
+    /**
+     * This type identifies when an island size expansion is being purchased.
+     */
+    ISLAND_SIZE
 }

@@ -26,10 +26,11 @@ import com.github.lukesky19.skyshop.config.locale.Locale;
 import com.github.lukesky19.skyshop.gui.CategoryGUI;
 import com.github.lukesky19.skyshop.manager.HookManager;
 import com.github.lukesky19.skyshop.manager.StatsManager;
+import com.github.lukesky19.skyshop.manager.TransactionManager;
 import com.github.lukesky19.skyshop.manager.config.CategoryConfigManager;
 import com.github.lukesky19.skyshop.manager.config.LocaleManager;
 import com.github.lukesky19.skyshop.manager.config.SellAllManager;
-import com.github.lukesky19.skyshop.manager.config.TransactionManager;
+import com.github.lukesky19.skyshop.manager.config.TransactionConfigManager;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
@@ -48,6 +49,7 @@ public class OpenCommand {
     private final @NotNull SkyShop skyShop;
     private final @NotNull LocaleManager localeManager;
     private final @NotNull CategoryConfigManager categoryConfigManager;
+    private final @NotNull TransactionConfigManager transactionConfigManager;
     private final @NotNull TransactionManager transactionManager;
     private final @NotNull SellAllManager sellAllManager;
     private final @Nullable StatsManager statsManager;
@@ -61,6 +63,7 @@ public class OpenCommand {
      * @param guiManager A {@link UUIDGUIManager} instance.
      * @param localeManager A {@link LocaleManager} instance.
      * @param categoryConfigManager A {@link CategoryConfigManager} instance.
+     * @param transactionConfigManager A {@link TransactionConfigManager} instance.
      * @param transactionManager A {@link TransactionManager} instance.
      * @param sellAllManager A {@link SellAllManager} instance.
      * @param statsManager A {@link StatsManager} instance.
@@ -72,6 +75,7 @@ public class OpenCommand {
             @NotNull UUIDGUIManager guiManager,
             @NotNull LocaleManager localeManager,
             @NotNull CategoryConfigManager categoryConfigManager,
+            @NotNull TransactionConfigManager transactionConfigManager,
             @NotNull TransactionManager transactionManager,
             @NotNull SellAllManager sellAllManager,
             @Nullable StatsManager statsManager,
@@ -80,6 +84,7 @@ public class OpenCommand {
         this.skyShop = skyShop;
         this.localeManager = localeManager;
         this.categoryConfigManager = categoryConfigManager;
+        this.transactionConfigManager = transactionConfigManager;
         this.transactionManager = transactionManager;
         this.sellAllManager = sellAllManager;
         this.statsManager = statsManager;
@@ -112,9 +117,16 @@ public class OpenCommand {
                             player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.guiOpenError()));
                             return 0;
                         }
-                        CategoryConfig categoryConfig = optionalCategoryConfig.get();
 
-                        CategoryGUI categoryGUI = new CategoryGUI(skyShop, guiManager, player, localeManager, categoryConfigManager, transactionManager, sellAllManager, statsManager, hookManager, skyShopAPI, null, categoryConfig, categoryId);
+                        CategoryConfig categoryConfig = optionalCategoryConfig.get();
+                        if(categoryConfig.permission() != null) {
+                            if(!player.hasPermission(categoryConfig.permission())) {
+                                player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.categoryNoPermission()));
+                                return 0;
+                            }
+                        }
+
+                        CategoryGUI categoryGUI = new CategoryGUI(skyShop, guiManager, player, localeManager, categoryConfigManager, transactionConfigManager, transactionManager, sellAllManager, statsManager, hookManager, skyShopAPI, null, categoryConfig, categoryId);
 
                         boolean creationResult = categoryGUI.create();
                         if(!creationResult) {

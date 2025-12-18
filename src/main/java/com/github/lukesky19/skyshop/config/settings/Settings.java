@@ -26,11 +26,13 @@ import org.jetbrains.annotations.Nullable;
  * @param locale The plugin's locale. Refers to a file in SkyShop/locale
  * @param firstRun Is this the first time the plugin has run?
  * @param statistics Should statistics be saved for how many items have been purchased and sold?
+ * @param islandSizeLimit The maximum island size a player's island can be from island size purchases.
  */
 @ConfigSerializable
 public record Settings(
         @Nullable String configVersion,
         @Nullable String locale,
         boolean firstRun,
-        boolean statistics) {
+        boolean statistics,
+        @Nullable Integer islandSizeLimit) {
 }

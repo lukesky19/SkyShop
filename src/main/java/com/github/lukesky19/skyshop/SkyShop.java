@@ -18,6 +18,7 @@
 package com.github.lukesky19.skyshop;
 
 import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
+import com.github.lukesky19.skylib.api.common.abstracts.SkyPlugin;
 import com.github.lukesky19.skylib.api.gui.impl.UUIDGUIListener;
 import com.github.lukesky19.skylib.api.gui.impl.UUIDGUIManager;
 import com.github.lukesky19.skylib.libs.bstats.bukkit.Metrics;
@@ -27,16 +28,12 @@ import com.github.lukesky19.skyshop.config.settings.Settings;
 import com.github.lukesky19.skyshop.database.ConnectionManager;
 import com.github.lukesky19.skyshop.database.DatabaseManager;
 import com.github.lukesky19.skyshop.database.QueueManager;
-import com.github.lukesky19.skyshop.manager.HookManager;
-import com.github.lukesky19.skyshop.manager.PriceManager;
-import com.github.lukesky19.skyshop.manager.StatsManager;
-import com.github.lukesky19.skyshop.manager.TaskManager;
+import com.github.lukesky19.skyshop.manager.*;
 import com.github.lukesky19.skyshop.manager.config.*;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.ServicePriority;
-import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -45,14 +42,14 @@ import java.util.Objects;
 /**
  * This class is the entry point to the plugin.
  */
-public final class SkyShop extends JavaPlugin {
+public final class SkyShop extends SkyPlugin {
     // Class Instances
     private SettingsManager settingsManager;
     private LocaleManager localeManager;
     private MenuConfigManager menuConfigManager;
     private ShopConfigManager shopConfigManager;
     private CategoryConfigManager categoryConfigManager;
-    private TransactionManager transactionManager;
+    private TransactionConfigManager transactionConfigManager;
     private SellAllManager sellAllManager;
     private DatabaseManager databaseManager;
     private StatsManager statsManager;
@@ -82,11 +79,13 @@ public final class SkyShop extends JavaPlugin {
         menuConfigManager = new MenuConfigManager(this);
         shopConfigManager = new ShopConfigManager(this);
         categoryConfigManager = new CategoryConfigManager(this, settingsManager, priceManager);
-        transactionManager = new TransactionManager(this);
+        transactionConfigManager = new TransactionConfigManager(this);
         sellAllManager = new SellAllManager(this);
 
         // Setup HookManager / Hooks
         HookManager hookManager = new HookManager(this);
+
+        TransactionManager transactionManager = new TransactionManager(this, settingsManager, localeManager, hookManager, statsManager);
 
         // Create the gui manager class
         guiManager = new UUIDGUIManager();
@@ -98,7 +97,7 @@ public final class SkyShop extends JavaPlugin {
         reload();
 
         // Get the plugin's settings and whether or not statistics should be tracked.
-        @Nullable Settings settings = settingsManager.getSettingsConfig();
+        @Nullable Settings settings = settingsManager.getConfiguration();
         boolean statistics = Objects.requireNonNullElse(settings != null ? settings.statistics() : null, false);
 
         // If statistics are to be tracked, setup the ConnectionManager, QueueManager, DatabaseManager, StatsManager, TaskManager, and start the save stats task.
@@ -124,7 +123,7 @@ public final class SkyShop extends JavaPlugin {
         this.getServer().getServicesManager().register(SkyShopAPI.class, skyShopAPI, this, ServicePriority.Lowest);
 
         // Register commands
-        SkyShopCommand skyShopCommand = new SkyShopCommand(this, guiManager, localeManager, categoryConfigManager, transactionManager, sellAllManager, statsManager, hookManager, skyShopAPI);
+        SkyShopCommand skyShopCommand = new SkyShopCommand(this, guiManager, localeManager, categoryConfigManager, transactionConfigManager, transactionManager, sellAllManager, statsManager, hookManager, skyShopAPI);
         SellCommand sellCommand = new SellCommand(skyShopAPI);
 
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, commands -> {
@@ -163,15 +162,16 @@ public final class SkyShop extends JavaPlugin {
     /**
      * Main reload method
     */
+    @Override
     public void reload() {
         guiManager.closeOpenGUIs(false);
 
-        this.settingsManager.reload();
+        this.settingsManager.loadConfiguration();
         this.localeManager.reload();
         this.menuConfigManager.migrate();
         this.shopConfigManager.migrate();
         this.categoryConfigManager.reload();
-        this.transactionManager.reload();
+        this.transactionConfigManager.reload();
         this.sellAllManager.reload();
     }
 

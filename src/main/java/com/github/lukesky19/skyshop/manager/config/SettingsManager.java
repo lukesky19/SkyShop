@@ -17,10 +17,8 @@
 */
 package com.github.lukesky19.skyshop.manager.config;
 
-import com.github.lukesky19.skylib.api.configurate.ConfigurationUtility;
-import com.github.lukesky19.skylib.libs.configurate.CommentedConfigurationNode;
-import com.github.lukesky19.skylib.libs.configurate.ConfigurateException;
-import com.github.lukesky19.skylib.libs.configurate.yaml.YamlConfigurationLoader;
+import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
+import com.github.lukesky19.skylib.api.common.abstracts.config.SimpleConfigManager;
 import com.github.lukesky19.skyshop.SkyShop;
 import com.github.lukesky19.skyshop.config.settings.Settings;
 import org.jetbrains.annotations.NotNull;
@@ -32,62 +30,70 @@ import java.nio.file.Path;
 /**
  * This class manages everything related to handling the plugin's settings.
 */
-public class SettingsManager {
-    private final @NotNull SkyShop skyShop;
-    private @Nullable Settings settingsConfig;
-
+public class SettingsManager extends SimpleConfigManager<Settings> {
     /**
      * Constructor
      * @param skyShop A {@link SkyShop} instance.
     */
     public SettingsManager(@NotNull SkyShop skyShop) {
-        this.skyShop = skyShop;
+        super(skyShop, Path.of(skyShop.getDataFolder() + File.separator + "settings.yml"), Settings.class);
     }
 
-    /**
-     * Get the plugin's {@link Settings}.
-     * @return The plugin's {@link Settings}.
-    */
-    public @Nullable Settings getSettingsConfig() {
-        return settingsConfig;
+    @Override
+    public void loadConfiguration() {
+        super.loadConfiguration();
     }
 
-    /**
-     * A method to reload the plugin's settings config.
-    */
-    public void reload() {
-        settingsConfig = null;
-        Path path = Path.of(skyShop.getDataFolder() + File.separator + "settings.yml");
+    @Override
+    protected void saveBundledConfig() {
+        Path path = Path.of(plugin.getDataFolder() + File.separator + "settings.yml");
         if(!path.toFile().exists()) {
-            skyShop.saveResource("settings.yml", false);
+            plugin.saveResource("settings.yml", false);
         }
+    }
 
-        YamlConfigurationLoader loader = ConfigurationUtility.getYamlConfigurationLoader(path);
-        try {
-            settingsConfig = loader.load().get(Settings.class);
-        } catch (ConfigurateException e) {
-            throw new RuntimeException(e);
+    @Override
+    protected @Nullable Settings migrateConfiguration(@NotNull Settings configuration) {
+        switch(configuration.configVersion()) {
+            case "2.1.0.0" -> {
+                // Latest version, do nothing
+                return configuration;
+            }
+
+            case "2.0.0.0" -> {
+                return new Settings(
+                        "2.1.0.0",
+                        configuration.locale(),
+                        configuration.firstRun(),
+                        configuration.statistics(),
+                        100);
+            }
+
+            case null -> {
+                logger.error(AdventureUtil.deserialize("Unable to migrate settings configuration because the config version is null."));
+                return null;
+            }
+
+            default -> {
+                logger.error(AdventureUtil.deserialize("Unable to migrate settings configuration because the config version is unknown."));
+                return null;
+            }
         }
+    }
+
+    @Override
+    protected boolean validateConfiguration() {
+        return true;
     }
 
     /**
      * This edits the settings.yml file to set `first-run` to false.
     */
     public void setFirstRunFalse() {
-        if(settingsConfig == null) return;
+        if(configuration == null) return;
 
-        Settings newSettings = new Settings(settingsConfig.configVersion(), settingsConfig.locale(), false, settingsConfig.statistics());
-        settingsConfig = newSettings;
+        configuration = new Settings(configuration.configVersion(), configuration.locale(), false, configuration.statistics(), configuration.islandSizeLimit());
 
-        Path path = Path.of(skyShop.getDataFolder() + File.separator + "settings.yml");
-        YamlConfigurationLoader loader = ConfigurationUtility.getYamlConfigurationLoader(path);
-
-        try {
-            CommentedConfigurationNode settingsNode = loader.load();
-            settingsNode.set(Settings.class, newSettings);
-            loader.save(settingsNode);
-        } catch (ConfigurateException e) {
-            throw new RuntimeException(e);
-        }
+        saveConfiguration();
     }
 }
