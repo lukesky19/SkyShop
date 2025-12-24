@@ -22,7 +22,6 @@ import com.github.lukesky19.skylib.api.itemstack.ItemStackConfig;
 import com.github.lukesky19.skylib.libs.configurate.objectmapping.ConfigSerializable;
 import com.github.lukesky19.skyshop.config.gui.CategoryConfig;
 import com.github.lukesky19.skyshop.util.ButtonType;
-import com.github.lukesky19.skyshop.util.TransactionType;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -70,7 +69,6 @@ public record ShopConfig(@Nullable String configVersion, @NotNull GuiData gui) {
 
     /**
      * This record contains the configuration required to complete a transaction.
-     * @param transactionType The {@link TransactionType}.
      * @param transactionStyle This is a file name in SkyShop/transaction_styles
      * @param buyPrice The buy price of the item.
      * @param sellPrice The sell price of the item.
@@ -82,7 +80,6 @@ public record ShopConfig(@Nullable String configVersion, @NotNull GuiData gui) {
      */
     @ConfigSerializable
     public record TransactionData(
-            @Nullable TransactionType transactionType,
             @Nullable String transactionStyle,
             @Nullable Double buyPrice,
             @Nullable Double sellPrice,

@@ -94,4 +94,26 @@ public class BentoBoxHook implements Hook {
                 .protectionRange(newRange, oldRange)
                 .build();
     }
+
+    /**
+     * Set the provided island's protection range to the provided size.
+     * @param playerId The {@link UUID} of the player changing the island size.
+     * @param island The island to set the island size for.
+     * @param islandSize The island size to set.
+     * @param maxSize The maximum size an island can be.
+     */
+    public void setIslandSize(@NotNull UUID playerId, @NotNull Island island, int islandSize, int maxSize) {
+        int oldRange = island.getProtectionRange();
+        int newRange = Math.max(1, Math.min(maxSize, islandSize));
+
+        // Set the island range
+        island.setProtectionRange(newRange);
+
+        // Call an island range change event
+        IslandEvent.builder()
+                .island(island).location(island.getCenter())
+                .reason(IslandEvent.Reason.RANGE_CHANGE).involvedPlayer(playerId).admin(true)
+                .protectionRange(newRange, oldRange)
+                .build();
+    }
 }

@@ -107,6 +107,7 @@ public class TransactionManager {
             int amount,
             double money,
             int points) {
+        if(transactionItemConfig.itemType() == null) return;
         Locale locale = localeManager.getLocale();
         EconomyHook economyHook = hookManager.getHook(EconomyHook.class);
         PlayerPointsHook playerPointsHook = hookManager.getHook(PlayerPointsHook.class);
@@ -167,6 +168,7 @@ public class TransactionManager {
             int amount,
             double money,
             int points) {
+        if(transactionItemConfig.itemType() == null) return;
         Locale locale = localeManager.getLocale();
         EconomyHook economyHook = hookManager.getHook(EconomyHook.class);
         PlayerPointsHook playerPointsHook = hookManager.getHook(PlayerPointsHook.class);
@@ -234,6 +236,7 @@ public class TransactionManager {
             int amount,
             double money,
             int points) {
+        if(commands.isEmpty()) return;
         Locale locale = localeManager.getLocale();
         EconomyHook economyHook = hookManager.getHook(EconomyHook.class);
         PlayerPointsHook playerPointsHook = hookManager.getHook(PlayerPointsHook.class);
@@ -294,6 +297,7 @@ public class TransactionManager {
             int amount,
             double money,
             int points) {
+        if(commands.isEmpty()) return;
         Locale locale = localeManager.getLocale();
         EconomyHook economyHook = hookManager.getHook(EconomyHook.class);
         PlayerPointsHook playerPointsHook = hookManager.getHook(PlayerPointsHook.class);
@@ -342,6 +346,7 @@ public class TransactionManager {
      * @param gui The {@link BaseGUI} involved.
      * @param transactionName The transaction name.
      * @param islandSize The island size.
+     * @param setIslandSize Should the island size be set or just added to?
      * @param amount The amount involved.
      * @param money The money involved.
      * @param points The player points involved.
@@ -351,6 +356,7 @@ public class TransactionManager {
             @NotNull BaseGUI<UUID> gui,
             @NotNull String transactionName,
             @Nullable Integer islandSize,
+            boolean setIslandSize,
             int amount,
             double money,
             int points) {
@@ -397,8 +403,12 @@ public class TransactionManager {
         if(money > 0) economyHook.removeFromBalance(player, money);
         if(points > 0) playerPointsHook.removeFromBalance(player, points);
 
-        // Add the island size
-        bentoBoxHook.addIslandSize(player.getUniqueId(), island, islandSize, settings.islandSizeLimit());
+        // Modify the island size
+        if(setIslandSize) {
+            bentoBoxHook.setIslandSize(player.getUniqueId(), island, islandSize, settings.islandSizeLimit());
+        } else {
+            bentoBoxHook.addIslandSize(player.getUniqueId(), island, islandSize, settings.islandSizeLimit());
+        }
 
         // Create the necessary placeholders
         List<TagResolver.Single> successPlaceholders = buildPlaceholders(economyHook, playerPointsHook, player, transactionName, amount, money, points);
@@ -419,6 +429,7 @@ public class TransactionManager {
      * @param gui The {@link BaseGUI} involved.
      * @param transactionName The transaction name.
      * @param islandSize The island size.
+     * @param setIslandSize Should the island size be set or just removed from?
      * @param amount The amount involved.
      * @param money The money involved.
      * @param points The player points involved.
@@ -428,11 +439,19 @@ public class TransactionManager {
             @NotNull BaseGUI<UUID> gui,
             @NotNull String transactionName,
             @Nullable Integer islandSize,
+            boolean setIslandSize,
             int amount,
             double money,
             int points) {
         if(islandSize == null || islandSize <= 0) return;
         Locale locale = localeManager.getLocale();
+        @Nullable Settings settings = settingsManager.getConfiguration();
+        if(settings == null || settings.islandSizeLimit() == null) {
+            logger.error(AdventureUtil.deserialize("Unable to complete the transaction because the plugin's settings are invalid."));
+            player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.transactionError()));
+            gui.close();
+            return;
+        }
         BentoBoxHook bentoBoxHook = hookManager.getHook(BentoBoxHook.class);
         EconomyHook economyHook = hookManager.getHook(EconomyHook.class);
         PlayerPointsHook playerPointsHook = hookManager.getHook(PlayerPointsHook.class);
@@ -467,8 +486,12 @@ public class TransactionManager {
         if(money > 0) economyHook.addToBalance(player, money);
         if(points > 0) playerPointsHook.addToBalance(player, points);
 
-        // Remove the island size
-        bentoBoxHook.removeIslandSize(player.getUniqueId(), island, islandSize);
+        // Modify the island size
+        if(setIslandSize) {
+            bentoBoxHook.setIslandSize(player.getUniqueId(), island, islandSize, settings.islandSizeLimit());
+        } else {
+            bentoBoxHook.removeIslandSize(player.getUniqueId(), island, islandSize);
+        }
 
         // Create the necessary placeholders
         List<TagResolver.Single> successPlaceholders = buildPlaceholders(economyHook, playerPointsHook, player, transactionName, amount, money, points);

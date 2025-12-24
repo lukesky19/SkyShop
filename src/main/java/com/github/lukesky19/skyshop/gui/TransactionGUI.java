@@ -34,7 +34,6 @@ import com.github.lukesky19.skyshop.manager.TransactionManager;
 import com.github.lukesky19.skyshop.manager.config.LocaleManager;
 import com.github.lukesky19.skyshop.manager.config.SellAllManager;
 import com.github.lukesky19.skyshop.util.ButtonType;
-import com.github.lukesky19.skyshop.util.TransactionType;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.entity.Player;
@@ -62,7 +61,6 @@ public class TransactionGUI extends ChestGUI<UUID> {
 
     // Config related to the Transaction
     private final @NotNull TransactionConfig transactionConfig;
-    private final @NotNull TransactionType transactionType;
     private final @NotNull String transactionStyle;
     private final @NotNull String transactionName;
     // ItemStack data
@@ -72,7 +70,7 @@ public class TransactionGUI extends ChestGUI<UUID> {
     private final @NotNull List<String> buyCommands;
     private final @NotNull List<String> sellCommands;
     // Island Size Data
-    private final @Nullable Integer islandSize;
+    private final @NotNull CategoryConfig.IslandSizeData islandSizeData;
     // Price Data
     private final double buyPrice;
     private final double sellPrice;
@@ -92,7 +90,6 @@ public class TransactionGUI extends ChestGUI<UUID> {
      * @param transactionManager A {@link TransactionManager} instance.
      * @param skyShopAPI A {@link SkyShopAPI} instance.
      * @param categoryGUI The {@link CategoryGUI} the player came from.
-     * @param transactionType The {@link TransactionType}.
      * @param transactionStyle The transaction style name. This is the {@link String} that was used to get the {@link TransactionConfig}.
      * @param transactionConfig The {@link TransactionConfig} to create the GUI with.
      * @param displayItemConfig The {@link ItemStackConfig} used to create the {@link ItemStack} that displays what is being purchased or sold.
@@ -101,7 +98,7 @@ public class TransactionGUI extends ChestGUI<UUID> {
      * @param transactionName The name to use when displaying a successful transaction message.
      * @param buyCommands A {@link List} of {@link String} containing the commands to execute in console when a successful buy transaction is made.
      * @param sellCommands A {@link List} of {@link String} containing the commands to execute in console when a successful sell transaction is made.
-     * @param islandSize The island size being purchased or sold.
+     * @param islandSizeData The island size data being purchased or sold.
      */
     public TransactionGUI(
             @NotNull SkyShop skyShop,
@@ -112,7 +109,6 @@ public class TransactionGUI extends ChestGUI<UUID> {
             @NotNull TransactionManager transactionManager,
             @NotNull SkyShopAPI skyShopAPI,
             @NotNull CategoryGUI categoryGUI,
-            @NotNull TransactionType transactionType,
             @NotNull String transactionStyle,
             @NotNull TransactionConfig transactionConfig,
             @NotNull ItemStackConfig displayItemConfig,
@@ -121,7 +117,7 @@ public class TransactionGUI extends ChestGUI<UUID> {
             @Nullable String transactionName,
             @NotNull List<String> buyCommands,
             @NotNull List<String> sellCommands,
-            @Nullable Integer islandSize) {
+            @NotNull CategoryConfig.IslandSizeData islandSizeData) {
         super(skyShop, guiManager, player.getUniqueId(), player);
 
         this.skyShop = skyShop;
@@ -130,7 +126,6 @@ public class TransactionGUI extends ChestGUI<UUID> {
         this.transactionManager = transactionManager;
         this.skyShopAPI = skyShopAPI;
         this.categoryGUI = categoryGUI;
-        this.transactionType = transactionType;
         this.transactionStyle = transactionStyle;
         this.transactionConfig = transactionConfig;
         this.displayItemConfig = displayItemConfig;
@@ -142,7 +137,7 @@ public class TransactionGUI extends ChestGUI<UUID> {
         this.buyCommands = buyCommands;
         this.sellCommands = sellCommands;
         this.transactionName = Objects.requireNonNullElse(transactionName, "");
-        this.islandSize = islandSize;
+        this.islandSizeData = islandSizeData;
     }
 
     /**
@@ -509,13 +504,11 @@ public class TransactionGUI extends ChestGUI<UUID> {
         itemStackPlaceholders.add(Placeholder.parsed("buy_points", String.valueOf(finalBuyPoints)));
         itemStackPlaceholders.add(Placeholder.parsed("amount", String.valueOf(purchaseAmount)));
 
-        Consumer<InventoryClickEvent> action = switch(transactionType) {
-            case ITEM -> inventoryClickEvent -> transactionManager.buyItem(player, this, transactionItemConfig, transactionName, purchaseAmount, finalBuyPrice, finalBuyPoints);
-            case COMMAND -> inventoryClickEvent -> transactionManager.buyCommand(player, this, transactionName, buyCommands, purchaseAmount, finalBuyPrice, finalBuyPoints);
-            case ISLAND_SIZE -> inventoryClickEvent -> transactionManager.buyIslandSize(player, this, transactionName, islandSize, purchaseAmount, finalBuyPrice, finalBuyPoints);
-        };
-
-        createButton(buttonType, buttonConfig, itemStackPlaceholders, action);
+        createButton(buttonType, buttonConfig, itemStackPlaceholders, inventoryClickEvent -> {
+            transactionManager.buyItem(player, this, transactionItemConfig, transactionName, purchaseAmount, finalBuyPrice, finalBuyPoints);
+            transactionManager.buyCommand(player, this, transactionName, buyCommands, purchaseAmount, finalBuyPrice, finalBuyPoints);
+            transactionManager.buyIslandSize(player, this, transactionName, islandSizeData.buyAmount(), islandSizeData.setIslandSize(), purchaseAmount, finalBuyPrice, finalBuyPoints);
+        });
     }
 
     /**
@@ -554,13 +547,13 @@ public class TransactionGUI extends ChestGUI<UUID> {
         itemStackPlaceholders.add(Placeholder.parsed("sell_points", String.valueOf(finalSellPoints)));
         itemStackPlaceholders.add(Placeholder.parsed("amount", String.valueOf(sellAmount)));
 
-        Consumer<InventoryClickEvent> action = switch(transactionType) {
-            case ITEM -> inventoryClickEvent -> transactionManager.sellItem(player, this, transactionItemConfig, transactionName, sellAmount, finalSellPrice, finalSellPoints);
-            case COMMAND -> inventoryClickEvent -> transactionManager.sellCommand(player, this, transactionName, sellCommands, sellAmount, finalSellPrice, finalSellPoints);
-            case ISLAND_SIZE -> inventoryClickEvent -> transactionManager.sellIslandSize(player, this, transactionName, islandSize, sellAmount, finalSellPrice, finalSellPoints);
-        };
+        createButton(buttonType, buttonConfig, itemStackPlaceholders, inventoryClickEvent -> {
+            transactionManager.sellItem(player, this, transactionItemConfig, transactionName, sellAmount, finalSellPrice, finalSellPoints);
 
-        createButton(buttonType, buttonConfig, itemStackPlaceholders, action);
+            transactionManager.sellCommand(player, this, transactionName, sellCommands, sellAmount, finalSellPrice, finalSellPoints);
+
+            transactionManager.sellIslandSize(player, this, transactionName, islandSizeData.sellAmount(), islandSizeData.setIslandSize(), sellAmount, finalSellPrice, finalSellPoints);
+        });
     }
 
     /**

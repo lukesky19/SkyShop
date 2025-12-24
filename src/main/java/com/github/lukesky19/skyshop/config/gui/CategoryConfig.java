@@ -21,7 +21,6 @@ import com.github.lukesky19.skylib.api.gui.GUIType;
 import com.github.lukesky19.skylib.api.itemstack.ItemStackConfig;
 import com.github.lukesky19.skylib.libs.configurate.objectmapping.ConfigSerializable;
 import com.github.lukesky19.skyshop.util.ButtonType;
-import com.github.lukesky19.skyshop.util.TransactionType;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -71,7 +70,6 @@ public record CategoryConfig(@Nullable String configVersion, @Nullable String pe
             @Nullable String permission) {}
     /**
      * This record contains the configuration required to complete a transaction.
-     * @param transactionType The {@link TransactionType}.
      * @param transactionStyle This is a file name in SkyShop/transaction_styles
      * @param transactionName This is the text to use in the success messages when a transaction is successful.
      * @param prices The {@link PriceConfig} for the transaction.
@@ -79,11 +77,10 @@ public record CategoryConfig(@Nullable String configVersion, @Nullable String pe
      * @param transactionItem The {@link ItemStackConfig} used to create the {@link ItemStack} that will be purchased or sold.
      * @param buyCommands A {@link List} of {@link String}s to execute in console when purchased.
      * @param sellCommands A {@link List} of {@link String}s to execute in console when sold.
-     * @param islandSize The island size to add to or remove from the island when a transaction occurs.
+     * @param islandSize The island size data when a transaction occurs.
      */
     @ConfigSerializable
     public record TransactionData(
-            @Nullable TransactionType transactionType,
             @Nullable String transactionStyle,
             @Nullable String transactionName,
             @NotNull PriceConfig prices,
@@ -91,7 +88,19 @@ public record CategoryConfig(@Nullable String configVersion, @Nullable String pe
             @NotNull ItemStackConfig transactionItem,
             @NotNull List<String> buyCommands,
             @NotNull List<String> sellCommands,
-            @Nullable Integer islandSize) {}
+            @NotNull IslandSizeData islandSize) {}
+
+    /**
+     * This record stores the data for an island size transactions.
+     * @param setIslandSize Should the values here when purchased or sold set the island size to the exact values?
+     * @param buyAmount The amount of island size to purchase.
+     * @param sellAmount The amount of island size to sell.
+     */
+    public record IslandSizeData(
+            boolean setIslandSize,
+            @Nullable Integer buyAmount,
+            @Nullable Integer sellAmount) {}
+
     /**
      * The price configuration for a transaction.
      * @param buyPrice The buy price of the item.

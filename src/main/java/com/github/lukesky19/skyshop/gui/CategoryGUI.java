@@ -37,7 +37,6 @@ import com.github.lukesky19.skyshop.manager.config.LocaleManager;
 import com.github.lukesky19.skyshop.manager.config.SellAllManager;
 import com.github.lukesky19.skyshop.manager.config.TransactionConfigManager;
 import com.github.lukesky19.skyshop.util.ButtonType;
-import com.github.lukesky19.skyshop.util.TransactionType;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.entity.Player;
@@ -377,8 +376,6 @@ public class CategoryGUI extends ChestGUI<UUID> {
 
                     CategoryConfig.TransactionData transactionData = buttonConfig.transactionData();
                     if(transactionData == null) continue;
-                    TransactionType transactionType = transactionData.transactionType();
-                    if(transactionType == null) continue;
 
                     // Create the ItemStackBuilder and pass the ItemStackConfig.
                     ItemStackBuilder itemStackBuilder = new ItemStackBuilder(logger);
@@ -433,7 +430,6 @@ public class CategoryGUI extends ChestGUI<UUID> {
                                     transactionManager,
                                     skyShopAPI,
                                     this,
-                                    transactionType,
                                     transactionStyle,
                                     transactionConfig,
                                     transactionData.displayItem(),

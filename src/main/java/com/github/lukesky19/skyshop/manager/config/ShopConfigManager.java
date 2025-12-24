@@ -162,7 +162,6 @@ public class ShopConfigManager {
      */
     private @NotNull CategoryConfig.TransactionData getTransactionData(@NotNull ShopConfig.TransactionData legacyTransactionData) {
         return new CategoryConfig.TransactionData(
-                legacyTransactionData.transactionType(),
                 legacyTransactionData.transactionStyle(),
                 legacyTransactionData.transactionName(),
                 new CategoryConfig.PriceConfig(Objects.requireNonNullElse(legacyTransactionData.buyPrice(), -1.0), Objects.requireNonNullElse(legacyTransactionData.sellPrice(), -1.0), -1, -1),
@@ -170,6 +169,6 @@ public class ShopConfigManager {
                 legacyTransactionData.transactionItem(),
                 legacyTransactionData.buyCommands(),
                 legacyTransactionData.sellCommands(),
-                null);
+                new CategoryConfig.IslandSizeData(false, null, null));
     }
 }
