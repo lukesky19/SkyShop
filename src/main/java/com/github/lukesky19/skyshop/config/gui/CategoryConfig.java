@@ -96,6 +96,7 @@ public record CategoryConfig(@Nullable String configVersion, @Nullable String pe
      * @param buyAmount The amount of island size to purchase.
      * @param sellAmount The amount of island size to sell.
      */
+    @ConfigSerializable
     public record IslandSizeData(
             boolean setIslandSize,
             @Nullable Integer buyAmount,
