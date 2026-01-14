@@ -53,7 +53,7 @@ public class SettingsManager extends SimpleConfigManager<Settings> {
     }
 
     @Override
-    protected @Nullable Settings migrateConfiguration(@NotNull Settings configuration) {
+    public @Nullable Settings migrateConfiguration(@NotNull Settings configuration) {
         switch(configuration.configVersion()) {
             case "2.1.0.0" -> {
                 // Latest version, do nothing
@@ -82,7 +82,7 @@ public class SettingsManager extends SimpleConfigManager<Settings> {
     }
 
     @Override
-    protected boolean validateConfiguration() {
+    public boolean validateConfiguration(@Nullable Settings settings) {
         return true;
     }
 
@@ -94,6 +94,6 @@ public class SettingsManager extends SimpleConfigManager<Settings> {
 
         configuration = new Settings(configuration.configVersion(), configuration.locale(), false, configuration.statistics(), configuration.islandSizeLimit());
 
-        saveConfiguration();
+        saveConfiguration(configuration);
     }
 }
