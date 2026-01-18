@@ -31,9 +31,10 @@ dependencies {
     compileOnly("com.github.lukesky19:SkyLib:1.4.0.0")
 
     // Hooks
-    compileOnly("com.github.MilkBowl:VaultAPI:1.7.1")
-    compileOnly("org.black_ixx:playerpoints:3.3.3")
     compileOnly("world.bentobox:bentobox:2.7.0-SNAPSHOT")
+    compileOnly("org.black_ixx:playerpoints:3.3.3")
+    compileOnly("com.github.lukesky19:SkyPrestige:2.0.0.0")
+    compileOnly("com.github.MilkBowl:VaultAPI:1.7.1")
 }
 
 java {

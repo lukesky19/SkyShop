@@ -6,7 +6,7 @@ author: lukeskywlker19
 description: A graphical shop plugin
 depend: [SkyLib]
 
-soft-depend: [BentoBox, PlayerPoints, Vault]
+soft-depend: [BentoBox, PlayerPoints, SkyPrestige, Vault]
 
 permissions:
   skyshop.commands.skyshop:

@@ -438,7 +438,8 @@ public class CategoryGUI extends ChestGUI<UUID> {
                                     transactionName,
                                     transactionData.buyCommands(),
                                     transactionData.sellCommands(),
-                                    transactionData.islandSize());
+                                    transactionData.islandSize(),
+                                    transactionData.prestigeMultiplier());
 
                             boolean creationResult = transactionGUI.create();
                             if(!creationResult) {

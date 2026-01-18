@@ -1,7 +1,25 @@
+/*
+    SkyShop is a GUI shop plugin with sell commands, a sell GUI, nested categories, page support, and error checking.
+    Copyright (C) 2024 lukeskywlker19
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as published
+    by the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
 package com.github.lukesky19.skyshop.hook.impl;
 
+import com.github.lukesky19.skyshop.SkyShop;
 import com.github.lukesky19.skyshop.hook.Hook;
-import org.bukkit.Location;
+import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import world.bentobox.bentobox.BentoBox;
@@ -15,12 +33,16 @@ import java.util.UUID;
  * This class manages interfacing with the BentoBox plugin.
  */
 public class BentoBoxHook implements Hook {
-    private @NotNull IslandsManager islandsManager;
+    private final @NotNull SkyShop skyShop;
+    private @Nullable IslandsManager islandsManager;
 
     /**
      * Constructor
+     * @param skyShop A {@link SkyShop} instance.
      */
-    public BentoBoxHook() {
+    public BentoBoxHook(@NotNull SkyShop skyShop) {
+        this.skyShop = skyShop;
+
         initialize();
     }
 
@@ -29,8 +51,10 @@ public class BentoBoxHook implements Hook {
      */
     @Override
     public void initialize() {
-        @NotNull BentoBox bentoBox = BentoBox.getInstance();
-        islandsManager = bentoBox.getIslandsManager();
+        if(skyShop.getServer().getPluginManager().isPluginEnabled("BentoBox")) {
+            BentoBox bentoBox = BentoBox.getInstance();
+            islandsManager = bentoBox.getIslandsManager();
+        }
     }
 
     /**
@@ -39,16 +63,18 @@ public class BentoBoxHook implements Hook {
      */
     @Override
     public boolean isHooked() {
-        return true;
+        return islandsManager != null;
     }
 
     /**
-     * Attempt to get the island at the given location.
-     * @param location The {@link Location}.
+     * Attempt to get the island for the player.
+     * @param player The {@link Player}.
      * @return An {@link Island} or null.
      */
-    public @Nullable Island getIslandAtLocation(@NotNull Location location) {
-        return islandsManager.getIslandAt(location).orElse(null);
+    public @Nullable Island getIsland(@NotNull Player player) {
+        if(islandsManager == null) return null;
+
+        return islandsManager.getIsland(player.getWorld(), player.getUniqueId());
     }
 
     /**
@@ -68,7 +94,9 @@ public class BentoBoxHook implements Hook {
         // Call an island range change event
         IslandEvent.builder()
                 .island(island).location(island.getCenter())
-                .reason(IslandEvent.Reason.RANGE_CHANGE).involvedPlayer(playerId).admin(true)
+                .reason(IslandEvent.Reason.RANGE_CHANGE)
+                .involvedPlayer(playerId)
+                .admin(true)
                 .protectionRange(newRange, oldRange)
                 .build();
     }

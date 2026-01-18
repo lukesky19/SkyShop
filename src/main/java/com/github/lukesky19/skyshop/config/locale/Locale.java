@@ -44,9 +44,8 @@ import java.util.List;
  * @param guiOpenError The message sent to the player when a GUI fails to open.
  * @param statsDisabledGuiError The message sent to the player when stats tracking is disabled, and they try to open the stats GUI.
  * @param transactionError The message sent to the player when buying or selling fails due to an error.
- * @param notOnIsland The message sent to a player when they are not on their island to buy or sell island size.
- * @param islandTooSmall The message sent to a player when their island is too small to sell a portion of their island size.
- * @param islandMaxSize The message sent to a player when their island is at the maximum size and an expansion can be purchased.
+ * @param islandSizeMessages The messages related to buying or selling island size.
+ * @param prestigeMultiplierMessages The messages related to buying or selling a prestige points multiplier.
  * @param categoryNoPermission The message sent to a player when they don't have permission to access a shop category.
  * @param buttonNoPermission The message sent to a player when they don't have permission to use a button.
  */
@@ -73,9 +72,8 @@ public record Locale(
         String guiOpenError,
         String statsDisabledGuiError,
         String transactionError,
-        String notOnIsland,
-        String islandTooSmall,
-        String islandMaxSize,
+        IslandSizeMessages islandSizeMessages,
+        PrestigeMultiplierMessages prestigeMultiplierMessages,
         String categoryNoPermission,
         String buttonNoPermission) {
     /**
@@ -89,4 +87,28 @@ public record Locale(
             String moneyAndPoints,
             String money,
             String points) {}
+    /**
+     * This record contains messages related to island size expansion purchases.
+     * @param notOnIsland The message sent to a player when they are not on their island to buy or sell island size.
+     * @param islandTooSmall The message sent to a player when their island is too small to sell a portion of their island size.
+     * @param islandMaxSize The message sent to a player when their island is at the maximum size and an expansion can be purchased.
+     */
+    @ConfigSerializable
+    public record IslandSizeMessages(
+            String notOnIsland,
+            String islandTooSmall,
+            String islandMaxSize) {}
+    /**
+     * This record contains messages related to buy or sell a prestige point multiplier.
+     * @param notOnIsland The message sent to a player when they are not on their island.
+     * @param multiplierActive The message sent to a player when a multiplier is active and the player isn't allowed to buy another because of it.
+     * @param higherMultiplierActive The message sent to a player when a higher multiplier is active and the player isn't allowed to buy another because of it.
+     * @param multiplierTimeMax The message sent to a player when a multiplier is at the maximum time allowed.
+     */
+    @ConfigSerializable
+    public record PrestigeMultiplierMessages(
+            String notOnIsland,
+            String multiplierActive,
+            String higherMultiplierActive,
+            String multiplierTimeMax) {}
 }

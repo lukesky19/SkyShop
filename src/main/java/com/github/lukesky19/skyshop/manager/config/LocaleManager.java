@@ -99,9 +99,15 @@ public class LocaleManager {
             "<red>Unable to open this GUI because of a configuration error.</red>",
             "<red>Unable to open the stats GUI as stats tracking is disabled.</red>",
             "<red>Unable to complete this transaction due to an error.</red>",
-            "<red>You must be on your island to buy or sell island size.</red>",
-            "<red>Your island is too small to sell any island size.</red>",
-            "<red>Your island is at the maximum size it can be expanded to.</red>",
+            new Locale.IslandSizeMessages(
+                    "<red>You must be on your island to buy or sell island size.</red>",
+                    "<red>Your island is too small to sell any island size.</red>",
+                    "<red>Your island is at the maximum size it can be expanded to.</red>"),
+            new Locale.PrestigeMultiplierMessages(
+                    "<red>You must be on your island to purchase an island multiplier.</red>",
+                    "<red>You cannot purchase this multiplier as one is already active.</red>",
+                    "<red>You cannot purchase this multiplier as a higher one is already active.</red>",
+                    "<red>The multiplier is already at or higher than this multiplier.</red>"),
             "<red>You do not have permission to access this shop category.</red>",
             "<red>You do not have permission to access this button.</red>");
 
@@ -237,9 +243,15 @@ public class LocaleManager {
                         locale.guiOpenError(),
                         locale.statsDisabledGuiError(),
                         "<red>Unable to complete this transaction due to an error.</red>",
-                        "<red>You must be on your island to buy or sell island size.</red>",
-                        "<red>Your island is too small to sell any island size.</red>",
-                        "<red>Your island is at the maximum size it can be expanded to.</red>",
+                        new Locale.IslandSizeMessages(
+                                "<red>You must be on your island to buy or sell island size.</red>",
+                                "<red>Your island is too small to sell any island size.</red>",
+                                "<red>Your island is at the maximum size it can be expanded to.</red>"),
+                        new Locale.PrestigeMultiplierMessages(
+                                "<red>You must be on your island to purchase an island multiplier.</red>",
+                                "<red>You cannot purchase this multiplier as one is already active.</red>",
+                                "<red>You cannot purchase this multiplier as a higher one is already active.</red>",
+                                "<red>The multiplier is already at or higher than this multiplier.</red>"),
                         "<red>You do not have permission to access this shop category.</red>",
                         "<red>You do not have permission to access this button.</red>");
 
@@ -326,6 +338,7 @@ public class LocaleManager {
                 || locale.configReload() == null
                 || locale.notEnoughItems() == null
                 || locale.insufficientMoney() == null
+                || locale.insufficientPlayerPoints() == null
                 || locale.buyItemSuccess().moneyAndPoints() == null
                 || locale.buyItemSuccess().money() == null
                 || locale.buyItemSuccess().points() == null
@@ -354,9 +367,13 @@ public class LocaleManager {
                 || locale.guiOpenError() == null
                 || locale.statsDisabledGuiError() == null
                 || locale.transactionError() == null
-                || locale.notOnIsland() == null
-                || locale.islandTooSmall() == null
-                || locale.islandMaxSize() == null
+                || locale.islandSizeMessages().notOnIsland() == null
+                || locale.islandSizeMessages().islandTooSmall() == null
+                || locale.islandSizeMessages().islandMaxSize() == null
+                || locale.prestigeMultiplierMessages().notOnIsland() == null
+                || locale.prestigeMultiplierMessages().multiplierActive() == null
+                || locale.prestigeMultiplierMessages().higherMultiplierActive() == null
+                || locale.prestigeMultiplierMessages().multiplierTimeMax() == null
                 || locale.categoryNoPermission() == null
                 || locale.buttonNoPermission() == null) {
             locale = null;

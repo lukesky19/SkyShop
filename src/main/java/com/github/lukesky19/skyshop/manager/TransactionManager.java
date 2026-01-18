@@ -24,6 +24,7 @@ import com.github.lukesky19.skylib.api.itemstack.ItemStackConfig;
 import com.github.lukesky19.skylib.api.placeholderapi.PlaceholderAPIUtil;
 import com.github.lukesky19.skylib.api.player.PlayerUtil;
 import com.github.lukesky19.skyshop.SkyShop;
+import com.github.lukesky19.skyshop.config.gui.CategoryConfig;
 import com.github.lukesky19.skyshop.config.locale.Locale;
 import com.github.lukesky19.skyshop.config.settings.Settings;
 import com.github.lukesky19.skyshop.event.CommandPurchasedEvent;
@@ -34,8 +35,10 @@ import com.github.lukesky19.skyshop.gui.TransactionGUI;
 import com.github.lukesky19.skyshop.hook.impl.BentoBoxHook;
 import com.github.lukesky19.skyshop.hook.impl.EconomyHook;
 import com.github.lukesky19.skyshop.hook.impl.PlayerPointsHook;
+import com.github.lukesky19.skyshop.hook.impl.SkyPrestigeHook;
 import com.github.lukesky19.skyshop.manager.config.LocaleManager;
 import com.github.lukesky19.skyshop.manager.config.SettingsManager;
+import com.github.lukesky19.skyshop.util.MultiplierType;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
@@ -382,16 +385,16 @@ public class TransactionManager {
         }
 
         // Get and validate the island
-        @Nullable Island island = bentoBoxHook.getIslandAtLocation(player.getLocation());
+        @Nullable Island island = bentoBoxHook.getIsland(player);
         if(island == null) {
-            player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.notOnIsland()));
+            player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.islandSizeMessages().notOnIsland()));
             gui.close();
             return;
         }
 
         // Check if the island is at the max configured size
         if(island.getProtectionRange() >= settings.islandSizeLimit()) {
-            player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.islandMaxSize()));
+            player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.islandSizeMessages().islandMaxSize()));
             gui.close();
             return;
         }
@@ -465,9 +468,9 @@ public class TransactionManager {
         }
 
         // Get and validate the island
-        @Nullable Island island = bentoBoxHook.getIslandAtLocation(player.getLocation());
+        @Nullable Island island = bentoBoxHook.getIsland(player);
         if(island == null) {
-            player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.notOnIsland()));
+            player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.islandSizeMessages().notOnIsland()));
             gui.close();
             return;
         }
@@ -477,7 +480,7 @@ public class TransactionManager {
 
         // Validate that the player's island is large enough
         if(island.getProtectionRange() <= islandSize) {
-            player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.islandTooSmall()));
+            player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.islandSizeMessages().islandTooSmall()));
             gui.close();
             return;
         }
@@ -503,6 +506,182 @@ public class TransactionManager {
             player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.otherSellSuccess().money(), successPlaceholders));
         } else { // Points only
             player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.otherSellSuccess().points(), successPlaceholders));
+        }
+    }
+
+    /**
+     * Initiate the buying of a prestige points multiplier.
+     * @param player The {@link Player} involved.
+     * @param gui The {@link BaseGUI} involved.
+     * @param transactionName The transaction name.
+     * @param prestigeMultiplierData The {@link CategoryConfig.PrestigeMultiplierData}.
+     * @param money The money for the purchase.
+     * @param points The player points for the purchase.
+     */
+    public void buyPrestigePointsMultiplier(
+            @NotNull Player player,
+            @NotNull BaseGUI<UUID> gui,
+            @NotNull String transactionName,
+            @NotNull CategoryConfig.PrestigeMultiplierData prestigeMultiplierData,
+            double money,
+            int points) {
+        Locale locale = localeManager.getLocale();
+
+        @Nullable MultiplierType multiplierType = prestigeMultiplierData.multiplierType();
+        @Nullable Double multiplier = prestigeMultiplierData.multiplier();
+        boolean activeMultiplierPreventPurchase = prestigeMultiplierData.activeMultiplierPreventPurchase();
+        boolean activeMultiplierHigherPreventPurchase = prestigeMultiplierData.activeMultiplierHigherPreventPurchase();
+        boolean resetMultiplierTimeIfHigherMultiplier = prestigeMultiplierData.resetMultiplierTimeIfHigherMultiplier();
+        @Nullable Long time = prestigeMultiplierData.time();
+        @Nullable Long maxTime = prestigeMultiplierData.maxTime();
+
+        if(multiplierType == null
+                || ((multiplier == null || multiplier <= 0)
+                && (time == null || time <= 0))) {
+            return;
+        }
+
+        @Nullable Settings settings = settingsManager.getConfiguration();
+        if(settings == null || settings.islandSizeLimit() == null) {
+            logger.error(AdventureUtil.deserialize("Unable to complete the transaction because the plugin's settings are invalid."));
+            player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.transactionError()));
+            gui.close();
+            return;
+        }
+
+        BentoBoxHook bentoBoxHook = hookManager.getHook(BentoBoxHook.class);
+        SkyPrestigeHook skyPrestigeHook = hookManager.getHook(SkyPrestigeHook.class);
+        EconomyHook economyHook = hookManager.getHook(EconomyHook.class);
+        PlayerPointsHook playerPointsHook = hookManager.getHook(PlayerPointsHook.class);
+
+        // Check if BentoBox is hooked into
+        if(!bentoBoxHook.isHooked()) {
+            logger.error(AdventureUtil.deserialize("Unable to complete the transaction because BentoBox is not hooked into."));
+            player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.transactionError()));
+            gui.close();
+            return;
+        }
+
+        // Check if SkyPrestige is hooked into
+        if(!skyPrestigeHook.isHooked()) {
+            logger.error(AdventureUtil.deserialize("Unable to complete the transaction because SkyPrestige is not hooked into."));
+            player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.transactionError()));
+            gui.close();
+            return;
+        }
+
+        @Nullable Island island = null;
+        @Nullable Long updatedTime = null;
+        if(multiplierType.equals(MultiplierType.SERVER)) {
+            if(activeMultiplierPreventPurchase) {
+                if(skyPrestigeHook.getServerMultiplier() > 0.0) {
+                    player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.prestigeMultiplierMessages().multiplierActive()));
+                    gui.close();
+                    return;
+                }
+            }
+
+            if(multiplier != null && activeMultiplierHigherPreventPurchase) {
+                if(skyPrestigeHook.getServerMultiplier() > multiplier) {
+                    player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.prestigeMultiplierMessages().higherMultiplierActive()));
+                    gui.close();
+                    return;
+                }
+            }
+
+            // Calculate base time
+            long baseTime = skyPrestigeHook.getServerMultiplierTime();
+            if(multiplier != null
+                    && multiplier > skyPrestigeHook.getServerMultiplier()
+                    && resetMultiplierTimeIfHigherMultiplier) {
+                baseTime = 0;
+            }
+
+            // Calculate updated time
+            if(time != null && time > 0) {
+                updatedTime = baseTime + time;
+
+                // Check max time
+                if(maxTime != null && updatedTime > maxTime) {
+                    player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.prestigeMultiplierMessages().multiplierTimeMax()));
+                    gui.close();
+                    return;
+                }
+            }
+        } else {
+            // Get and validate the island
+            island = bentoBoxHook.getIsland(player);
+            if(island == null) {
+                player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.prestigeMultiplierMessages().notOnIsland()));
+                gui.close();
+                return;
+            }
+
+            if(activeMultiplierPreventPurchase) {
+                if(skyPrestigeHook.getIslandMultiplier(island) > 0.0) {
+                    player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.prestigeMultiplierMessages().multiplierActive()));
+                    gui.close();
+                    return;
+                }
+            }
+
+            // Calculate base time
+            long baseTime = skyPrestigeHook.getIslandMultiplierTime(island);
+            if(multiplier != null
+                    && multiplier > skyPrestigeHook.getIslandMultiplier(island)
+                    && resetMultiplierTimeIfHigherMultiplier) {
+                baseTime = 0;
+            }
+
+            // Calculate updated time
+            if(time != null && time > 0) {
+                updatedTime = baseTime + time;
+
+                // Check max time
+                if(maxTime != null && updatedTime > maxTime) {
+                    player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.prestigeMultiplierMessages().multiplierTimeMax()));
+                    gui.close();
+                    return;
+                }
+            }
+        }
+
+        // Validate the money and points
+        if(!validateMoneyAndPoints(locale, economyHook, playerPointsHook, player, gui, money, points)) return;
+
+        // Remove the prices from the player's balances
+        if(money > 0) economyHook.removeFromBalance(player, money);
+        if(points > 0) playerPointsHook.removeFromBalance(player, points);
+
+        // Modify multiplier and multiplier time
+        boolean result;
+        if(multiplierType.equals(MultiplierType.SERVER)) {
+            result = skyPrestigeHook.setServerMultiplier(multiplier, updatedTime);
+        } else {
+            result = skyPrestigeHook.setIslandMultiplier(island, multiplier, updatedTime);
+        }
+
+        if(result) {
+            // Create the necessary placeholders
+            List<TagResolver.Single> successPlaceholders = buildPlaceholders(economyHook, playerPointsHook, player, transactionName, 1, money, points);
+
+            // Send the message that the transaction was a success
+            if(money > 0 && points > 0) {
+                player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.otherBuySuccess().moneyAndPoints(), successPlaceholders));
+            } else if(money > 0) {
+                player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.otherBuySuccess().money(), successPlaceholders));
+            } else { // Points only
+                player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.otherBuySuccess().points(), successPlaceholders));
+            }
+        } else {
+            logger.error(AdventureUtil.deserialize("Unable to complete the transaction because the multiplier was not updated successfully."));
+            player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.transactionError()));
+
+            // Return prices taken
+            if(money > 0) economyHook.addToBalance(player, money);
+            if(points > 0) playerPointsHook.addToBalance(player, points);
+
+            gui.close();
         }
     }
 

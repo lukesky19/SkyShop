@@ -22,6 +22,7 @@ import com.github.lukesky19.skyshop.hook.Hook;
 import com.github.lukesky19.skyshop.hook.impl.BentoBoxHook;
 import com.github.lukesky19.skyshop.hook.impl.EconomyHook;
 import com.github.lukesky19.skyshop.hook.impl.PlayerPointsHook;
+import com.github.lukesky19.skyshop.hook.impl.SkyPrestigeHook;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
@@ -38,11 +39,13 @@ public class HookManager {
      * @param skyShop A {@link SkyShop} instance.
      */
     public HookManager(@NotNull SkyShop skyShop) {
-        registerHook(BentoBoxHook.class, new BentoBoxHook());
+        registerHook(BentoBoxHook.class, new BentoBoxHook(skyShop));
 
         registerHook(EconomyHook.class, new EconomyHook(skyShop));
 
         registerHook(PlayerPointsHook.class, new PlayerPointsHook(skyShop));
+
+        registerHook(SkyPrestigeHook.class, new SkyPrestigeHook(skyShop));
     }
 
     /**

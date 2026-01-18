@@ -21,6 +21,7 @@ import com.github.lukesky19.skylib.api.gui.GUIType;
 import com.github.lukesky19.skylib.api.itemstack.ItemStackConfig;
 import com.github.lukesky19.skylib.libs.configurate.objectmapping.ConfigSerializable;
 import com.github.lukesky19.skyshop.util.ButtonType;
+import com.github.lukesky19.skyshop.util.MultiplierType;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -78,6 +79,7 @@ public record CategoryConfig(@Nullable String configVersion, @Nullable String pe
      * @param buyCommands A {@link List} of {@link String}s to execute in console when purchased.
      * @param sellCommands A {@link List} of {@link String}s to execute in console when sold.
      * @param islandSize The island size data when a transaction occurs.
+     * @param prestigeMultiplier The prestige multiplier data when a transaction occurs.
      */
     @ConfigSerializable
     public record TransactionData(
@@ -88,7 +90,8 @@ public record CategoryConfig(@Nullable String configVersion, @Nullable String pe
             @NotNull ItemStackConfig transactionItem,
             @NotNull List<String> buyCommands,
             @NotNull List<String> sellCommands,
-            @NotNull IslandSizeData islandSize) {}
+            @NotNull IslandSizeData islandSize,
+            @NotNull PrestigeMultiplierData prestigeMultiplier) {}
 
     /**
      * This record stores the data for an island size transactions.
@@ -101,6 +104,26 @@ public record CategoryConfig(@Nullable String configVersion, @Nullable String pe
             boolean setIslandSize,
             @Nullable Integer buyAmount,
             @Nullable Integer sellAmount) {}
+
+    /**
+     * This record stores the data for a prestige multiplier purchase.
+     * @param multiplierType The {@link MultiplierType} of the purchase.
+     * @param activeMultiplierPreventPurchase If the multiplier is active, prevent the purchase of another multiplier.
+     * @param activeMultiplierHigherPreventPurchase If the active multiplier is higher than the one being purchased, prevent the purchase of the multiplier.
+     * @param resetMultiplierTimeIfHigherMultiplier If the multiplier is higher than the active multiplier, should the current time be reset before adding time?
+     * @param multiplier The multiplier to purchase.
+     * @param time The multiplier time to purchase.
+     * @param maxTime The maximum time to allow purchase of. If the total time will exceed this amount, the purchase won't be allowed.
+     */
+    @ConfigSerializable
+    public record PrestigeMultiplierData(
+            @Nullable MultiplierType multiplierType,
+            boolean activeMultiplierPreventPurchase,
+            boolean activeMultiplierHigherPreventPurchase,
+            boolean resetMultiplierTimeIfHigherMultiplier,
+            @Nullable Double multiplier,
+            @Nullable Long time,
+            @Nullable Long maxTime) {}
 
     /**
      * The price configuration for a transaction.

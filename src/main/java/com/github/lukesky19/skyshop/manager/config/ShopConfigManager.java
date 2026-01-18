@@ -169,6 +169,7 @@ public class ShopConfigManager {
                 legacyTransactionData.transactionItem(),
                 legacyTransactionData.buyCommands(),
                 legacyTransactionData.sellCommands(),
-                new CategoryConfig.IslandSizeData(false, null, null));
+                new CategoryConfig.IslandSizeData(false, null, null),
+                new CategoryConfig.PrestigeMultiplierData(null, true, true, true, null, null, null));
     }
 }

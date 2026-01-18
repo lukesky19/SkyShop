@@ -71,6 +71,9 @@ public class TransactionGUI extends ChestGUI<UUID> {
     private final @NotNull List<String> sellCommands;
     // Island Size Data
     private final @NotNull CategoryConfig.IslandSizeData islandSizeData;
+    // Prestige Multiplier Data
+    private final @NotNull CategoryConfig.PrestigeMultiplierData prestigeMultiplierData;
+
     // Price Data
     private final double buyPrice;
     private final double sellPrice;
@@ -99,6 +102,7 @@ public class TransactionGUI extends ChestGUI<UUID> {
      * @param buyCommands A {@link List} of {@link String} containing the commands to execute in console when a successful buy transaction is made.
      * @param sellCommands A {@link List} of {@link String} containing the commands to execute in console when a successful sell transaction is made.
      * @param islandSizeData The island size data being purchased or sold.
+     * @param prestigeMultiplierData The prestige multiplier data being purchased or sold.
      */
     public TransactionGUI(
             @NotNull SkyShop skyShop,
@@ -117,7 +121,8 @@ public class TransactionGUI extends ChestGUI<UUID> {
             @Nullable String transactionName,
             @NotNull List<String> buyCommands,
             @NotNull List<String> sellCommands,
-            @NotNull CategoryConfig.IslandSizeData islandSizeData) {
+            @NotNull CategoryConfig.IslandSizeData islandSizeData,
+            @NotNull CategoryConfig.PrestigeMultiplierData prestigeMultiplierData) {
         super(skyShop, guiManager, player.getUniqueId(), player);
 
         this.skyShop = skyShop;
@@ -138,6 +143,7 @@ public class TransactionGUI extends ChestGUI<UUID> {
         this.sellCommands = sellCommands;
         this.transactionName = Objects.requireNonNullElse(transactionName, "");
         this.islandSizeData = islandSizeData;
+        this.prestigeMultiplierData = prestigeMultiplierData;
     }
 
     /**
@@ -508,6 +514,7 @@ public class TransactionGUI extends ChestGUI<UUID> {
             transactionManager.buyItem(player, this, transactionItemConfig, transactionName, purchaseAmount, finalBuyPrice, finalBuyPoints);
             transactionManager.buyCommand(player, this, transactionName, buyCommands, purchaseAmount, finalBuyPrice, finalBuyPoints);
             transactionManager.buyIslandSize(player, this, transactionName, islandSizeData.buyAmount(), islandSizeData.setIslandSize(), purchaseAmount, finalBuyPrice, finalBuyPoints);
+            transactionManager.buyPrestigePointsMultiplier(player, this, transactionName, prestigeMultiplierData, finalBuyPrice, finalBuyPoints);
         });
     }
 
