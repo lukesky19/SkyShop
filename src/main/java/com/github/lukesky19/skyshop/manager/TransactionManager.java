@@ -176,9 +176,6 @@ public class TransactionManager {
         EconomyHook economyHook = hookManager.getHook(EconomyHook.class);
         PlayerPointsHook playerPointsHook = hookManager.getHook(PlayerPointsHook.class);
 
-        // Validate the money and points
-        if(!validateMoneyAndPoints(locale, economyHook, playerPointsHook, player, gui, money, points)) return;
-
         // Create the ItemStack that will be taken from the player if they have enough of said ItemStack.
         @Nullable ItemStack sellItem = buildItemStack(locale, player, gui, transactionItemConfig, amount);
         if(sellItem == null) return;
