@@ -759,7 +759,6 @@ public class TransactionManager {
             int transactionAmount) {
         ItemStackBuilder itemStackBuilder = new ItemStackBuilder(logger);
         itemStackBuilder.fromItemStackConfig(itemStackConfig, player, null, List.of());
-        itemStackBuilder.setAmount(transactionAmount);
 
         Optional<ItemStack> optionalItemStack = itemStackBuilder.buildItemStack();
         if(optionalItemStack.isEmpty()) {
@@ -769,7 +768,10 @@ public class TransactionManager {
             return null;
         }
 
-        return optionalItemStack.get();
+        ItemStack itemStack = optionalItemStack.get();
+        itemStack.setAmount(transactionAmount);
+
+        return itemStack;
     }
 
     /**
