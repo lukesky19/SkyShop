@@ -1,16 +1,20 @@
 # SkyShop
 ## Description
-* A simple inventory based shop plugin.
+* SkyShop is a GUI shop plugin with sell commands, a sell GUI, nested categories, page support, and error checking.
 ## Features
-* A simple inventory based shop plugin.
+* Supports nested categories.
 * Supports multiple pages.
-* Supports buying and selling for items and commands.
+* Supports buying and selling for items, commands, and island size.
+* Supports multiple currencies.
+  * Currently, only the economy from Vault and PlayerPoints are supported.
 * Features a sellall GUI for quick selling of items.
 * Features a variety of sell commands for quick selling of items.
 * Simple stats tracking for how much of an item has been purchased or sold.
 ## Required Dependencies
 * [SkyLib](https://github.com/lukesky19/SkyLib)
-* PlaceholderAPI
+## Optional Dependencies
+* BentoBox
+* PlayerPoints
 * Vault
 ## Commands
 - /skyshop - Command to open the shop.
@@ -20,6 +24,7 @@
 - /skyshop reload - Reloads the plugin.
 - /skyshop sellall - Opens the sellall GUI.
 - /skyshop stats - Opens the stats GUI.
+- /skyshop open <category> - Opens the GUI for a specific category.
 - /sell all - Sells all items inside the player's inventory.
   - Aliases: 
     - /sell
@@ -33,7 +38,8 @@
 - `skyshop.commands.reload` - The permission to access /skyshop reload.
 - `skyshop.commands.skyshop.help` The permission to access /skyshop help.
 - `skyshop.commands.skyshop.sellall` - The permission to access the sellall GUI (/skyshop sellall).
-- - `skyshop.commands.skyshop.stats` - The permission to access the stats GUI (/skyshop stats).
+- `skyshop.commands.skyshop.stats` - The permission to access the stats GUI (/skyshop stats).
+- `skyshop.commands.skyshop.open` - The permission to open a specific shop category. (/skyshop open <category>)
 - `skyshop.commands.sell` - The permission to access the /sell command.
 - `skyshop.commands.sell.hand` - The permission to access the /sell hand command.
 - `skyshop.commands.sell.hand.all` - The permission to access the /sell hand all command.
@@ -47,7 +53,7 @@
 ## FAQ
 Q: What versions does this plugin support?
 
-A: 1.21.4, 1.21.5, 1.21.6, 1.21.7, and 1.21.8.
+A: 1.21.4, 1.21.5, 1.21.6, 1.21.7, 1.21.8, 1.21.9, 1.21.10, and 1.21.11.
 
 Q: Are there any plans to support any other versions?
 
@@ -77,7 +83,7 @@ repositories {
 
 ```koitlin
 dependencies {
-  compileOnly("com.github.lukesky19:SkyShop:2.0.0.0")
+  compileOnly("com.github.lukesky19:SkyShop:2.1.0.0")
 }
 ```
 

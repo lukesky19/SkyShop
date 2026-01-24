@@ -1,5 +1,5 @@
 /*
-    SkyShop is a simple inventory based shop plugin with page support, sell commands, and error checking.
+    SkyShop is a GUI shop plugin with sell commands, a sell GUI, nested categories, page support, and error checking.
     Copyright (C) 2024 lukeskywlker19
 
     This program is free software: you can redistribute it and/or modify
@@ -19,8 +19,8 @@ package com.github.lukesky19.skyshop.commands.arguments;
 
 import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
 import com.github.lukesky19.skyshop.SkyShop;
-import com.github.lukesky19.skyshop.configuration.LocaleManager;
-import com.github.lukesky19.skyshop.data.Locale;
+import com.github.lukesky19.skyshop.configuration.locale.Locale;
+import com.github.lukesky19.skyshop.configuration.locale.LocaleManager;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
@@ -54,12 +54,12 @@ public class ReloadCommand {
                 .executes(ctx -> {
                     skyShop.reload();
 
-                    Locale locale = localeManager.getLocale();
+                    Locale locale = localeManager.getConfiguration();
 
                     if(ctx.getSource().getSender() instanceof Player player) {
-                        player.sendMessage(AdventureUtil.serialize(player, locale.prefix() + locale.configReload()));
+                        player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.configReload()));
                     } else {
-                        skyShop.getComponentLogger().info(AdventureUtil.serialize(locale.configReload()));
+                        skyShop.getComponentLogger().info(AdventureUtil.deserialize(locale.configReload()));
                     }
 
                     return 1;

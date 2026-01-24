@@ -1,5 +1,5 @@
 /*
-    SkyShop is a simple inventory based shop plugin with page support, sell commands, and error checking.
+    SkyShop is a GUI shop plugin with sell commands, a sell GUI, nested categories, page support, and error checking.
     Copyright (C) 2024 lukeskywlker19
 
     This program is free software: you can redistribute it and/or modify
@@ -19,12 +19,12 @@ package com.github.lukesky19.skyshop.commands.arguments;
 
 import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
 import com.github.lukesky19.skylib.api.gui.GUIType;
+import com.github.lukesky19.skylib.api.gui.impl.UUIDGUIManager;
 import com.github.lukesky19.skyshop.SkyShop;
-import com.github.lukesky19.skyshop.configuration.LocaleManager;
-import com.github.lukesky19.skyshop.data.Locale;
-import com.github.lukesky19.skyshop.gui.GUIManager;
+import com.github.lukesky19.skyshop.configuration.locale.Locale;
+import com.github.lukesky19.skyshop.configuration.locale.LocaleManager;
 import com.github.lukesky19.skyshop.gui.StatsGUI;
-import com.github.lukesky19.skyshop.manager.StatsManager;
+import com.github.lukesky19.skyshop.stats.StatsManager;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
@@ -41,17 +41,17 @@ import java.util.List;
 public class StatsCommand {
     private final @NotNull SkyShop skyShop;
     private final @NotNull LocaleManager localeManager;
-    private final @NotNull GUIManager guiManager;
+    private final @NotNull UUIDGUIManager guiManager;
     private final @Nullable StatsManager statsManager;
 
     /**
      * Constructor
      * @param skyShop A {@link SkyShop} instance.
      * @param localeManager A {@link LocaleManager} instance.
-     * @param guiManager  A {@link GUIManager} instance.
+     * @param guiManager  A {@link UUIDGUIManager} instance.
      * @param statsManager A {@link StatsManager} instance.
      */
-    public StatsCommand(@NotNull SkyShop skyShop, @NotNull LocaleManager localeManager, @NotNull GUIManager guiManager, @Nullable StatsManager statsManager) {
+    public StatsCommand(@NotNull SkyShop skyShop, @NotNull LocaleManager localeManager, @NotNull UUIDGUIManager guiManager, @Nullable StatsManager statsManager) {
         this.skyShop = skyShop;
         this.localeManager = localeManager;
         this.guiManager = guiManager;
@@ -64,14 +64,14 @@ public class StatsCommand {
      */
     public LiteralCommandNode<CommandSourceStack> createCommand() {
         return Commands.literal("stats")
-            .requires(ctx -> ctx.getSender().hasPermission("skyshop.command.skyshop.stats") && ctx.getSender() instanceof Player)
+            .requires(ctx -> ctx.getSender().hasPermission("skyshop.commands.skyshop.stats") && ctx.getSender() instanceof Player)
             .executes(ctx -> {
                 Player player = (Player) ctx.getSource().getSender();
-                Locale locale = localeManager.getLocale();
+                Locale locale = localeManager.getConfiguration();
                 ComponentLogger logger = skyShop.getComponentLogger();
 
                 if(statsManager == null) {
-                    player.sendMessage(AdventureUtil.serialize(locale.prefix() + locale.statsDisabledGuiError()));
+                    player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.statsDisabledGuiError()));
                     return 0;
                 }
 
@@ -79,22 +79,22 @@ public class StatsCommand {
 
                 boolean creationResult = statsGUI.create(GUIType.CHEST_54, "<yellow><bold>Transaction Stats</bold></yellow>", List.of());
                 if(!creationResult) {
-                    logger.error(AdventureUtil.serialize("Unable to create the InventoryView for the stats GUI for player " + player.getName() + " due to a configuration error."));
-                    player.sendMessage(AdventureUtil.serialize(locale.prefix() + locale.guiOpenError()));
+                    logger.error(AdventureUtil.deserialize("Unable to create the InventoryView for the stats GUI for player " + player.getName() + " due to a configuration error."));
+                    player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.guiOpenError()));
                     return 0;
                 }
 
                 boolean updateResult = statsGUI.update();
                 if(!updateResult) {
-                    logger.error(AdventureUtil.serialize("Unable to decorate the stats GUI for player " + player.getName() + " due to a configuration error."));
-                    player.sendMessage(AdventureUtil.serialize(locale.prefix() + locale.guiOpenError()));
+                    logger.error(AdventureUtil.deserialize("Unable to decorate the stats GUI for player " + player.getName() + " due to a configuration error."));
+                    player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.guiOpenError()));
                     return 0;
                 }
 
                 boolean openResult = statsGUI.open();
                 if(!openResult) {
-                    logger.error(AdventureUtil.serialize("Unable to open the stats GUI for player " + player.getName() + " due to a configuration error."));
-                    player.sendMessage(AdventureUtil.serialize(locale.prefix() + locale.guiOpenError()));
+                    logger.error(AdventureUtil.deserialize("Unable to open the stats GUI for player " + player.getName() + " due to a configuration error."));
+                    player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.guiOpenError()));
                     return 0;
                 }
 

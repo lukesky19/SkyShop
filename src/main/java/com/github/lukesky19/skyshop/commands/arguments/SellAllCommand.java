@@ -1,5 +1,5 @@
 /*
-    SkyShop is a simple inventory based shop plugin with page support, sell commands, and error checking.
+    SkyShop is a GUI shop plugin with sell commands, a sell GUI, nested categories, page support, and error checking.
     Copyright (C) 2024 lukeskywlker19
 
     This program is free software: you can redistribute it and/or modify
@@ -18,13 +18,13 @@
 package com.github.lukesky19.skyshop.commands.arguments;
 
 import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
+import com.github.lukesky19.skylib.api.gui.impl.UUIDGUIManager;
 import com.github.lukesky19.skyshop.SkyShop;
-import com.github.lukesky19.skyshop.SkyShopAPI;
-import com.github.lukesky19.skyshop.configuration.LocaleManager;
-import com.github.lukesky19.skyshop.configuration.SellAllManager;
-import com.github.lukesky19.skyshop.data.Locale;
-import com.github.lukesky19.skyshop.data.gui.SellAllConfig;
-import com.github.lukesky19.skyshop.gui.GUIManager;
+import com.github.lukesky19.skyshop.api.SkyShopAPI;
+import com.github.lukesky19.skyshop.configuration.locale.Locale;
+import com.github.lukesky19.skyshop.configuration.locale.LocaleManager;
+import com.github.lukesky19.skyshop.configuration.sellall.SellAllConfig;
+import com.github.lukesky19.skyshop.configuration.sellall.SellAllManager;
 import com.github.lukesky19.skyshop.gui.SellAllGUI;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
@@ -33,8 +33,6 @@ import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Optional;
-
 /**
  * This class is used to create the sellall command used to sell items inside the player's inventory.
  */
@@ -42,18 +40,18 @@ public class SellAllCommand {
     private final @NotNull SkyShop skyShop;
     private final @NotNull LocaleManager localeManager;
     private final @NotNull SellAllManager sellAllManager;
-    private final @NotNull GUIManager guiManager;
+    private final @NotNull UUIDGUIManager guiManager;
     private final @NotNull SkyShopAPI skyShopAPI;
 
     /**
      * Constructor
      * @param skyShop A {@link SkyShop} instance.
      * @param localeManager A {@link LocaleManager} instance.
-     * @param guiManager  A {@link GUIManager} instance.
+     * @param guiManager  A {@link UUIDGUIManager} instance.
      * @param sellAllManager A {@link SellAllManager} instance.
      * @param skyShopAPI A {@link SkyShopAPI} instance.
      */
-    public SellAllCommand(@NotNull SkyShop skyShop, @NotNull LocaleManager localeManager, @NotNull GUIManager guiManager, @NotNull SellAllManager sellAllManager, @NotNull SkyShopAPI skyShopAPI) {
+    public SellAllCommand(@NotNull SkyShop skyShop, @NotNull LocaleManager localeManager, @NotNull UUIDGUIManager guiManager, @NotNull SellAllManager sellAllManager, @NotNull SkyShopAPI skyShopAPI) {
         this.skyShop = skyShop;
         this.localeManager = localeManager;
         this.guiManager = guiManager;
@@ -70,37 +68,35 @@ public class SellAllCommand {
                 .requires(ctx -> ctx.getSender().hasPermission("skyshop.commands.skyshop.sellall") && ctx.getSender() instanceof Player)
                 .executes(ctx -> {
                     Player player = (Player) ctx.getSource().getSender();
-                    Locale locale = localeManager.getLocale();
+                    Locale locale = localeManager.getConfiguration();
                     ComponentLogger logger = skyShop.getComponentLogger();
 
-                    @NotNull Optional<@NotNull SellAllConfig> optionalSellAllConfig = sellAllManager.getSellAllGuiConfig();
-                    if(optionalSellAllConfig.isEmpty()) {
-                        logger.error(AdventureUtil.serialize("Unable to open the sell all GUI for player " + player.getName() + " due to a configuration error."));
-                        player.sendMessage(AdventureUtil.serialize(locale.prefix() + locale.guiOpenError()));
+                    SellAllConfig sellAllConfig = sellAllManager.getConfiguration();
+                    if(sellAllConfig == null) {
+                        logger.error(AdventureUtil.deserialize("Unable to open the sell all GUI for player " + player.getName() + " due to a configuration error."));
+                        player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.guiOpenError()));
                         return 0;
                     }
-
-                    SellAllConfig sellAllConfig  = optionalSellAllConfig.get();
                     SellAllGUI gui = new SellAllGUI(skyShop, guiManager, sellAllConfig, skyShopAPI, player);
 
                     boolean creationResult = gui.create();
                     if(!creationResult) {
-                        logger.error(AdventureUtil.serialize("Unable to create the InventoryView for the sell all GUI for player " + player.getName() + " due to a configuration error."));
-                        player.sendMessage(AdventureUtil.serialize(locale.prefix() + locale.guiOpenError()));
+                        logger.error(AdventureUtil.deserialize("Unable to create the InventoryView for the sell all GUI for player " + player.getName() + " due to a configuration error."));
+                        player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.guiOpenError()));
                         return 0;
                     }
 
                     boolean updateResult = gui.update();
                     if(!updateResult) {
-                        logger.error(AdventureUtil.serialize("Unable to decorate the sell all GUI for player " + player.getName() + " due to a configuration error."));
-                        player.sendMessage(AdventureUtil.serialize(locale.prefix() + locale.guiOpenError()));
+                        logger.error(AdventureUtil.deserialize("Unable to decorate the sell all GUI for player " + player.getName() + " due to a configuration error."));
+                        player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.guiOpenError()));
                         return 0;
                     }
 
                     boolean openResult = gui.open();
                     if(!openResult) {
-                        logger.error(AdventureUtil.serialize("Unable to open the sell all GUI for player " + player.getName() + " due to a configuration error."));
-                        player.sendMessage(AdventureUtil.serialize(locale.prefix() + locale.guiOpenError()));
+                        logger.error(AdventureUtil.deserialize("Unable to open the sell all GUI for player " + player.getName() + " due to a configuration error."));
+                        player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.guiOpenError()));
                         return 0;
                     }
 

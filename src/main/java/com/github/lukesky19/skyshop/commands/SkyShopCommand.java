@@ -1,5 +1,5 @@
 /*
-    SkyShop is a simple inventory based shop plugin with page support, sell commands, and error checking.
+    SkyShop is a GUI shop plugin with sell commands, a sell GUI, nested categories, page support, and error checking.
     Copyright (C) 2024 lukeskywlker19
 
     This program is free software: you can redistribute it and/or modify
@@ -18,18 +18,20 @@
 package com.github.lukesky19.skyshop.commands;
 
 import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
+import com.github.lukesky19.skylib.api.gui.impl.UUIDGUIManager;
 import com.github.lukesky19.skyshop.SkyShop;
-import com.github.lukesky19.skyshop.SkyShopAPI;
-import com.github.lukesky19.skyshop.commands.arguments.HelpCommand;
-import com.github.lukesky19.skyshop.commands.arguments.ReloadCommand;
-import com.github.lukesky19.skyshop.commands.arguments.SellAllCommand;
-import com.github.lukesky19.skyshop.commands.arguments.StatsCommand;
-import com.github.lukesky19.skyshop.configuration.*;
-import com.github.lukesky19.skyshop.data.Locale;
-import com.github.lukesky19.skyshop.data.gui.MenuConfig;
-import com.github.lukesky19.skyshop.gui.GUIManager;
-import com.github.lukesky19.skyshop.gui.MenuGUI;
-import com.github.lukesky19.skyshop.manager.StatsManager;
+import com.github.lukesky19.skyshop.api.SkyShopAPI;
+import com.github.lukesky19.skyshop.commands.arguments.*;
+import com.github.lukesky19.skyshop.configuration.category.CategoryConfigManager;
+import com.github.lukesky19.skyshop.configuration.category.gui.CategoryConfig;
+import com.github.lukesky19.skyshop.configuration.locale.Locale;
+import com.github.lukesky19.skyshop.configuration.locale.LocaleManager;
+import com.github.lukesky19.skyshop.configuration.sellall.SellAllManager;
+import com.github.lukesky19.skyshop.configuration.transaction.TransactionStyleConfigManager;
+import com.github.lukesky19.skyshop.gui.CategoryGUI;
+import com.github.lukesky19.skyshop.hook.HookManager;
+import com.github.lukesky19.skyshop.registry.RegistryManager;
+import com.github.lukesky19.skyshop.stats.StatsManager;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
@@ -39,52 +41,54 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Optional;
-
 /**
  * This class is used to create the main skyshop command.
  */
 public class SkyShopCommand {
     private final @NotNull SkyShop skyShop;
     private final @NotNull LocaleManager localeManager;
-    private final @NotNull MenuManager menuManager;
-    private final @NotNull ShopManager shopManager;
-    private final @NotNull TransactionManager transactionManager;
+    private final @NotNull CategoryConfigManager categoryConfigManager;
+    private final @NotNull TransactionStyleConfigManager transactionStyleConfigManager;
+    private final @NotNull RegistryManager registryManager;
     private final @NotNull SellAllManager sellAllManager;
     private final @Nullable StatsManager statsManager;
-    private final @NotNull GUIManager guiManager;
+    private final @NotNull HookManager hookManager;
+    private final @NotNull UUIDGUIManager guiManager;
     private final @NotNull SkyShopAPI skyShopAPI;
 
     /**
      * Constructor
      * @param skyShop A {@link SkyShop} instance
-     * @param guiManager A {@link GUIManager} instance.
+     * @param guiManager A {@link UUIDGUIManager} instance.
      * @param localeManager A {@link LocaleManager} instance.
-     * @param menuManager A {@link MenuManager} instance.
-     * @param shopManager A {@link ShopManager} instance.
-     * @param transactionManager A {@link TransactionManager} instance.
+     * @param categoryConfigManager A {@link CategoryConfigManager} instance.
+     * @param transactionStyleConfigManager A {@link TransactionStyleConfigManager} instance.
+     * @param registryManager A {@link RegistryManager} instance.
      * @param sellAllManager A {@link SellAllManager} instance.
      * @param statsManager A {@link StatsManager} instance.
+     * @param hookManager A {@link HookManager} instance.
      * @param skyShopAPI A {@link SkyShopAPI} instance.
      */
     public SkyShopCommand(
             @NotNull SkyShop skyShop,
-            @NotNull GUIManager guiManager,
+            @NotNull UUIDGUIManager guiManager,
             @NotNull LocaleManager localeManager,
-            @NotNull MenuManager menuManager,
-            @NotNull ShopManager shopManager,
-            @NotNull TransactionManager transactionManager,
+            @NotNull CategoryConfigManager categoryConfigManager,
+            @NotNull TransactionStyleConfigManager transactionStyleConfigManager,
+            @NotNull RegistryManager registryManager,
             @NotNull SellAllManager sellAllManager,
             @Nullable StatsManager statsManager,
+            @NotNull HookManager hookManager,
             @NotNull SkyShopAPI skyShopAPI) {
         this.skyShop = skyShop;
         this.localeManager = localeManager;
-        this.menuManager = menuManager;
-        this.shopManager = shopManager;
-        this.transactionManager = transactionManager;
+        this.categoryConfigManager = categoryConfigManager;
+        this.transactionStyleConfigManager = transactionStyleConfigManager;
+        this.registryManager = registryManager;
         this.sellAllManager = sellAllManager;
         this.statsManager = statsManager;
         this.guiManager = guiManager;
+        this.hookManager = hookManager;
         this.skyShopAPI = skyShopAPI;
     }
 
@@ -96,55 +100,56 @@ public class SkyShopCommand {
         LiteralArgumentBuilder<CommandSourceStack> builder = Commands.literal("skyshop");
         builder.requires(ctx -> ctx.getSender().hasPermission("skyshop.commands.skyshop"));
         builder.executes(ctx -> {
-            Locale locale = localeManager.getLocale();
+            Locale locale = localeManager.getConfiguration();
             ComponentLogger logger = skyShop.getComponentLogger();
 
             if (ctx.getSource().getSender() instanceof Player player) {
-                Optional<MenuConfig> optionalMenuConfig = menuManager.getMenuConfig();
-                if(optionalMenuConfig.isPresent()) {
-                    MenuConfig menuConfig = optionalMenuConfig.get();
-                    MenuGUI menuGUI = new MenuGUI(skyShop, guiManager, player, localeManager, shopManager, transactionManager, sellAllManager, statsManager, skyShopAPI, menuConfig);
+                CategoryConfig menuConfig = categoryConfigManager.getConfiguration("menu");
+                if(menuConfig != null) {
+                    CategoryGUI menuGUI = new CategoryGUI(skyShop, guiManager, player, localeManager, categoryConfigManager, transactionStyleConfigManager, registryManager, sellAllManager, statsManager, hookManager, skyShopAPI, null, menuConfig, "menu");
 
                     boolean creationResult = menuGUI.create();
                     if(!creationResult) {
-                        logger.error(AdventureUtil.serialize("Unable to create the InventoryView for the menu GUI for player " + player.getName() + " due to a configuration error."));
-                        player.sendMessage(AdventureUtil.serialize(locale.prefix() + locale.guiOpenError()));
+                        logger.error(AdventureUtil.deserialize("Unable to create the InventoryView for the menu GUI for player " + player.getName() + " due to a configuration error."));
+                        player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.guiOpenError()));
                         return 0;
                     }
 
                     boolean updateResult = menuGUI.update();
                     if(!updateResult) {
-                        logger.error(AdventureUtil.serialize("Unable to decorate the menu GUI for player " + player.getName() + " due to a configuration error."));
-                        player.sendMessage(AdventureUtil.serialize(locale.prefix() + locale.guiOpenError()));
+                        logger.error(AdventureUtil.deserialize("Unable to decorate the menu GUI for player " + player.getName() + " due to a configuration error."));
+                        player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.guiOpenError()));
                         return 0;
                     }
 
                     boolean openResult = menuGUI.open();
                     if(!openResult) {
-                        logger.error(AdventureUtil.serialize("Unable to open the menu GUI for player " + player.getName() + " due to a configuration error."));
-                        player.sendMessage(AdventureUtil.serialize(locale.prefix() + locale.guiOpenError()));
+                        logger.error(AdventureUtil.deserialize("Unable to open the menu GUI for player " + player.getName() + " due to a configuration error."));
+                        player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.guiOpenError()));
                         return 0;
                     }
 
                     return 1;
                 } else {
-                    player.sendMessage(AdventureUtil.serialize(locale.prefix() + locale.guiOpenError()));
+                    player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.guiOpenError()));
 
                     return 0;
                 }
             } else {
-                skyShop.getComponentLogger().info(AdventureUtil.serialize(locale.inGameOnly()));
+                skyShop.getComponentLogger().info(AdventureUtil.deserialize(locale.inGameOnly()));
 
                 return 0;
             }
         });
 
         HelpCommand helpCommand = new HelpCommand(skyShop, localeManager);
+        OpenCommand openCommand = new OpenCommand(skyShop, guiManager, localeManager, categoryConfigManager, transactionStyleConfigManager, registryManager, sellAllManager, statsManager, hookManager, skyShopAPI);
         ReloadCommand reloadCommand = new ReloadCommand(skyShop, localeManager);
         SellAllCommand sellAllCommand = new SellAllCommand(skyShop, localeManager, guiManager, sellAllManager, skyShopAPI);
         StatsCommand statsCommand = new StatsCommand(skyShop, localeManager, guiManager, statsManager);
 
         builder.then(helpCommand.createCommand());
+        builder.then(openCommand.createCommand());
         builder.then(reloadCommand.createCommand());
         builder.then(sellAllCommand.createCommand());
         builder.then(statsCommand.createCommand());

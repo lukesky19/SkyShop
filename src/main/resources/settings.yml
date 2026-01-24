@@ -7,3 +7,5 @@ locale: en_US
 # When true, this will save the number of items bought and sold per ItemType.
 # A full server restart is required when changing this from true -> false or false -> true.
 statistics: false
+# The maximum size an island can be from island size purchases. This is the radius of an island. I.e., 15 = 30x30.
+island-size-limit: 100

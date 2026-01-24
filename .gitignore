@@ -1,5 +1,4 @@
 # Project exclude paths
 /.gradle/
 /build
-/Core/build
-/v1_20_R4/build
+/jars/

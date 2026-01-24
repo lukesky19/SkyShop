@@ -4,7 +4,9 @@ main: com.github.lukesky19.skyshop.SkyShop
 api-version: '1.21'
 author: lukeskywlker19
 description: A graphical shop plugin
-depend: [SkyLib, Vault]
+depend: [SkyLib]
+
+soft-depend: [BentoBox, PlayerPoints, Vault]
 
 permissions:
   skyshop.commands.skyshop:
@@ -22,7 +24,7 @@ permissions:
   skyshop.commands.skyshop.sellall:
     description: Permission to access the /shop sellall GUI.
     default: op
-  skyshop.command.skyshop.stats:
+  skyshop.commands.skyshop.stats:
     description: Permission to access the /shop stats GUI.
     default: op
   skyshop.commands.sell:
