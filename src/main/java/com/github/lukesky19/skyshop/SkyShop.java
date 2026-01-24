@@ -22,14 +22,29 @@ import com.github.lukesky19.skylib.api.common.abstracts.SkyPlugin;
 import com.github.lukesky19.skylib.api.gui.impl.UUIDGUIListener;
 import com.github.lukesky19.skylib.api.gui.impl.UUIDGUIManager;
 import com.github.lukesky19.skylib.libs.bstats.bukkit.Metrics;
+import com.github.lukesky19.skyshop.api.SkyShopAPI;
 import com.github.lukesky19.skyshop.commands.SellCommand;
 import com.github.lukesky19.skyshop.commands.SkyShopCommand;
-import com.github.lukesky19.skyshop.config.settings.Settings;
+import com.github.lukesky19.skyshop.configuration.category.CategoryConfigManager;
+import com.github.lukesky19.skyshop.configuration.category.serializer.CommandConfigurationSerializer;
+import com.github.lukesky19.skyshop.configuration.category.serializer.IslandSizeConfigurationSerializer;
+import com.github.lukesky19.skyshop.configuration.category.serializer.ItemConfigurationSerializer;
+import com.github.lukesky19.skyshop.configuration.locale.LocaleManager;
+import com.github.lukesky19.skyshop.configuration.sellall.SellAllManager;
+import com.github.lukesky19.skyshop.configuration.settings.Settings;
+import com.github.lukesky19.skyshop.configuration.settings.SettingsManager;
+import com.github.lukesky19.skyshop.configuration.transaction.TransactionStyleConfigManager;
 import com.github.lukesky19.skyshop.database.ConnectionManager;
 import com.github.lukesky19.skyshop.database.DatabaseManager;
 import com.github.lukesky19.skyshop.database.QueueManager;
-import com.github.lukesky19.skyshop.manager.*;
-import com.github.lukesky19.skyshop.manager.config.*;
+import com.github.lukesky19.skyshop.hook.HookManager;
+import com.github.lukesky19.skyshop.prices.PriceManager;
+import com.github.lukesky19.skyshop.registry.RegistryManager;
+import com.github.lukesky19.skyshop.stats.StatsManager;
+import com.github.lukesky19.skyshop.task.TaskManager;
+import com.github.lukesky19.skyshop.transaction.CommandDataProcessor;
+import com.github.lukesky19.skyshop.transaction.IslandSizeProcessor;
+import com.github.lukesky19.skyshop.transaction.ItemStackProcessor;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
@@ -46,10 +61,8 @@ public final class SkyShop extends SkyPlugin {
     // Class Instances
     private SettingsManager settingsManager;
     private LocaleManager localeManager;
-    private MenuConfigManager menuConfigManager;
-    private ShopConfigManager shopConfigManager;
     private CategoryConfigManager categoryConfigManager;
-    private TransactionConfigManager transactionConfigManager;
+    private TransactionStyleConfigManager transactionStyleConfigManager;
     private SellAllManager sellAllManager;
     private DatabaseManager databaseManager;
     private StatsManager statsManager;
@@ -72,20 +85,24 @@ public final class SkyShop extends SkyPlugin {
         // Set up bstats.
         setupBStats();
 
-        // Set up configuration manager classes
-        settingsManager = new SettingsManager(this);
-        localeManager = new LocaleManager(this, this.settingsManager);
-        PriceManager priceManager = new PriceManager(this);
-        menuConfigManager = new MenuConfigManager(this);
-        shopConfigManager = new ShopConfigManager(this);
-        categoryConfigManager = new CategoryConfigManager(this, settingsManager, priceManager);
-        transactionConfigManager = new TransactionConfigManager(this);
-        sellAllManager = new SellAllManager(this);
+        // Create the RegistryManager
+        RegistryManager registryManager = new RegistryManager();
 
         // Setup HookManager / Hooks
         HookManager hookManager = new HookManager(this);
 
-        TransactionManager transactionManager = new TransactionManager(this, settingsManager, localeManager, hookManager, statsManager);
+        // Set up configuration manager classes
+        settingsManager = new SettingsManager(this);
+        localeManager = new LocaleManager(this, this.settingsManager);
+        PriceManager priceManager = new PriceManager(this);
+        categoryConfigManager = new CategoryConfigManager(this, settingsManager, priceManager, registryManager);
+        transactionStyleConfigManager = new TransactionStyleConfigManager(this);
+        sellAllManager = new SellAllManager(this);
+
+        // Register SkyShop serializers and processors
+        registryManager.register("skyshop:item", new ItemConfigurationSerializer(), new ItemStackProcessor(this, localeManager, statsManager));
+        registryManager.register("skyshop:commands", new CommandConfigurationSerializer(), new CommandDataProcessor(this));
+        registryManager.register("skyshop:island_size", new IslandSizeConfigurationSerializer(), new IslandSizeProcessor(settingsManager, localeManager, hookManager));
 
         // Create the gui manager class
         guiManager = new UUIDGUIManager();
@@ -93,37 +110,12 @@ public final class SkyShop extends SkyPlugin {
         // Register listeners
         this.getServer().getPluginManager().registerEvents(new UUIDGUIListener(guiManager), this);
 
-        // Reload the plugin data
-        reload();
-
-        // Get the plugin's settings and whether or not statistics should be tracked.
-        @Nullable Settings settings = settingsManager.getConfiguration();
-        boolean statistics = Objects.requireNonNullElse(settings != null ? settings.statistics() : null, false);
-
-        // If statistics are to be tracked, setup the ConnectionManager, QueueManager, DatabaseManager, StatsManager, TaskManager, and start the save stats task.
-        if(statistics) {
-            // Setup database related classes classes.
-            ConnectionManager connectionManager = new ConnectionManager(this);
-            QueueManager queueManager = new QueueManager(connectionManager);
-            databaseManager = new DatabaseManager(this, connectionManager, queueManager);
-
-            // Setup the stats manager class.
-            statsManager = new StatsManager(this.getComponentLogger(), databaseManager);
-            // Loads stats from the database
-            statsManager.loadStats();
-
-            // Setup the task manager class.
-            taskManager = new TaskManager(this, statsManager);
-            // Start the save stats task.
-            taskManager.startSaveStatsTask();
-        }
-
         // Create and register the SkyShopAPI
-        SkyShopAPI skyShopAPI = new SkyShopAPI(this, localeManager, priceManager, statsManager, hookManager);
+        SkyShopAPI skyShopAPI = new SkyShopAPI(this, localeManager, priceManager, statsManager, hookManager, registryManager);
         this.getServer().getServicesManager().register(SkyShopAPI.class, skyShopAPI, this, ServicePriority.Lowest);
 
         // Register commands
-        SkyShopCommand skyShopCommand = new SkyShopCommand(this, guiManager, localeManager, categoryConfigManager, transactionConfigManager, transactionManager, sellAllManager, statsManager, hookManager, skyShopAPI);
+        SkyShopCommand skyShopCommand = new SkyShopCommand(this, guiManager, localeManager, categoryConfigManager, transactionStyleConfigManager, registryManager, sellAllManager, statsManager, hookManager, skyShopAPI);
         SellCommand sellCommand = new SellCommand(skyShopAPI);
 
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, commands -> {
@@ -133,6 +125,34 @@ public final class SkyShop extends SkyPlugin {
             commands.registrar().register(sellCommand.createCommand(),
                     "Command to use the sell command.");
         });
+
+        // Final initialization is delayed until all plugins get the chance to register serializers and processors.
+        this.getServer().getScheduler().runTaskLater(this, () -> {
+            // Reload the plugin data
+            reload();
+
+            // Get the plugin's settings and whether or not statistics should be tracked.
+            @Nullable Settings settings = settingsManager.getConfiguration();
+            boolean statistics = Objects.requireNonNullElse(settings != null ? settings.statistics() : null, false);
+
+            // If statistics are to be tracked, setup the ConnectionManager, QueueManager, DatabaseManager, StatsManager, TaskManager, and start the save stats task.
+            if(statistics) {
+                // Setup database related classes classes.
+                ConnectionManager connectionManager = new ConnectionManager(this);
+                QueueManager queueManager = new QueueManager(connectionManager);
+                databaseManager = new DatabaseManager(this, connectionManager, queueManager);
+
+                // Setup the stats manager class.
+                statsManager = new StatsManager(this.getComponentLogger(), databaseManager);
+                // Loads stats from the database
+                statsManager.loadStats();
+
+                // Setup the task manager class.
+                taskManager = new TaskManager(this, statsManager);
+                // Start the save stats task.
+                taskManager.startSaveStatsTask();
+            }
+        }, 1L);
     }
 
     @Override
@@ -167,12 +187,10 @@ public final class SkyShop extends SkyPlugin {
         guiManager.closeOpenGUIs(false);
 
         this.settingsManager.loadConfiguration();
-        this.localeManager.reload();
-        this.menuConfigManager.migrate();
-        this.shopConfigManager.migrate();
-        this.categoryConfigManager.reload();
-        this.transactionConfigManager.reload();
-        this.sellAllManager.reload();
+        this.localeManager.loadConfiguration();
+        this.categoryConfigManager.loadConfigurations();
+        this.transactionStyleConfigManager.reload();
+        this.sellAllManager.loadConfiguration();
     }
 
     /**

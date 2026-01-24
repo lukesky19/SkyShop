@@ -17,7 +17,7 @@
 */
 package com.github.lukesky19.skyshop.commands;
 
-import com.github.lukesky19.skyshop.SkyShopAPI;
+import com.github.lukesky19.skyshop.api.SkyShopAPI;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import io.papermc.paper.command.brigadier.CommandSourceStack;

@@ -20,20 +20,18 @@ package com.github.lukesky19.skyshop.commands.arguments;
 import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
 import com.github.lukesky19.skylib.api.gui.impl.UUIDGUIManager;
 import com.github.lukesky19.skyshop.SkyShop;
-import com.github.lukesky19.skyshop.SkyShopAPI;
-import com.github.lukesky19.skyshop.config.gui.SellAllConfig;
-import com.github.lukesky19.skyshop.config.locale.Locale;
+import com.github.lukesky19.skyshop.api.SkyShopAPI;
+import com.github.lukesky19.skyshop.configuration.locale.Locale;
+import com.github.lukesky19.skyshop.configuration.locale.LocaleManager;
+import com.github.lukesky19.skyshop.configuration.sellall.SellAllConfig;
+import com.github.lukesky19.skyshop.configuration.sellall.SellAllManager;
 import com.github.lukesky19.skyshop.gui.SellAllGUI;
-import com.github.lukesky19.skyshop.manager.config.LocaleManager;
-import com.github.lukesky19.skyshop.manager.config.SellAllManager;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.Optional;
 
 /**
  * This class is used to create the sellall command used to sell items inside the player's inventory.
@@ -70,17 +68,15 @@ public class SellAllCommand {
                 .requires(ctx -> ctx.getSender().hasPermission("skyshop.commands.skyshop.sellall") && ctx.getSender() instanceof Player)
                 .executes(ctx -> {
                     Player player = (Player) ctx.getSource().getSender();
-                    Locale locale = localeManager.getLocale();
+                    Locale locale = localeManager.getConfiguration();
                     ComponentLogger logger = skyShop.getComponentLogger();
 
-                    @NotNull Optional<@NotNull SellAllConfig> optionalSellAllConfig = sellAllManager.getSellAllGuiConfig();
-                    if(optionalSellAllConfig.isEmpty()) {
+                    SellAllConfig sellAllConfig = sellAllManager.getConfiguration();
+                    if(sellAllConfig == null) {
                         logger.error(AdventureUtil.deserialize("Unable to open the sell all GUI for player " + player.getName() + " due to a configuration error."));
                         player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.guiOpenError()));
                         return 0;
                     }
-
-                    SellAllConfig sellAllConfig  = optionalSellAllConfig.get();
                     SellAllGUI gui = new SellAllGUI(skyShop, guiManager, sellAllConfig, skyShopAPI, player);
 
                     boolean creationResult = gui.create();

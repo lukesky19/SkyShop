@@ -25,17 +25,17 @@ import com.github.lukesky19.skylib.api.gui.templates.ChestGUI;
 import com.github.lukesky19.skylib.api.itemstack.ItemStackBuilder;
 import com.github.lukesky19.skylib.api.itemstack.ItemStackConfig;
 import com.github.lukesky19.skyshop.SkyShop;
-import com.github.lukesky19.skyshop.SkyShopAPI;
-import com.github.lukesky19.skyshop.config.gui.CategoryConfig;
-import com.github.lukesky19.skyshop.config.gui.TransactionConfig;
-import com.github.lukesky19.skyshop.config.locale.Locale;
-import com.github.lukesky19.skyshop.manager.HookManager;
-import com.github.lukesky19.skyshop.manager.StatsManager;
-import com.github.lukesky19.skyshop.manager.TransactionManager;
-import com.github.lukesky19.skyshop.manager.config.CategoryConfigManager;
-import com.github.lukesky19.skyshop.manager.config.LocaleManager;
-import com.github.lukesky19.skyshop.manager.config.SellAllManager;
-import com.github.lukesky19.skyshop.manager.config.TransactionConfigManager;
+import com.github.lukesky19.skyshop.api.SkyShopAPI;
+import com.github.lukesky19.skyshop.configuration.category.CategoryConfigManager;
+import com.github.lukesky19.skyshop.configuration.category.gui.CategoryConfig;
+import com.github.lukesky19.skyshop.configuration.locale.Locale;
+import com.github.lukesky19.skyshop.configuration.locale.LocaleManager;
+import com.github.lukesky19.skyshop.configuration.sellall.SellAllManager;
+import com.github.lukesky19.skyshop.configuration.transaction.TransactionStyleConfig;
+import com.github.lukesky19.skyshop.configuration.transaction.TransactionStyleConfigManager;
+import com.github.lukesky19.skyshop.hook.HookManager;
+import com.github.lukesky19.skyshop.registry.RegistryManager;
+import com.github.lukesky19.skyshop.stats.StatsManager;
 import com.github.lukesky19.skyshop.util.ButtonType;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
@@ -58,8 +58,8 @@ public class CategoryGUI extends ChestGUI<UUID> {
     private final @NotNull SkyShop skyShop;
     private final @NotNull LocaleManager localeManager;
     private final @NotNull CategoryConfigManager categoryConfigManager;
-    private final @NotNull TransactionConfigManager transactionConfigManager;
-    private final @NotNull TransactionManager transactionManager;
+    private final @NotNull TransactionStyleConfigManager transactionStyleConfigManager;
+    private final @NotNull RegistryManager registryManager;
     private final @NotNull SellAllManager sellAllManager;
     private final @Nullable StatsManager statsManager;
     private final @NotNull HookManager hookManager;
@@ -79,8 +79,8 @@ public class CategoryGUI extends ChestGUI<UUID> {
      * @param player The {@link Player} viewing the GUI/Inventory.
      * @param localeManager A {@link LocaleManager} instance.
      * @param categoryConfigManager A {@link CategoryConfigManager} instance.
-     * @param transactionConfigManager A {@link TransactionConfigManager} instance.
-     * @param transactionManager A {@link TransactionManager} instance.
+     * @param transactionStyleConfigManager A {@link TransactionStyleConfigManager} instance.
+     * @param registryManager A {@link RegistryManager} instance.
      * @param sellAllManager A {@link SellAllManager} instance.
      * @param statsManager A {@link StatsManager} instance.
      * @param hookManager A {@link HookManager} instance.
@@ -95,8 +95,8 @@ public class CategoryGUI extends ChestGUI<UUID> {
             @NotNull Player player,
             @NotNull LocaleManager localeManager,
             @NotNull CategoryConfigManager categoryConfigManager,
-            @NotNull TransactionConfigManager transactionConfigManager,
-            @NotNull TransactionManager transactionManager,
+            @NotNull TransactionStyleConfigManager transactionStyleConfigManager,
+            @NotNull RegistryManager registryManager,
             @NotNull SellAllManager sellAllManager,
             @Nullable StatsManager statsManager,
             @NotNull HookManager hookManager,
@@ -109,8 +109,8 @@ public class CategoryGUI extends ChestGUI<UUID> {
         this.skyShop = skyShop;
         this.localeManager = localeManager;
         this.categoryConfigManager = categoryConfigManager;
-        this.transactionConfigManager = transactionConfigManager;
-        this.transactionManager = transactionManager;
+        this.transactionStyleConfigManager = transactionStyleConfigManager;
+        this.registryManager = registryManager;
         this.sellAllManager = sellAllManager;
         this.statsManager = statsManager;
         this.hookManager = hookManager;
@@ -125,13 +125,13 @@ public class CategoryGUI extends ChestGUI<UUID> {
      * @return true if created successfully, otherwise false.
      */
     public boolean create() {
-        GUIType guiType = categoryConfig.gui().guiType();
+        GUIType guiType = categoryConfig.guiType();
         if(guiType == null) {
             logger.warn(AdventureUtil.deserialize("Unable to create the InventoryView for a ShopGUI due to an invalid GUIType"));
             return false;
         }
 
-        String guiName = Objects.requireNonNullElse(categoryConfig.gui().name(), "");
+        String guiName = Objects.requireNonNullElse(categoryConfig.guiName(), "");
 
         return create(guiType, guiName, List.of());
     }
@@ -192,7 +192,7 @@ public class CategoryGUI extends ChestGUI<UUID> {
      */
     @Override
     public boolean update() {
-        Locale locale = localeManager.getLocale();
+        Locale locale = localeManager.getConfiguration();
 
         // If the InventoryView was not created, log a warning and return false.
         if(inventoryView == null) {
@@ -207,7 +207,7 @@ public class CategoryGUI extends ChestGUI<UUID> {
         clearButtons();
 
         // Check if at least 1 page is configured.
-        List<CategoryConfig.PageConfig> pages = categoryConfig.gui().pages();
+        List<CategoryConfig.PageConfig> pages = categoryConfig.pages();
         if(pages.isEmpty()) {
             logger.error(AdventureUtil.deserialize("Unable to decorate the shop GUI for file " + shopName + ".yml due to no pages configured."));
             return false;
@@ -412,14 +412,14 @@ public class CategoryGUI extends ChestGUI<UUID> {
                             }
 
                             // Get the TransactionConfig for the transaction style and check if it is valid
-                            @NotNull Optional<TransactionConfig> optionalTransactionConfig = transactionConfigManager.getTransactionConfig(transactionStyle);
+                            @NotNull Optional<TransactionStyleConfig> optionalTransactionConfig = transactionStyleConfigManager.getTransactionConfig(transactionStyle);
                             if(optionalTransactionConfig.isEmpty()) {
                                 logger.error(AdventureUtil.deserialize("Unable to open transaction GUI for player " + player.getName() + " due to no transaction style config found for " + transactionStyle + "."));
                                 player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.guiOpenError()));
                                 if(isOpen) close();
                                 return;
                             }
-                            TransactionConfig transactionConfig = optionalTransactionConfig.get();
+                            TransactionStyleConfig transactionConfig = optionalTransactionConfig.get();
 
                             TransactionGUI transactionGUI = new TransactionGUI(
                                     skyShop,
@@ -427,19 +427,16 @@ public class CategoryGUI extends ChestGUI<UUID> {
                                     player,
                                     localeManager,
                                     sellAllManager,
-                                    transactionManager,
+                                    registryManager,
+                                    hookManager,
                                     skyShopAPI,
                                     this,
                                     transactionStyle,
                                     transactionConfig,
                                     transactionData.displayItem(),
-                                    transactionData.transactionItem(),
                                     transactionData.prices(),
                                     transactionName,
-                                    transactionData.buyCommands(),
-                                    transactionData.sellCommands(),
-                                    transactionData.islandSize(),
-                                    transactionData.prestigeMultiplier());
+                                    transactionData.transactionList());
 
                             boolean creationResult = transactionGUI.create();
                             if(!creationResult) {
@@ -502,15 +499,14 @@ public class CategoryGUI extends ChestGUI<UUID> {
                                 return;
                             }
 
-                            @NotNull Optional<CategoryConfig> optionalCategoryConfig = categoryConfigManager.getCategoryConfig(shopName);
-                            if(optionalCategoryConfig.isEmpty()) {
+                            CategoryConfig categoryConfig = categoryConfigManager.getConfiguration(shopName);
+                            if(categoryConfig == null) {
                                 logger.error(AdventureUtil.deserialize("Unable to open shop GUI " + shopName + " for player " + player.getName() + " due to no configuration found for shop name " + shopName + "."));
                                 player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.guiOpenError()));
                                 if(isOpen) close();
                                 return;
                             }
 
-                            CategoryConfig categoryConfig = optionalCategoryConfig.get();
                             if(categoryConfig.permission() != null) {
                                 if(!player.hasPermission(categoryConfig.permission())) {
                                     player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.categoryNoPermission()));
@@ -518,7 +514,7 @@ public class CategoryGUI extends ChestGUI<UUID> {
                                 }
                             }
 
-                            CategoryGUI categoryGUI = new CategoryGUI(skyShop, guiManager, player, localeManager, categoryConfigManager, transactionConfigManager, transactionManager, sellAllManager, statsManager, hookManager, skyShopAPI, this, categoryConfig, shopName);
+                            CategoryGUI categoryGUI = new CategoryGUI(skyShop, guiManager, player, localeManager, categoryConfigManager, transactionStyleConfigManager, registryManager, sellAllManager, statsManager, hookManager, skyShopAPI, this, categoryConfig, shopName);
 
                             boolean creationResult = categoryGUI.create();
                             if(!creationResult) {

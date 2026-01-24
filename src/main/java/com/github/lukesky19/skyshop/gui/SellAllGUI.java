@@ -26,8 +26,8 @@ import com.github.lukesky19.skylib.api.gui.templates.ChestGUI;
 import com.github.lukesky19.skylib.api.itemstack.ItemStackBuilder;
 import com.github.lukesky19.skylib.api.itemstack.ItemStackConfig;
 import com.github.lukesky19.skyshop.SkyShop;
-import com.github.lukesky19.skyshop.SkyShopAPI;
-import com.github.lukesky19.skyshop.config.gui.SellAllConfig;
+import com.github.lukesky19.skyshop.api.SkyShopAPI;
+import com.github.lukesky19.skyshop.configuration.sellall.SellAllConfig;
 import com.github.lukesky19.skyshop.util.ButtonType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -77,13 +77,13 @@ public class SellAllGUI extends ChestGUI<UUID> {
      * @return true if created successfully, otherwise false.
      */
     public boolean create() {
-        GUIType guiType = sellAllConfig.gui().guiType();
+        GUIType guiType = sellAllConfig.guiType();
         if(guiType == null) {
             logger.warn(AdventureUtil.deserialize("Unable to create the InventoryView for a ShopGUI due to an invalid GUIType"));
             return false;
         }
 
-        String guiName = Objects.requireNonNullElse(sellAllConfig.gui().name(), "");
+        String guiName = Objects.requireNonNullElse(sellAllConfig.guiName(), "");
 
         return create(guiType, guiName, List.of());
     }
@@ -102,7 +102,7 @@ public class SellAllGUI extends ChestGUI<UUID> {
         // Clear the GUI of buttons
         clearButtons();
 
-        List<SellAllConfig.Button> buttonList = sellAllConfig.gui().buttons();
+        List<SellAllConfig.Button> buttonList = sellAllConfig.buttons();
         for(int buttonNum = 0; buttonNum < buttonList.size(); buttonNum++) {
             SellAllConfig.Button buttonConfig = buttonList.get(buttonNum);
             ButtonType buttonType = buttonConfig.buttonType();

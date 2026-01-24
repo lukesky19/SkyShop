@@ -25,14 +25,21 @@ import com.github.lukesky19.skylib.api.gui.templates.ChestGUI;
 import com.github.lukesky19.skylib.api.itemstack.ItemStackBuilder;
 import com.github.lukesky19.skylib.api.itemstack.ItemStackConfig;
 import com.github.lukesky19.skyshop.SkyShop;
-import com.github.lukesky19.skyshop.SkyShopAPI;
-import com.github.lukesky19.skyshop.config.gui.CategoryConfig;
-import com.github.lukesky19.skyshop.config.gui.SellAllConfig;
-import com.github.lukesky19.skyshop.config.gui.TransactionConfig;
-import com.github.lukesky19.skyshop.config.locale.Locale;
-import com.github.lukesky19.skyshop.manager.TransactionManager;
-import com.github.lukesky19.skyshop.manager.config.LocaleManager;
-import com.github.lukesky19.skyshop.manager.config.SellAllManager;
+import com.github.lukesky19.skyshop.api.SkyShopAPI;
+import com.github.lukesky19.skyshop.api.configuration.TransactionConfiguration;
+import com.github.lukesky19.skyshop.api.processor.TransactionProcessor;
+import com.github.lukesky19.skyshop.api.result.TransactionResult;
+import com.github.lukesky19.skyshop.configuration.category.gui.CategoryConfig;
+import com.github.lukesky19.skyshop.configuration.category.transaction.ItemConfiguration;
+import com.github.lukesky19.skyshop.configuration.locale.Locale;
+import com.github.lukesky19.skyshop.configuration.locale.LocaleManager;
+import com.github.lukesky19.skyshop.configuration.sellall.SellAllConfig;
+import com.github.lukesky19.skyshop.configuration.sellall.SellAllManager;
+import com.github.lukesky19.skyshop.configuration.transaction.TransactionStyleConfig;
+import com.github.lukesky19.skyshop.hook.HookManager;
+import com.github.lukesky19.skyshop.hook.impl.EconomyHook;
+import com.github.lukesky19.skyshop.hook.impl.PlayerPointsHook;
+import com.github.lukesky19.skyshop.registry.RegistryManager;
 import com.github.lukesky19.skyshop.util.ButtonType;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
@@ -45,6 +52,9 @@ import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
 import java.util.*;
 import java.util.function.Consumer;
 
@@ -55,24 +65,19 @@ public class TransactionGUI extends ChestGUI<UUID> {
     private final @NotNull SkyShop skyShop;
     private final @NotNull LocaleManager localeManager;
     private final @NotNull SellAllManager sellAllManager;
-    private final @NotNull TransactionManager transactionManager;
+    private final @NotNull RegistryManager registryManager;
+    private final @NotNull HookManager hookManager;
     private final @NotNull SkyShopAPI skyShopAPI;
     private final @NotNull CategoryGUI categoryGUI;
 
     // Config related to the Transaction
-    private final @NotNull TransactionConfig transactionConfig;
+    private final @NotNull TransactionStyleConfig transactionConfig;
     private final @NotNull String transactionStyle;
     private final @NotNull String transactionName;
     // ItemStack data
     private final @NotNull ItemStackConfig displayItemConfig;
-    private final @NotNull ItemStackConfig transactionItemConfig;
-    // Command Data
-    private final @NotNull List<String> buyCommands;
-    private final @NotNull List<String> sellCommands;
-    // Island Size Data
-    private final @NotNull CategoryConfig.IslandSizeData islandSizeData;
-    // Prestige Multiplier Data
-    private final @NotNull CategoryConfig.PrestigeMultiplierData prestigeMultiplierData;
+
+    private final @NotNull List<TransactionConfiguration> transactionConfigurationList;
 
     // Price Data
     private final double buyPrice;
@@ -90,19 +95,16 @@ public class TransactionGUI extends ChestGUI<UUID> {
      * @param player The {@link Player} to create the GUI for.
      * @param localeManager A {@link LocaleManager} instance.
      * @param sellAllManager A {@link SellAllManager} instance.
-     * @param transactionManager A {@link TransactionManager} instance.
+     * @param registryManager A {@link RegistryManager} instance.
+     * @param hookManager A {@link HookManager} instance.
      * @param skyShopAPI A {@link SkyShopAPI} instance.
      * @param categoryGUI The {@link CategoryGUI} the player came from.
-     * @param transactionStyle The transaction style name. This is the {@link String} that was used to get the {@link TransactionConfig}.
-     * @param transactionConfig The {@link TransactionConfig} to create the GUI with.
+     * @param transactionStyle The transaction style name. This is the {@link String} that was used to get the {@link TransactionStyleConfig}.
+     * @param transactionConfig The {@link TransactionStyleConfig} to create the GUI with.
      * @param displayItemConfig The {@link ItemStackConfig} used to create the {@link ItemStack} that displays what is being purchased or sold.
-     * @param transactionItemConfig The {@link ItemStackConfig} used to create the {@link ItemStack} that will be purchased or sold.
      * @param priceConfig The {@link CategoryConfig.PriceConfig} for this transaction.
      * @param transactionName The name to use when displaying a successful transaction message.
-     * @param buyCommands A {@link List} of {@link String} containing the commands to execute in console when a successful buy transaction is made.
-     * @param sellCommands A {@link List} of {@link String} containing the commands to execute in console when a successful sell transaction is made.
-     * @param islandSizeData The island size data being purchased or sold.
-     * @param prestigeMultiplierData The prestige multiplier data being purchased or sold.
+     * @param transactionConfigurationList The {@link List} of {@link TransactionConfiguration}s to process.
      */
     public TransactionGUI(
             @NotNull SkyShop skyShop,
@@ -110,40 +112,34 @@ public class TransactionGUI extends ChestGUI<UUID> {
             @NotNull Player player,
             @NotNull LocaleManager localeManager,
             @NotNull SellAllManager sellAllManager,
-            @NotNull TransactionManager transactionManager,
+            @NotNull RegistryManager registryManager,
+            @NotNull HookManager hookManager,
             @NotNull SkyShopAPI skyShopAPI,
             @NotNull CategoryGUI categoryGUI,
             @NotNull String transactionStyle,
-            @NotNull TransactionConfig transactionConfig,
+            @NotNull TransactionStyleConfig transactionConfig,
             @NotNull ItemStackConfig displayItemConfig,
-            @NotNull ItemStackConfig transactionItemConfig,
             @NotNull CategoryConfig.PriceConfig priceConfig,
             @Nullable String transactionName,
-            @NotNull List<String> buyCommands,
-            @NotNull List<String> sellCommands,
-            @NotNull CategoryConfig.IslandSizeData islandSizeData,
-            @NotNull CategoryConfig.PrestigeMultiplierData prestigeMultiplierData) {
+            @NotNull List<TransactionConfiguration> transactionConfigurationList) {
         super(skyShop, guiManager, player.getUniqueId(), player);
 
         this.skyShop = skyShop;
         this.localeManager = localeManager;
         this.sellAllManager = sellAllManager;
-        this.transactionManager = transactionManager;
+        this.registryManager = registryManager;
+        this.hookManager = hookManager;
         this.skyShopAPI = skyShopAPI;
         this.categoryGUI = categoryGUI;
         this.transactionStyle = transactionStyle;
         this.transactionConfig = transactionConfig;
         this.displayItemConfig = displayItemConfig;
-        this.transactionItemConfig = transactionItemConfig;
         this.buyPrice = priceConfig.buyPrice() > 0.0 ? priceConfig.buyPrice() : -1.0;
         this.sellPrice = priceConfig.sellPrice() > 0.0 ? priceConfig.sellPrice() : -1.0;
         this.buyPoints = priceConfig.buyPoints() > 0 ? priceConfig.buyPoints() : -1;
         this.sellPoints = priceConfig.sellPoints() > 0 ? priceConfig.sellPoints() : -1;
-        this.buyCommands = buyCommands;
-        this.sellCommands = sellCommands;
         this.transactionName = Objects.requireNonNullElse(transactionName, "");
-        this.islandSizeData = islandSizeData;
-        this.prestigeMultiplierData = prestigeMultiplierData;
+        this.transactionConfigurationList = transactionConfigurationList;
     }
 
     /**
@@ -181,7 +177,7 @@ public class TransactionGUI extends ChestGUI<UUID> {
      */
     @Override
     public boolean update() {
-        Locale locale = localeManager.getLocale();
+        Locale locale = localeManager.getConfiguration();
 
         // If the InventoryView was not created, log a warning and return false.
         if(inventoryView == null) {
@@ -197,7 +193,7 @@ public class TransactionGUI extends ChestGUI<UUID> {
         clearButtons();
 
         // Check if at least 1 page is configured.
-        List<TransactionConfig.PageConfig> pages = transactionConfig.gui().pages();
+        List<TransactionStyleConfig.PageConfig> pages = transactionConfig.gui().pages();
         if(pages.isEmpty()) {
             logger.error(AdventureUtil.deserialize("Unable to decorate the transaction GUI due to no pages configured."));
             close();
@@ -205,10 +201,10 @@ public class TransactionGUI extends ChestGUI<UUID> {
         }
 
         // Get the page config
-        TransactionConfig.PageConfig page = pages.get(pageNum);
+        TransactionStyleConfig.PageConfig page = pages.get(pageNum);
 
         // Check if at least 1 button is configured.
-        List<TransactionConfig.Button> entries = page.buttons();
+        List<TransactionStyleConfig.Button> entries = page.buttons();
         if(entries.isEmpty()) {
             logger.error(AdventureUtil.deserialize("Unable to decorate the transaction GUI for page " + pageNum + " due to no buttons configured."));
             close();
@@ -216,7 +212,7 @@ public class TransactionGUI extends ChestGUI<UUID> {
         }
 
         for(int buttonNum = 0; buttonNum < page.buttons().size(); buttonNum++) {
-            TransactionConfig.Button buttonConfig = page.buttons().get(buttonNum);
+            TransactionStyleConfig.Button buttonConfig = page.buttons().get(buttonNum);
             @Nullable ButtonType buttonType = buttonConfig.buttonType();
 
             // Handle the creation of buttons by button type.
@@ -231,7 +227,7 @@ public class TransactionGUI extends ChestGUI<UUID> {
 
                 case DISPLAY -> createButton(
                         buttonType,
-                        new TransactionConfig.Button(ButtonType.DISPLAY, buttonConfig.slot(), null, displayItemConfig),
+                        new TransactionStyleConfig.Button(ButtonType.DISPLAY, buttonConfig.slot(), null, displayItemConfig),
                         List.of(),
                         null);
 
@@ -298,11 +294,11 @@ public class TransactionGUI extends ChestGUI<UUID> {
     /**
      * Create and add filler buttons.
      * @param guiSize The size of the GUI.
-     * @param buttonConfig The {@link TransactionConfig.Button} config.
+     * @param buttonConfig The {@link TransactionStyleConfig.Button} config.
      */
-    private void createFilterButton(int guiSize, @NotNull TransactionConfig.Button buttonConfig) {
+    private void createFilterButton(int guiSize, @NotNull TransactionStyleConfig.Button buttonConfig) {
         // Get the ItemStackConfig
-        ItemStackConfig itemConfig = buttonConfig.displayItem();
+        com.github.lukesky19.skylib.api.itemstack.ItemStackConfig itemConfig = buttonConfig.displayItem();
 
         // Create the ItemStackBuilder and pass the ItemStackConfig.
         ItemStackBuilder itemStackBuilder = new ItemStackBuilder(logger);
@@ -324,12 +320,12 @@ public class TransactionGUI extends ChestGUI<UUID> {
 
     /**
      * Create and add a previous page button.
-     * @param buttonConfig The {@link TransactionConfig.Button} config.
+     * @param buttonConfig The {@link TransactionStyleConfig.Button} config.
      * @param buttonNum The button number.
      * @param buttonType The {@link ButtonType}
      */
     private void createPreviousPageButton(
-            @NotNull TransactionConfig.Button buttonConfig,
+            @NotNull TransactionStyleConfig.Button buttonConfig,
             int buttonNum,
             @NotNull ButtonType buttonType) {
         // Only display the previous page button if the page number is greater than or equal to 1
@@ -349,13 +345,13 @@ public class TransactionGUI extends ChestGUI<UUID> {
 
     /**
      * Create and add a next page button.
-     * @param buttonConfig The {@link TransactionConfig.Button} config.
+     * @param buttonConfig The {@link TransactionStyleConfig.Button} config.
      * @param pageSize The size of the page.
      * @param buttonNum The button number.
      * @param buttonType The {@link ButtonType}
      */
     private void createNextPageButton(
-            @NotNull TransactionConfig.Button buttonConfig,
+            @NotNull TransactionStyleConfig.Button buttonConfig,
             int pageSize,
             int buttonNum,
             @NotNull ButtonType buttonType) {
@@ -376,12 +372,12 @@ public class TransactionGUI extends ChestGUI<UUID> {
 
     /**
      * Create and add an exit button.
-     * @param buttonConfig The {@link TransactionConfig.Button} config.
+     * @param buttonConfig The {@link TransactionStyleConfig.Button} config.
      * @param buttonNum The button number.
      * @param buttonType The {@link ButtonType}
      */
     private void createExitButton(
-            @NotNull TransactionConfig.Button buttonConfig,
+            @NotNull TransactionStyleConfig.Button buttonConfig,
             int buttonNum,
             @NotNull ButtonType buttonType) {
         // Check if the slot is not configured and send a warning.
@@ -395,12 +391,12 @@ public class TransactionGUI extends ChestGUI<UUID> {
 
     /**
      * Create and add a sell all button.
-     * @param buttonConfig The {@link TransactionConfig.Button} config.
+     * @param buttonConfig The {@link TransactionStyleConfig.Button} config.
      * @param buttonNum The button number.
      * @param buttonType The {@link ButtonType}
      */
     private void createSellAllButton(
-            @NotNull TransactionConfig.Button buttonConfig,
+            @NotNull TransactionStyleConfig.Button buttonConfig,
             int buttonNum,
             @NotNull ButtonType buttonType) {
         // Check if the slot is not configured and send a warning.
@@ -410,26 +406,29 @@ public class TransactionGUI extends ChestGUI<UUID> {
         }
 
         createButton(buttonType, buttonConfig, List.of(), inventoryClickEvent -> {
-            ItemStackBuilder transactionItemBuilder = new ItemStackBuilder(logger);
-            transactionItemBuilder.fromItemStackConfig(transactionItemConfig, player, null, List.of());
-            Optional<ItemStack> optionalTransactionItemStack = transactionItemBuilder.buildItemStack();
-            if(optionalTransactionItemStack.isEmpty()) return;
+            for(TransactionConfiguration data : transactionConfigurationList) {
+                if(!(data instanceof ItemConfiguration itemConfiguration)) continue;
 
-            ItemStack transactionItemStack = optionalTransactionItemStack.get();
+                ItemStackBuilder transactionItemBuilder = new ItemStackBuilder(logger);
+                transactionItemBuilder.fromItemStackConfig(itemConfiguration.transactionItem(), player, null, List.of());
+                Optional<ItemStack> optionalTransactionItemStack = transactionItemBuilder.buildItemStack();
+                if(optionalTransactionItemStack.isEmpty()) continue;
+                ItemStack transactionItemStack = optionalTransactionItemStack.get();
 
-            skyShopAPI.sellAllMatchingItemStack(player, player.getInventory(), transactionItemStack, true, false, true);
+                skyShopAPI.sellAllMatchingItemStack(player, player.getInventory(), transactionItemStack, true, false, true);
+            }
         });
     }
 
     /**
      * Create and add a sell GUI button.
-     * @param buttonConfig The {@link TransactionConfig.Button} config.
+     * @param buttonConfig The {@link TransactionStyleConfig.Button} config.
      * @param buttonNum The button number.
      * @param buttonType The {@link ButtonType}
      */
     private void createSellGUIButton(
             @NotNull Locale locale,
-            @NotNull TransactionConfig.Button buttonConfig,
+            @NotNull TransactionStyleConfig.Button buttonConfig,
             int buttonNum,
             @NotNull ButtonType buttonType) {
         // Check if the slot is not configured and send a warning.
@@ -439,15 +438,13 @@ public class TransactionGUI extends ChestGUI<UUID> {
         }
 
         createButton(buttonType, buttonConfig, List.of(), inventoryClickEvent -> {
-            @NotNull Optional<@NotNull SellAllConfig> optionalGUIConfig = sellAllManager.getSellAllGuiConfig();
-            if(optionalGUIConfig.isEmpty()) {
+            SellAllConfig sellAllGuiConfig = sellAllManager.getConfiguration();
+            if(sellAllGuiConfig == null) {
                 logger.error(AdventureUtil.deserialize("Unable to open sellall GUI for player " + player.getName() + " due to invalid sellall config."));
                 player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.guiOpenError()));
                 close();
                 return;
             }
-
-            SellAllConfig sellAllGuiConfig = optionalGUIConfig.get();
             SellAllGUI sellAllGUI = new SellAllGUI(skyShop, guiManager, sellAllGuiConfig, skyShopAPI, player);
 
             boolean creationResult = sellAllGUI.create();
@@ -477,12 +474,12 @@ public class TransactionGUI extends ChestGUI<UUID> {
 
     /**
      * Create and add a buy button.
-     * @param buttonConfig The {@link TransactionConfig.Button} config.
+     * @param buttonConfig The {@link TransactionStyleConfig.Button} config.
      * @param buttonNum The button number.
      * @param buttonType The {@link ButtonType}
      */
     private void createBuyButton(
-            @NotNull TransactionConfig.Button buttonConfig,
+            @NotNull TransactionStyleConfig.Button buttonConfig,
             int buttonNum,
             @NotNull ButtonType buttonType) {
         if(buyPrice <= 0.0 && buyPoints <= 0) return;
@@ -495,6 +492,11 @@ public class TransactionGUI extends ChestGUI<UUID> {
 
         if(buttonConfig.transactionAmount() == null || buttonConfig.transactionAmount() <= 0) {
             logger.warn(AdventureUtil.deserialize("Unable to add a buy button due to an invalid transaction amount."));
+            return;
+        }
+
+        if(transactionConfigurationList.isEmpty()) {
+            logger.warn(AdventureUtil.deserialize("Unable to add a buy button because the transaction configuration list is empty."));
             return;
         }
 
@@ -511,21 +513,93 @@ public class TransactionGUI extends ChestGUI<UUID> {
         itemStackPlaceholders.add(Placeholder.parsed("amount", String.valueOf(purchaseAmount)));
 
         createButton(buttonType, buttonConfig, itemStackPlaceholders, inventoryClickEvent -> {
-            transactionManager.buyItem(player, this, transactionItemConfig, transactionName, purchaseAmount, finalBuyPrice, finalBuyPoints);
-            transactionManager.buyCommand(player, this, transactionName, buyCommands, purchaseAmount, finalBuyPrice, finalBuyPoints);
-            transactionManager.buyIslandSize(player, this, transactionName, islandSizeData.buyAmount(), islandSizeData.setIslandSize(), purchaseAmount, finalBuyPrice, finalBuyPoints);
-            transactionManager.buyPrestigePointsMultiplier(player, this, transactionName, prestigeMultiplierData, finalBuyPrice, finalBuyPoints);
+            Locale locale = localeManager.getConfiguration();
+            EconomyHook economyHook = hookManager.getHook(EconomyHook.class);
+            PlayerPointsHook playerPointsHook = hookManager.getHook(PlayerPointsHook.class);
+
+            if(!validateMoneyAndPoints(locale, economyHook, playerPointsHook, player, finalBuyPrice, finalBuyPoints)) return;
+
+            // Early checks
+            for(TransactionConfiguration configuration : transactionConfigurationList) {
+                @Nullable TransactionProcessor processor = registryManager.getProcessor(configuration.getId());
+                if(processor == null) {
+                    logger.warn(AdventureUtil.deserialize("No processor for id " + configuration.getId()));
+                    player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.transactionError()));
+                    return;
+                }
+
+                TransactionResult canBuyResult = processor.canBuy(player, configuration, purchaseAmount);
+                if(canBuyResult.cancelled()) return;
+
+                if(canBuyResult.errored()) {
+                    if(canBuyResult.sendErrorMessage()) {
+                        logger.warn(AdventureUtil.deserialize("Pre-buy failed for a transaction with id: " + configuration.getId() + ". Error: " + canBuyResult.message()));
+                        player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.transactionError()));
+                    }
+
+                    return;
+                }
+            }
+
+            // Actual buy
+            for(TransactionConfiguration configuration : transactionConfigurationList) {
+                @Nullable TransactionProcessor processor = registryManager.getProcessor(configuration.getId());
+                if(processor == null) {
+                    logger.warn(AdventureUtil.deserialize("No processor for id " + configuration.getId()));
+                    player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.transactionError()));
+                    return;
+                }
+
+                TransactionResult buyResult = processor.buy(player, configuration, purchaseAmount);
+                if(buyResult.errored()) {
+                    if(buyResult.sendErrorMessage()) {
+                        logger.warn(AdventureUtil.deserialize("Failed to process (buy) a portion of a transaction with id: " + configuration.getId() + ". Error: " + buyResult.message()));
+                        player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.transactionError()));
+                    }
+                }
+            }
+
+            // Remove the prices from the player's balances
+            if(finalBuyPrice > 0 && economyHook.isHooked()) economyHook.removeFromBalance(player, finalBuyPrice);
+            if(finalBuyPoints > 0 && playerPointsHook.isHooked()) playerPointsHook.removeFromBalance(player, finalBuyPoints);
+
+            // Create the message placeholders
+            List<TagResolver.Single> messagePlaceholders = new ArrayList<>();
+            messagePlaceholders.add(Placeholder.parsed("amount", String.valueOf(purchaseAmount)));
+            messagePlaceholders.add(Placeholder.parsed("transaction_name", transactionName));
+
+            DecimalFormat df = new DecimalFormat("#.##");
+            df.setRoundingMode(RoundingMode.CEILING);
+
+            BigDecimal bigPrice = BigDecimal.valueOf(finalBuyPrice);
+            String formattedSellPrice = df.format(bigPrice);
+            messagePlaceholders.add(Placeholder.parsed("money", formattedSellPrice));
+
+            BigDecimal bigBalance = BigDecimal.valueOf(economyHook.getBalance(player));
+            messagePlaceholders.add(Placeholder.parsed("money_balance", df.format(bigBalance)));
+
+            messagePlaceholders.add(Placeholder.parsed("player_points", String.valueOf(finalBuyPoints)));
+            messagePlaceholders.add(Placeholder.parsed("player_points_balance", String.valueOf(playerPointsHook.getBalance(player))));
+
+            // Send the message that the transaction was a success
+            if(finalBuyPrice > 0 && finalBuyPoints > 0) {
+                player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.buySuccess().moneyAndPoints(), messagePlaceholders));
+            } else if(finalBuyPrice > 0) {
+                player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.buySuccess().money(), messagePlaceholders));
+            } else if(finalBuyPoints > 0) {
+                player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.buySuccess().points(), messagePlaceholders));
+            }
         });
     }
 
     /**
      * Create and add a sell button.
-     * @param buttonConfig The {@link TransactionConfig.Button} config.
+     * @param buttonConfig The {@link TransactionStyleConfig.Button} config.
      * @param buttonNum The button number.
      * @param buttonType The {@link ButtonType}
      */
     private void createSellButton(
-            @NotNull TransactionConfig.Button buttonConfig,
+            @NotNull TransactionStyleConfig.Button buttonConfig,
             int buttonNum,
             @NotNull ButtonType buttonType) {
         if(sellPrice <= 0.0 && sellPoints <= 0) return;
@@ -542,6 +616,11 @@ public class TransactionGUI extends ChestGUI<UUID> {
             return;
         }
 
+        if(transactionConfigurationList.isEmpty()) {
+            logger.warn(AdventureUtil.deserialize("Unable to add a buy button because the transaction configuration list is empty."));
+            return;
+        }
+
         // Get the amount to sell
         int sellAmount = buttonConfig.transactionAmount();
         // Calculate the final prices
@@ -555,24 +634,93 @@ public class TransactionGUI extends ChestGUI<UUID> {
         itemStackPlaceholders.add(Placeholder.parsed("amount", String.valueOf(sellAmount)));
 
         createButton(buttonType, buttonConfig, itemStackPlaceholders, inventoryClickEvent -> {
-            transactionManager.sellItem(player, this, transactionItemConfig, transactionName, sellAmount, finalSellPrice, finalSellPoints);
+            Locale locale = localeManager.getConfiguration();
+            EconomyHook economyHook = hookManager.getHook(EconomyHook.class);
+            PlayerPointsHook playerPointsHook = hookManager.getHook(PlayerPointsHook.class);
 
-            transactionManager.sellCommand(player, this, transactionName, sellCommands, sellAmount, finalSellPrice, finalSellPoints);
+            // Early checks
+            for(TransactionConfiguration configuration : transactionConfigurationList) {
+                @Nullable TransactionProcessor processor = registryManager.getProcessor(configuration.getId());
+                if(processor == null) {
+                    logger.warn(AdventureUtil.deserialize("No processor for id " + configuration.getId()));
+                    player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.transactionError()));
+                    return;
+                }
 
-            transactionManager.sellIslandSize(player, this, transactionName, islandSizeData.sellAmount(), islandSizeData.setIslandSize(), sellAmount, finalSellPrice, finalSellPoints);
+                TransactionResult canSellResult = processor.canSell(player, configuration, sellAmount);
+                if(canSellResult.cancelled()) return;
+
+                if(canSellResult.errored()) {
+                    if(canSellResult.sendErrorMessage()) {
+                        logger.warn(AdventureUtil.deserialize("Pre-sell failed for a transaction with id: " + configuration.getId() + ". Error: " + canSellResult.message()));
+                        player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.transactionError()));
+                    }
+
+                    return;
+                }
+            }
+
+            // Actual Sell
+            for(TransactionConfiguration configuration : transactionConfigurationList) {
+                @Nullable TransactionProcessor processor = registryManager.getProcessor(configuration.getId());
+                if(processor == null) {
+                    logger.warn(AdventureUtil.deserialize("No processor for id " + configuration.getId()));
+                    player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.transactionError()));
+                    return;
+                }
+
+                TransactionResult sellResult = processor.sell(player, configuration, sellAmount);
+                if(sellResult.errored()) {
+                    if(sellResult.sendErrorMessage()) {
+                        logger.warn(AdventureUtil.deserialize("Failed to process (sell) a portion of a transaction with id: " + configuration.getId() + ". Error: " + sellResult.message()));
+                        player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.transactionError()));
+                    }
+                }
+            }
+
+            // Add the prices from the player's balances
+            if(finalSellPrice > 0 && economyHook.isHooked()) economyHook.addToBalance(player, finalSellPrice);
+            if(finalSellPoints > 0 && playerPointsHook.isHooked()) playerPointsHook.addToBalance(player, finalSellPoints);
+
+            // Create the message placeholders
+            List<TagResolver.Single> messagePlaceholders = new ArrayList<>();
+            messagePlaceholders.add(Placeholder.parsed("amount", String.valueOf(sellAmount)));
+            messagePlaceholders.add(Placeholder.parsed("transaction_name", transactionName));
+
+            DecimalFormat df = new DecimalFormat("#.##");
+            df.setRoundingMode(RoundingMode.CEILING);
+
+            BigDecimal bigPrice = BigDecimal.valueOf(finalSellPrice);
+            String formattedSellPrice = df.format(bigPrice);
+            messagePlaceholders.add(Placeholder.parsed("money", formattedSellPrice));
+
+            BigDecimal bigBalance = BigDecimal.valueOf(economyHook.getBalance(player));
+            messagePlaceholders.add(Placeholder.parsed("money_balance", df.format(bigBalance)));
+
+            messagePlaceholders.add(Placeholder.parsed("player_points", String.valueOf(finalSellPoints)));
+            messagePlaceholders.add(Placeholder.parsed("player_points_balance", String.valueOf(playerPointsHook.getBalance(player))));
+
+            // Send the message that the transaction was a success
+            if(finalSellPrice > 0 && finalSellPoints > 0) {
+                player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.sellSuccess().moneyAndPoints(), messagePlaceholders));
+            } else if(finalSellPrice > 0) {
+                player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.sellSuccess().money(), messagePlaceholders));
+            } else if(finalSellPoints > 0) {
+                player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.sellSuccess().points(), messagePlaceholders));
+            }
         });
     }
 
     /**
      * Create and add a button.
      * @param buttonType The {@link ButtonType}.
-     * @param buttonConfig The {@link TransactionConfig.Button} config.
+     * @param buttonConfig The {@link TransactionStyleConfig.Button} config.
      * @param placeholders A {@link List} of {@link TagResolver.Single} for placeholders.
      * @param action A {@link Consumer} consuming an {@link InventoryClickEvent} that is used when the button is clicked.
      */
     private void createButton(
             @NotNull ButtonType buttonType,
-            @NotNull TransactionConfig.Button buttonConfig,
+            @NotNull TransactionStyleConfig.Button buttonConfig,
             @NotNull List<TagResolver.Single> placeholders,
             @Nullable Consumer<InventoryClickEvent> action) {
         if(buttonConfig.slot() == null) {
@@ -590,5 +738,63 @@ public class TransactionGUI extends ChestGUI<UUID> {
 
             setButton(buttonConfig.slot(), guiButtonBuilder.build());
         });
+    }
+
+    /**
+     * Check if the money and points are valid and that the necessary plugins are hooked into.
+     * The GUI the player is in will be closed on any error.
+     * @param locale The plugin's {@link Locale}.
+     * @param economyHook The plugin's {@link EconomyHook}.
+     * @param playerPointsHook The player's {@link PlayerPointsHook}.
+     * @param player The {@link Player}.
+     * @param money The money.
+     * @param points The player points.
+     * @return true if money and points are valid along with the necessary hooks or false.
+     */
+    private boolean validateMoneyAndPoints(
+            @NotNull Locale locale,
+            @NotNull EconomyHook economyHook,
+            @NotNull PlayerPointsHook playerPointsHook,
+            @NotNull Player player,
+            double money,
+            int points) {
+        if(money <= 0 && points <= 0) {
+            logger.error(AdventureUtil.deserialize("Unable to complete the transaction because money and points are less than or equal to 0."));
+            player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.transactionError()));
+            this.close();
+            return false;
+        }
+
+        if(money > 0) {
+            if(!economyHook.isHooked()) {
+                logger.error(AdventureUtil.deserialize("Unable to complete the transaction due to no economy found."));
+                player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.transactionError()));
+                this.close();
+                return false;
+            }
+
+            if(economyHook.getBalance(player) < money) {
+                player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.insufficientMoney()));
+                this.close();
+                return false;
+            }
+        }
+
+        if(points > 0) {
+            if(!playerPointsHook.isHooked()) {
+                logger.error(AdventureUtil.deserialize("Unable to complete the transaction due to no player points dependency found."));
+                player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.transactionError()));
+                this.close();
+                return false;
+            }
+
+            if(playerPointsHook.getBalance(player) < points) {
+                player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.insufficientPlayerPoints()));
+                this.close();
+                return false;
+            }
+        }
+
+        return true;
     }
 }

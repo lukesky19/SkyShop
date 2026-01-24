@@ -20,17 +20,17 @@ package com.github.lukesky19.skyshop.commands.arguments;
 import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
 import com.github.lukesky19.skylib.api.gui.impl.UUIDGUIManager;
 import com.github.lukesky19.skyshop.SkyShop;
-import com.github.lukesky19.skyshop.SkyShopAPI;
-import com.github.lukesky19.skyshop.config.gui.CategoryConfig;
-import com.github.lukesky19.skyshop.config.locale.Locale;
+import com.github.lukesky19.skyshop.api.SkyShopAPI;
+import com.github.lukesky19.skyshop.configuration.category.CategoryConfigManager;
+import com.github.lukesky19.skyshop.configuration.category.gui.CategoryConfig;
+import com.github.lukesky19.skyshop.configuration.locale.Locale;
+import com.github.lukesky19.skyshop.configuration.locale.LocaleManager;
+import com.github.lukesky19.skyshop.configuration.sellall.SellAllManager;
+import com.github.lukesky19.skyshop.configuration.transaction.TransactionStyleConfigManager;
 import com.github.lukesky19.skyshop.gui.CategoryGUI;
-import com.github.lukesky19.skyshop.manager.HookManager;
-import com.github.lukesky19.skyshop.manager.StatsManager;
-import com.github.lukesky19.skyshop.manager.TransactionManager;
-import com.github.lukesky19.skyshop.manager.config.CategoryConfigManager;
-import com.github.lukesky19.skyshop.manager.config.LocaleManager;
-import com.github.lukesky19.skyshop.manager.config.SellAllManager;
-import com.github.lukesky19.skyshop.manager.config.TransactionConfigManager;
+import com.github.lukesky19.skyshop.hook.HookManager;
+import com.github.lukesky19.skyshop.registry.RegistryManager;
+import com.github.lukesky19.skyshop.stats.StatsManager;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
@@ -40,8 +40,6 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Optional;
-
 /**
  * This class is used to create the open command used to open specific shop categories.
  */
@@ -49,8 +47,8 @@ public class OpenCommand {
     private final @NotNull SkyShop skyShop;
     private final @NotNull LocaleManager localeManager;
     private final @NotNull CategoryConfigManager categoryConfigManager;
-    private final @NotNull TransactionConfigManager transactionConfigManager;
-    private final @NotNull TransactionManager transactionManager;
+    private final @NotNull TransactionStyleConfigManager transactionStyleConfigManager;
+    private final @NotNull RegistryManager registryManager;
     private final @NotNull SellAllManager sellAllManager;
     private final @Nullable StatsManager statsManager;
     private final @NotNull HookManager hookManager;
@@ -63,8 +61,8 @@ public class OpenCommand {
      * @param guiManager A {@link UUIDGUIManager} instance.
      * @param localeManager A {@link LocaleManager} instance.
      * @param categoryConfigManager A {@link CategoryConfigManager} instance.
-     * @param transactionConfigManager A {@link TransactionConfigManager} instance.
-     * @param transactionManager A {@link TransactionManager} instance.
+     * @param transactionStyleConfigManager A {@link TransactionStyleConfigManager} instance.
+     * @param registryManager A {@link RegistryManager} instance.
      * @param sellAllManager A {@link SellAllManager} instance.
      * @param statsManager A {@link StatsManager} instance.
      * @param hookManager A {@link HookManager} instance.
@@ -75,8 +73,8 @@ public class OpenCommand {
             @NotNull UUIDGUIManager guiManager,
             @NotNull LocaleManager localeManager,
             @NotNull CategoryConfigManager categoryConfigManager,
-            @NotNull TransactionConfigManager transactionConfigManager,
-            @NotNull TransactionManager transactionManager,
+            @NotNull TransactionStyleConfigManager transactionStyleConfigManager,
+            @NotNull RegistryManager registryManager,
             @NotNull SellAllManager sellAllManager,
             @Nullable StatsManager statsManager,
             @NotNull HookManager hookManager,
@@ -84,8 +82,8 @@ public class OpenCommand {
         this.skyShop = skyShop;
         this.localeManager = localeManager;
         this.categoryConfigManager = categoryConfigManager;
-        this.transactionConfigManager = transactionConfigManager;
-        this.transactionManager = transactionManager;
+        this.transactionStyleConfigManager = transactionStyleConfigManager;
+        this.registryManager = registryManager;
         this.sellAllManager = sellAllManager;
         this.statsManager = statsManager;
         this.guiManager = guiManager;
@@ -107,18 +105,17 @@ public class OpenCommand {
                     })
                     .executes(ctx -> {
                         ComponentLogger logger = skyShop.getComponentLogger();
-                        Locale locale = localeManager.getLocale();
+                        Locale locale = localeManager.getConfiguration();
                         Player player = (Player) ctx.getSource().getSender();
                         String categoryId = ctx.getArgument("category", String.class);
 
-                        Optional<CategoryConfig> optionalCategoryConfig = categoryConfigManager.getCategoryConfig(categoryId);
-                        if(optionalCategoryConfig.isEmpty()) {
+                        @Nullable CategoryConfig categoryConfig = categoryConfigManager.getConfiguration(categoryId);
+                        if(categoryConfig == null) {
                             logger.error(AdventureUtil.deserialize("Unable to open the category GUI for the category id " + categoryId + " for player " + player.getName() + " due to a configuration error."));
                             player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.guiOpenError()));
                             return 0;
                         }
 
-                        CategoryConfig categoryConfig = optionalCategoryConfig.get();
                         if(categoryConfig.permission() != null) {
                             if(!player.hasPermission(categoryConfig.permission())) {
                                 player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.categoryNoPermission()));
@@ -126,7 +123,7 @@ public class OpenCommand {
                             }
                         }
 
-                        CategoryGUI categoryGUI = new CategoryGUI(skyShop, guiManager, player, localeManager, categoryConfigManager, transactionConfigManager, transactionManager, sellAllManager, statsManager, hookManager, skyShopAPI, null, categoryConfig, categoryId);
+                        CategoryGUI categoryGUI = new CategoryGUI(skyShop, guiManager, player, localeManager, categoryConfigManager, transactionStyleConfigManager, registryManager, sellAllManager, statsManager, hookManager, skyShopAPI, null, categoryConfig, categoryId);
 
                         boolean creationResult = categoryGUI.create();
                         if(!creationResult) {

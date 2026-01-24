@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "com.github.lukesky19"
-version = "2.1.0.0"
+version = "3.0.0.0"
 
 repositories {
     mavenCentral()
@@ -33,7 +33,6 @@ dependencies {
     // Hooks
     compileOnly("world.bentobox:bentobox:2.7.0-SNAPSHOT")
     compileOnly("org.black_ixx:playerpoints:3.3.3")
-    compileOnly("com.github.lukesky19:SkyPrestige:2.0.0.0")
     compileOnly("com.github.MilkBowl:VaultAPI:1.7.1")
 }
 

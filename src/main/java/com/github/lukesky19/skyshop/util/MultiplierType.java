@@ -19,6 +19,7 @@ package com.github.lukesky19.skyshop.util;
 
 /**
  * This enum can be used to identify a prestige points multiplier.
+ * Used for migration purposes only.
  */
 public enum MultiplierType {
     /**

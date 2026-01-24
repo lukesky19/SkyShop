@@ -20,18 +20,18 @@ package com.github.lukesky19.skyshop.commands;
 import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
 import com.github.lukesky19.skylib.api.gui.impl.UUIDGUIManager;
 import com.github.lukesky19.skyshop.SkyShop;
-import com.github.lukesky19.skyshop.SkyShopAPI;
+import com.github.lukesky19.skyshop.api.SkyShopAPI;
 import com.github.lukesky19.skyshop.commands.arguments.*;
-import com.github.lukesky19.skyshop.config.gui.CategoryConfig;
-import com.github.lukesky19.skyshop.config.locale.Locale;
+import com.github.lukesky19.skyshop.configuration.category.CategoryConfigManager;
+import com.github.lukesky19.skyshop.configuration.category.gui.CategoryConfig;
+import com.github.lukesky19.skyshop.configuration.locale.Locale;
+import com.github.lukesky19.skyshop.configuration.locale.LocaleManager;
+import com.github.lukesky19.skyshop.configuration.sellall.SellAllManager;
+import com.github.lukesky19.skyshop.configuration.transaction.TransactionStyleConfigManager;
 import com.github.lukesky19.skyshop.gui.CategoryGUI;
-import com.github.lukesky19.skyshop.manager.HookManager;
-import com.github.lukesky19.skyshop.manager.StatsManager;
-import com.github.lukesky19.skyshop.manager.TransactionManager;
-import com.github.lukesky19.skyshop.manager.config.CategoryConfigManager;
-import com.github.lukesky19.skyshop.manager.config.LocaleManager;
-import com.github.lukesky19.skyshop.manager.config.SellAllManager;
-import com.github.lukesky19.skyshop.manager.config.TransactionConfigManager;
+import com.github.lukesky19.skyshop.hook.HookManager;
+import com.github.lukesky19.skyshop.registry.RegistryManager;
+import com.github.lukesky19.skyshop.stats.StatsManager;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
@@ -41,8 +41,6 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Optional;
-
 /**
  * This class is used to create the main skyshop command.
  */
@@ -50,8 +48,8 @@ public class SkyShopCommand {
     private final @NotNull SkyShop skyShop;
     private final @NotNull LocaleManager localeManager;
     private final @NotNull CategoryConfigManager categoryConfigManager;
-    private final @NotNull TransactionConfigManager transactionConfigManager;
-    private final @NotNull TransactionManager transactionManager;
+    private final @NotNull TransactionStyleConfigManager transactionStyleConfigManager;
+    private final @NotNull RegistryManager registryManager;
     private final @NotNull SellAllManager sellAllManager;
     private final @Nullable StatsManager statsManager;
     private final @NotNull HookManager hookManager;
@@ -64,8 +62,8 @@ public class SkyShopCommand {
      * @param guiManager A {@link UUIDGUIManager} instance.
      * @param localeManager A {@link LocaleManager} instance.
      * @param categoryConfigManager A {@link CategoryConfigManager} instance.
-     * @param transactionConfigManager A {@link TransactionConfigManager} instance.
-     * @param transactionManager A {@link TransactionManager} instance.
+     * @param transactionStyleConfigManager A {@link TransactionStyleConfigManager} instance.
+     * @param registryManager A {@link RegistryManager} instance.
      * @param sellAllManager A {@link SellAllManager} instance.
      * @param statsManager A {@link StatsManager} instance.
      * @param hookManager A {@link HookManager} instance.
@@ -76,8 +74,8 @@ public class SkyShopCommand {
             @NotNull UUIDGUIManager guiManager,
             @NotNull LocaleManager localeManager,
             @NotNull CategoryConfigManager categoryConfigManager,
-            @NotNull TransactionConfigManager transactionConfigManager,
-            @NotNull TransactionManager transactionManager,
+            @NotNull TransactionStyleConfigManager transactionStyleConfigManager,
+            @NotNull RegistryManager registryManager,
             @NotNull SellAllManager sellAllManager,
             @Nullable StatsManager statsManager,
             @NotNull HookManager hookManager,
@@ -85,8 +83,8 @@ public class SkyShopCommand {
         this.skyShop = skyShop;
         this.localeManager = localeManager;
         this.categoryConfigManager = categoryConfigManager;
-        this.transactionConfigManager = transactionConfigManager;
-        this.transactionManager = transactionManager;
+        this.transactionStyleConfigManager = transactionStyleConfigManager;
+        this.registryManager = registryManager;
         this.sellAllManager = sellAllManager;
         this.statsManager = statsManager;
         this.guiManager = guiManager;
@@ -102,14 +100,13 @@ public class SkyShopCommand {
         LiteralArgumentBuilder<CommandSourceStack> builder = Commands.literal("skyshop");
         builder.requires(ctx -> ctx.getSender().hasPermission("skyshop.commands.skyshop"));
         builder.executes(ctx -> {
-            Locale locale = localeManager.getLocale();
+            Locale locale = localeManager.getConfiguration();
             ComponentLogger logger = skyShop.getComponentLogger();
 
             if (ctx.getSource().getSender() instanceof Player player) {
-                Optional<CategoryConfig> optionalMenuConfig = categoryConfigManager.getCategoryConfig("menu");
-                if(optionalMenuConfig.isPresent()) {
-                    CategoryConfig menuConfig = optionalMenuConfig.get();
-                    CategoryGUI menuGUI = new CategoryGUI(skyShop, guiManager, player, localeManager, categoryConfigManager, transactionConfigManager, transactionManager, sellAllManager, statsManager, hookManager, skyShopAPI, null, menuConfig, "menu");
+                CategoryConfig menuConfig = categoryConfigManager.getConfiguration("menu");
+                if(menuConfig != null) {
+                    CategoryGUI menuGUI = new CategoryGUI(skyShop, guiManager, player, localeManager, categoryConfigManager, transactionStyleConfigManager, registryManager, sellAllManager, statsManager, hookManager, skyShopAPI, null, menuConfig, "menu");
 
                     boolean creationResult = menuGUI.create();
                     if(!creationResult) {
@@ -146,7 +143,7 @@ public class SkyShopCommand {
         });
 
         HelpCommand helpCommand = new HelpCommand(skyShop, localeManager);
-        OpenCommand openCommand = new OpenCommand(skyShop, guiManager, localeManager, categoryConfigManager, transactionConfigManager, transactionManager, sellAllManager, statsManager, hookManager, skyShopAPI);
+        OpenCommand openCommand = new OpenCommand(skyShop, guiManager, localeManager, categoryConfigManager, transactionStyleConfigManager, registryManager, sellAllManager, statsManager, hookManager, skyShopAPI);
         ReloadCommand reloadCommand = new ReloadCommand(skyShop, localeManager);
         SellAllCommand sellAllCommand = new SellAllCommand(skyShop, localeManager, guiManager, sellAllManager, skyShopAPI);
         StatsCommand statsCommand = new StatsCommand(skyShop, localeManager, guiManager, statsManager);

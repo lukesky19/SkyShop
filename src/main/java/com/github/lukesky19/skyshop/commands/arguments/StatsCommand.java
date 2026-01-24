@@ -21,10 +21,10 @@ import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
 import com.github.lukesky19.skylib.api.gui.GUIType;
 import com.github.lukesky19.skylib.api.gui.impl.UUIDGUIManager;
 import com.github.lukesky19.skyshop.SkyShop;
-import com.github.lukesky19.skyshop.config.locale.Locale;
+import com.github.lukesky19.skyshop.configuration.locale.Locale;
+import com.github.lukesky19.skyshop.configuration.locale.LocaleManager;
 import com.github.lukesky19.skyshop.gui.StatsGUI;
-import com.github.lukesky19.skyshop.manager.StatsManager;
-import com.github.lukesky19.skyshop.manager.config.LocaleManager;
+import com.github.lukesky19.skyshop.stats.StatsManager;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
@@ -67,7 +67,7 @@ public class StatsCommand {
             .requires(ctx -> ctx.getSender().hasPermission("skyshop.commands.skyshop.stats") && ctx.getSender() instanceof Player)
             .executes(ctx -> {
                 Player player = (Player) ctx.getSource().getSender();
-                Locale locale = localeManager.getLocale();
+                Locale locale = localeManager.getConfiguration();
                 ComponentLogger logger = skyShop.getComponentLogger();
 
                 if(statsManager == null) {
