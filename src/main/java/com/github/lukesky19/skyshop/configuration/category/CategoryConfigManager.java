@@ -241,6 +241,9 @@ public class CategoryConfigManager extends KeyValueConfigManager<String, Categor
                 saveConfiguration(configClass, configurationPath, migratedConfiguration);
             }
 
+            // Cache sell prices
+            priceManager.cacheCategorySellPrices(categoryConfig);
+
             // Store the configuration
             setData(identifier, migratedConfiguration);
         } catch (ConfigurateException configurateException) {
