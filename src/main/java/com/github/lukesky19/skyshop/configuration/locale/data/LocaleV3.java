@@ -15,14 +15,15 @@
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-package com.github.lukesky19.skyshop.configuration.locale;
+package com.github.lukesky19.skyshop.configuration.locale.data;
 
 import com.github.lukesky19.skylib.libs.configurate.objectmapping.ConfigSerializable;
 
 import java.util.List;
 
 /**
- * The plugin's locale configuration.
+ * The version 3 format of the locale configuration for migration purposes only.
+ * Version 3 = 2.1.0.0 in the old version format.
  * @param configVersion The configuration's version.
  * @param prefix The plugin's prefix/
  * @param help The plugin's help message. A {@link List} of {@link String}s.
@@ -30,8 +31,12 @@ import java.util.List;
  * @param notEnoughItems The message sent to the player when they lack the items to sell.
  * @param insufficientMoney The message sent to the player when they lack the funds to buy an item or command.
  * @param insufficientPlayerPoints The message sent to the player when they lack the player points to buy an item or command.
- * @param buySuccess The message when the player successfully completes a buy transaction successfully.
- * @param sellSuccess The message when the player successfully completes a sell transaction successfully.
+ * @param buyItemSuccess The message when the player successfully completes buying an item.
+ * @param sellItemSuccess The message when the player successfully completes selling an item.
+ * @param buyCommandSuccess The message when the player successfully completes buying a command.
+ * @param sellCommandSuccess The message when the player successfully completes selling a command.
+ * @param otherBuySuccess The message sent when a player successfully completes a non-item and non-command buy transaction.
+ * @param otherSellSuccess The message sent when a player successfully completes a non-item and non-command sell transaction.
  * @param sellallSuccess The message sent to the player when they successfully sell all items.
  * @param sellallUnsellable The message sent to the player when an item is unsellable.
  * @param unbuyable The message sent to the player when an item is unbuyable.
@@ -44,8 +49,9 @@ import java.util.List;
  * @param categoryNoPermission The message sent to a player when they don't have permission to access a shop category.
  * @param buttonNoPermission The message sent to a player when they don't have permission to use a button.
  */
+@Deprecated(since = "3.0.0.0")
 @ConfigSerializable
-public record Locale(
+public record LocaleV3(
         String configVersion,
         String prefix,
         List<String> help,
@@ -53,8 +59,12 @@ public record Locale(
         String notEnoughItems,
         String insufficientMoney,
         String insufficientPlayerPoints,
-        SuccessMessages buySuccess,
-        SuccessMessages sellSuccess,
+        SuccessMessages buyItemSuccess,
+        SuccessMessages sellItemSuccess,
+        SuccessMessages buyCommandSuccess,
+        SuccessMessages sellCommandSuccess,
+        SuccessMessages otherBuySuccess,
+        SuccessMessages otherSellSuccess,
         SuccessMessages sellallSuccess,
         String sellallUnsellable,
         String unbuyable,

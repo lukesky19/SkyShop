@@ -15,7 +15,7 @@
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-package com.github.lukesky19.skyshop.transaction;
+package com.github.lukesky19.skyshop.transaction.processor;
 
 import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
 import com.github.lukesky19.skylib.api.itemstack.ItemStackBuilder;
@@ -28,8 +28,8 @@ import com.github.lukesky19.skyshop.api.event.ItemPreSellEvent;
 import com.github.lukesky19.skyshop.api.processor.TransactionProcessor;
 import com.github.lukesky19.skyshop.api.result.TransactionResult;
 import com.github.lukesky19.skyshop.configuration.category.transaction.ItemConfiguration;
-import com.github.lukesky19.skyshop.configuration.locale.Locale;
 import com.github.lukesky19.skyshop.configuration.locale.LocaleManager;
+import com.github.lukesky19.skyshop.configuration.locale.data.LocaleV5;
 import com.github.lukesky19.skyshop.stats.StatsManager;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import org.bukkit.entity.Player;
@@ -111,7 +111,7 @@ public class ItemStackProcessor implements TransactionProcessor {
         if(!(configuration instanceof ItemConfiguration itemConfiguration)) return new TransactionResult("Wrong Type", true, true, false);
         @Nullable ItemStackConfig itemStackConfig = itemConfiguration.transactionItem();
         if(itemStackConfig.itemType() == null) return new TransactionResult("Not Configured", false, false, false);
-        Locale locale = localeManager.getConfiguration();
+        LocaleV5 locale = localeManager.getConfiguration();
 
         // Create the ItemStack that will be taken from the player if they have enough of said ItemStack.
         ItemStackBuilder itemStackBuilder = new ItemStackBuilder(logger);

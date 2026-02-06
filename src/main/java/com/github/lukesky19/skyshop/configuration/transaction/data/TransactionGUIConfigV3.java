@@ -15,7 +15,7 @@
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-package com.github.lukesky19.skyshop.configuration.transaction;
+package com.github.lukesky19.skyshop.configuration.transaction.data;
 
 import com.github.lukesky19.skylib.api.gui.GUIType;
 import com.github.lukesky19.skylib.api.itemstack.ItemStackConfig;
@@ -30,20 +30,17 @@ import java.util.List;
 
 /**
  * This record contains the configuration to create the {@link TransactionGUI}.
- * @param configVersion The file's config version.
- * @param gui The {@link GuiData} configuration.
+ * @param version The file's config version.
+ * @param guiType The {@link GUIType}.
+ * @param guiName The name to display inside the GUI.
+ * @param pages The {@link List} of {@link PageConfig}s.
  */
 @ConfigSerializable
-public record TransactionStyleConfig(@Nullable String configVersion, @NotNull GuiData gui) {
-    /**
-     * This record contains the actual configuration for creating the initial GUI.
-     * @param guiType The {@link GUIType}.
-     * @param name The name to display inside the GUI.
-     * @param pages The {@link List} of {@link PageConfig}s.
-     */
-    @ConfigSerializable
-    public record GuiData(@Nullable GUIType guiType, @Nullable String name, @NotNull List<@NotNull PageConfig> pages) {}
-
+public record TransactionGUIConfigV3(
+        int version,
+        @Nullable GUIType guiType,
+        @Nullable String guiName,
+        @NotNull List<@NotNull PageConfig> pages) {
     /**
      * This record contains the configuration for individual pages.
      * @param buttons The {@link List} of {@link Button}s.

@@ -17,8 +17,11 @@
 */
 package com.github.lukesky19.skyshop.task;
 
+import com.github.lukesky19.skylib.api.gui.impl.UUIDGUIManager;
 import com.github.lukesky19.skyshop.SkyShop;
+import com.github.lukesky19.skyshop.player.PlayerDataManager;
 import com.github.lukesky19.skyshop.stats.StatsManager;
+import com.github.lukesky19.skyshop.task.tasks.CooldownTask;
 import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -28,33 +31,81 @@ import org.jetbrains.annotations.Nullable;
  */
 public class TaskManager {
     private final @NotNull SkyShop skyShop;
-    private final @NotNull StatsManager statsManager;
+    private final @NotNull PlayerDataManager playerDataManager;
+    private final @NotNull UUIDGUIManager guiManager;
+    private final @Nullable StatsManager statsManager;
     private @Nullable BukkitTask saveStatsTask;
+    private @Nullable BukkitTask cooldownTask;
 
     /**
      * Constructor
      * @param skyShop A {@link SkyShop} instance.
+     * @param playerDataManager A {@link PlayerDataManager} instance.
+     * @param guiManager A {@link UUIDGUIManager} instance.
      * @param statsManager A {@link StatsManager} instance.
      */
-    public TaskManager(@NotNull SkyShop skyShop, @NotNull StatsManager statsManager) {
+    public TaskManager(
+            @NotNull SkyShop skyShop,
+            @NotNull PlayerDataManager playerDataManager,
+            @NotNull UUIDGUIManager guiManager,
+            @Nullable StatsManager statsManager) {
         this.skyShop = skyShop;
+        this.playerDataManager = playerDataManager;
+        this.guiManager = guiManager;
         this.statsManager = statsManager;
+    }
+
+    /**
+     * Start all tasks.
+     */
+    public void startTasks() {
+        stopTasks();
+
+        startCooldownTask();
+        startSaveStatsTask();
+    }
+
+    /**
+     * Stop all tasks.
+     */
+    public void stopTasks() {
+        stopCooldownTask();
+        stopSaveStatsTask();
     }
 
     /**
      * Start the task that regularly saves stats to the database.
      */
-    public void startSaveStatsTask() {
+    private void startSaveStatsTask() {
+        if(statsManager == null) return;
+
         saveStatsTask = skyShop.getServer().getScheduler().runTaskTimer(skyShop, statsManager::saveStats, 20L * 900, 20L * 900);
     }
 
     /**
      * Stop the task that regularly saves stats time to the database.
      */
-    public void stopSaveStatsTask() {
-        if(saveStatsTask != null && !saveStatsTask.isCancelled()) {
-            saveStatsTask.cancel();
+    private void stopSaveStatsTask() {
+        if(saveStatsTask != null) {
+            if(!saveStatsTask.isCancelled()) {
+                saveStatsTask.cancel();
+            }
+
             saveStatsTask = null;
+        }
+    }
+
+    private void startCooldownTask() {
+        cooldownTask = new CooldownTask(playerDataManager, guiManager).runTaskTimer(skyShop, 20L, 20L);
+    }
+
+    private void stopCooldownTask() {
+        if(cooldownTask != null) {
+            if(!cooldownTask.isCancelled()) {
+                cooldownTask.cancel();
+            }
+
+            cooldownTask = null;
         }
     }
 }

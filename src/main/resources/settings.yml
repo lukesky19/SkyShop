@@ -1,4 +1,4 @@
-config-version: 2.0.0.0
+version: 4
 first-run: true
 # This just has to be the name of any file in SkyShop/locale (without the extension, i.e, .yml)
 # Any locales provided by the plugin will always exist.

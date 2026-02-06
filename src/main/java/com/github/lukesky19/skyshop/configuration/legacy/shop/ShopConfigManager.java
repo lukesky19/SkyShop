@@ -19,13 +19,25 @@ package com.github.lukesky19.skyshop.configuration.legacy.shop;
 
 import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
 import com.github.lukesky19.skylib.api.configurate.ConfigurationUtility;
+import com.github.lukesky19.skylib.api.format.FormatUtil;
+import com.github.lukesky19.skylib.api.gui.GUIType;
+import com.github.lukesky19.skylib.api.itemstack.ItemStackConfig;
 import com.github.lukesky19.skylib.libs.configurate.CommentedConfigurationNode;
 import com.github.lukesky19.skylib.libs.configurate.ConfigurateException;
+import com.github.lukesky19.skylib.libs.configurate.ConfigurationNode;
+import com.github.lukesky19.skylib.libs.configurate.yaml.NodeStyle;
 import com.github.lukesky19.skylib.libs.configurate.yaml.YamlConfigurationLoader;
 import com.github.lukesky19.skyshop.SkyShop;
-import com.github.lukesky19.skyshop.configuration.category.gui.CategoryConfig;
-import com.github.lukesky19.skyshop.configuration.category.gui.CategoryConfigV2;
+import com.github.lukesky19.skyshop.api.configuration.TransactionConfiguration;
+import com.github.lukesky19.skyshop.configuration.category.data.CategoryConfigV4;
+import com.github.lukesky19.skyshop.configuration.category.transaction.CommandConfiguration;
+import com.github.lukesky19.skyshop.configuration.category.transaction.ItemConfiguration;
+import com.github.lukesky19.skyshop.configuration.util.TransactionConfigurationSerializer;
+import com.github.lukesky19.skyshop.registry.RegistryManager;
+import com.github.lukesky19.skyshop.util.ButtonType;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
+import org.bukkit.Material;
+import org.bukkit.inventory.ItemType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -43,13 +55,16 @@ import java.util.stream.Stream;
 */
 public class ShopConfigManager {
     private final @NotNull SkyShop skyShop;
+    private final @NotNull TransactionConfigurationSerializer serializer;
 
     /**
      * Constructor
      * @param skyShop A {@link SkyShop} instance.
+     * @param registryManager A {@link RegistryManager} instance.
     */
-    public ShopConfigManager(@NotNull SkyShop skyShop) {
+    public ShopConfigManager(@NotNull SkyShop skyShop, @NotNull RegistryManager registryManager) {
         this.skyShop = skyShop;
+        this.serializer = new TransactionConfigurationSerializer(registryManager);
     }
 
     /**
@@ -66,8 +81,10 @@ public class ShopConfigManager {
         // Walk through all files
         try(Stream<Path> stream = Files.walk(shopsPath)) {
             for(Path legacyPath : stream.toList()) {
+                if(legacyPath.toFile().isDirectory()) continue;
                 // Get the file name with the extension
                 String fileNameWithExtension = legacyPath.getFileName().toString();
+                String identifier = getFileNameWithoutExtension(legacyPath);
 
                 // Create the path where the migrated file will be saved
                 Path categoryPath = Path.of(skyShop.getDataFolder() + File.separator + "category" + File.separator + fileNameWithExtension);
@@ -76,20 +93,218 @@ public class ShopConfigManager {
                 if(categoryPath.toFile().exists()) continue;
 
                 YamlConfigurationLoader legacyLoader = ConfigurationUtility.getYamlConfigurationLoader(legacyPath);
-                YamlConfigurationLoader categoryLoader = ConfigurationUtility.getYamlConfigurationLoader(categoryPath);
+                YamlConfigurationLoader categoryLoader = YamlConfigurationLoader.builder()
+                        .nodeStyle(NodeStyle.BLOCK)
+                        .path(categoryPath)
+                        .indent(4)
+                        .defaultOptions(opts ->
+                                opts.serializers(build ->
+                                        build.registerExact(TransactionConfiguration.class, serializer)))
+                        .build();
 
+                ConfigurationNode root = legacyLoader.load();
+                ConfigurationNode versionNode = root.node("config-version");
+                @Nullable String version = versionNode.virtual() ? null : versionNode.getString();
+
+                CategoryConfigV4 categoryConfig;
                 try {
-                    // Load the legacy shop config
-                    @Nullable ShopConfig shopConfig = legacyLoader.load().get(ShopConfig.class);
-                    // If the shop config is null, move to the next file
-                    if(shopConfig == null) continue;
+                    if(version == null) {
+                        @Nullable ShopConfigV1 shopConfigV1 = root.get(ShopConfigV1.class);
+                        if(shopConfigV1 == null) {
+                            logger.warn(AdventureUtil.deserialize("Failed to migrate " + fileNameWithExtension + " due due failure to load."));
+                            continue;
+                        }
 
-                    // Create the new config from the legacy config
-                    CategoryConfigV2 categoryConfig = createCategoryConfig(shopConfig);
+                        List<ShopConfigV1.ShopPage> pages = shopConfigV1.pages().values().stream().toList();
+                        if(pages.isEmpty()) {
+                            logger.warn(AdventureUtil.deserialize("Failed to migrate the legacy " + fileNameWithExtension + " configuration due no pages configured."));
+                            return;
+                        }
+                        ShopConfigV1.ShopPage firstPage = pages.getFirst();
+                        GUIType guiType = GUIType.getType("CHEST_" + (firstPage.size() != null ? firstPage.size() : 54));
+
+                        int pageNum = 0;
+                        List<CategoryConfigV4.PageConfig> pageConfigList =  new ArrayList<>();
+                        for(ShopConfigV1.ShopPage pageConfig : shopConfigV1.pages().values()) {
+                            int buttonNum = 0;
+                            List<CategoryConfigV4.ButtonConfig> buttonConfigList =  new ArrayList<>();
+
+                            for(ShopConfigV1.ShopEntry button : pageConfig.entries().values()) {
+                                Material material = null;
+                                if(button.item().material() != null) {
+                                    material = Material.getMaterial(button.item().material());
+                                }
+                                ItemType itemType = material != null ? material.asItemType() : null;
+
+                                @Nullable ButtonType buttonType = ButtonType.getType(button.type());
+                                if(buttonType != null) {
+                                    if(buttonType.equals(ButtonType.COMMAND)) {
+                                        buttonType = ButtonType.TRANSACTION;
+                                    } else if(buttonType.equals(ButtonType.ITEM)) {
+                                        buttonType = ButtonType.TRANSACTION;
+                                    }
+                                }
+
+                                buttonConfigList.add(new CategoryConfigV4.ButtonConfig(
+                                        buttonType,
+                                        button.slot(),
+                                        null,
+                                        null,
+                                        new ItemStackConfig(
+                                                itemType != null ? itemType.getKey().toString() : null,
+                                                null,
+                                                null,
+                                                button.item().name(),
+                                                button.item().lore(),
+                                                null,
+                                                null,
+                                                List.of(),
+                                                new ItemStackConfig.PotionConfig(null, List.of()),
+                                                new ItemStackConfig.ColorConfig(false, null, null, null),
+                                                null,
+                                                List.of(),
+                                                new ItemStackConfig.DecoratedPotConfig(null, null, null, null),
+                                                new ItemStackConfig.ArmorTrimConfig(null, null),
+                                                List.of(),
+                                                new ItemStackConfig.OptionsConfig(null, null, null, null, null)),
+                                        new CategoryConfigV4.TransactionData(
+                                                identifier + ":" + pageNum + ":" + buttonNum,
+                                                "items",
+                                                itemType != null ? FormatUtil.formatItemTypeName(itemType) : "an item",
+                                                new CategoryConfigV4.PriceConfig(
+                                                        new CategoryConfigV4.PriceModifier(-1, -1, -1, -1, -1),
+                                                        new CategoryConfigV4.PriceModifier(-1, -1, -1, -1, -1),
+                                                        button.prices().buyPrice() != null ? button.prices().buyPrice() : -1.0,
+                                                        -1,
+                                                        button.prices().sellPrice() != null ? button.prices().sellPrice() : -1.0,
+                                                        -1
+                                                ),
+                                                new ItemStackConfig(
+                                                        itemType != null ? itemType.getKey().toString() : null,
+                                                        null,
+                                                        null,
+                                                        button.item().name(),
+                                                        button.item().lore(),
+                                                        null,
+                                                        null,
+                                                        List.of(),
+                                                        new ItemStackConfig.PotionConfig(null, List.of()),
+                                                        new ItemStackConfig.ColorConfig(false, null, null, null),
+                                                        null,
+                                                        List.of(),
+                                                        new ItemStackConfig.DecoratedPotConfig(null, null, null, null),
+                                                        new ItemStackConfig.ArmorTrimConfig(null, null),
+                                                        List.of(),
+                                                        new ItemStackConfig.OptionsConfig(null, null, null, null, null)),
+                                                List.of(
+                                                        new ItemConfiguration(1, "skyshop:item",
+                                                                new ItemStackConfig(
+                                                                        itemType != null ? itemType.getKey().toString() : null,
+                                                                        null,
+                                                                        null,
+                                                                        null,
+                                                                        List.of(),
+                                                                        null,
+                                                                        null,
+                                                                        List.of(),
+                                                                        new ItemStackConfig.PotionConfig(null, List.of()),
+                                                                        new ItemStackConfig.ColorConfig(false, null, null, null),
+                                                                        null,
+                                                                        List.of(),
+                                                                        new ItemStackConfig.DecoratedPotConfig(null, null, null, null),
+                                                                        new ItemStackConfig.ArmorTrimConfig(null, null),
+                                                                        List.of(),
+                                                                        new ItemStackConfig.OptionsConfig(null, null, null, null, null)),
+                                                                true),
+                                                        new CommandConfiguration(1, "skyshop:commands", button.commands().buyCommands(), button.commands().sellCommands())
+                                                ))));
+
+                                buttonNum++;
+                            }
+
+                            pageConfigList.add(new CategoryConfigV4.PageConfig(buttonConfigList));
+
+                            pageNum++;
+                        }
+
+                        categoryConfig = new CategoryConfigV4(
+                                4,
+                                null,
+                                guiType,
+                                firstPage.name(),
+                                pageConfigList);
+                    } else {
+                        if(!version.equals("2.0.0.0")) {
+                            logger.warn(AdventureUtil.deserialize("Failed to migrate " + fileNameWithExtension + " due to an unsupported version. Version: " + version));
+                            continue;
+                        }
+
+                        @Nullable ShopConfigV2 shopConfigV2 = root.get(ShopConfigV2.class);
+                        // If the shop config is null, move to the next file
+                        if(shopConfigV2 == null) {
+                            logger.warn(AdventureUtil.deserialize("Failed to migrate " + fileNameWithExtension + " due due failure to load."));
+                            continue;
+                        }
+
+                        int pageNum = 0;
+                        List<CategoryConfigV4.PageConfig> pageConfigList =  new ArrayList<>();
+                        for(ShopConfigV2.PageConfig pageConfig : shopConfigV2.gui().pages()) {
+                            int buttonNum = 0;
+                            List<CategoryConfigV4.ButtonConfig> buttonConfigList =  new ArrayList<>();
+
+                            for(ShopConfigV2.Button button : pageConfig.buttons()) {
+                                ButtonType buttonType = null;
+                                if(button.buttonType() != null) {
+                                    if(button.buttonType().equals(ButtonType.COMMAND)) {
+                                        buttonType = ButtonType.TRANSACTION;
+                                    } else if(button.buttonType().equals(ButtonType.ITEM)) {
+                                        buttonType = ButtonType.TRANSACTION;
+                                    } else {
+                                        buttonType = button.buttonType();
+                                    }
+                                }
+
+                                buttonConfigList.add(new CategoryConfigV4.ButtonConfig(
+                                        buttonType,
+                                        button.slot(),
+                                        null,
+                                        null,
+                                        button.displayItem(),
+                                        new CategoryConfigV4.TransactionData(
+                                                identifier + ":" + pageNum + ":" + buttonNum,
+                                                button.transactionData().transactionStyle(),
+                                                button.transactionData().transactionName(),
+                                                new CategoryConfigV4.PriceConfig(
+                                                        new CategoryConfigV4.PriceModifier(-1, -1, -1, -1, -1),
+                                                        new CategoryConfigV4.PriceModifier(-1, -1, -1, -1, -1),
+                                                        Objects.requireNonNullElse(button.transactionData().buyPrice(), -1.0),
+                                                        -1,
+                                                        Objects.requireNonNullElse(button.transactionData().sellPrice(), -1.0),
+                                                        -1),
+                                                button.transactionData().displayItem(),
+                                                List.of(
+                                                        new ItemConfiguration(1, "skyshop:item", button.transactionData().transactionItem(), true),
+                                                        new CommandConfiguration(1, "skyshop:commands", button.transactionData().buyCommands(), button.transactionData().sellCommands())
+                                                )))
+                                );
+
+                                buttonNum++;
+                            }
+
+                            pageConfigList.add(new CategoryConfigV4.PageConfig(buttonConfigList));
+                        }
+
+                        categoryConfig = new CategoryConfigV4(
+                                4,
+                                null,
+                                shopConfigV2.gui().guiType(),
+                                shopConfigV2.gui().name(),
+                                pageConfigList);
+                    }
 
                     // Save migrated config
                     CommentedConfigurationNode node = categoryLoader.createNode();
-                    node.set(CategoryConfig.class, categoryConfig);
+                    node.set(CategoryConfigV4.class, categoryConfig);
                     categoryLoader.save(node);
 
                     // Delete the legacy file.
@@ -107,69 +322,25 @@ public class ShopConfigManager {
                 shopsPath.toFile().delete();
             }
         } catch (IOException e) {
-            logger.error(AdventureUtil.deserialize("Failed to migrate legacy shop configuration files. " + e.getMessage()));
+            logger.error(AdventureUtil.deserialize("Failed to migrate legacy shop configuration files. Error: " + e.getMessage()));
         }
     }
 
     /**
-     * Create the {@link CategoryConfigV2} from the {@link ShopConfig}.
-     * @param shopConfig The legacy {@link ShopConfig}.
-     * @return The created {@link CategoryConfigV2}.
+     * Get the file name from a {@link Path} without the file extension.
+     * @param path The {@link Path} to a file. You should ensure the {@link Path} actually points to a file.
+     * @return A {@link String} containing the file name.
+     * @throws RuntimeException if the {@link Path} is not a file.
      */
-    private @NotNull CategoryConfigV2 createCategoryConfig(@NotNull ShopConfig shopConfig) {
-        List<CategoryConfigV2.PageConfig> pageConfigList = new ArrayList<>();
+    private @NotNull String getFileNameWithoutExtension(@NotNull Path path) {
+        if(!path.toFile().isFile()) throw new RuntimeException("Path does not point to a file.");
 
-        for(ShopConfig.PageConfig legacyPageConfig : shopConfig.gui().pages()) {
-            CategoryConfigV2.PageConfig categoryPageConfig = createCategoryPageConfig(legacyPageConfig);
+        String fileName = path.getFileName().toString();
 
-            pageConfigList.add(categoryPageConfig);
-        }
+        int lastDotIndex = fileName.lastIndexOf('.');
 
-        CategoryConfigV2.GuiData guiData = new CategoryConfigV2.GuiData(shopConfig.gui().guiType(), shopConfig.gui().name(), pageConfigList);
+        if(lastDotIndex == -1) return fileName;
 
-        return new CategoryConfigV2("2.1.0.0", null, guiData);
-    }
-
-    /**
-     * Create the {@link CategoryConfigV2.PageConfig} from the {@link ShopConfig.PageConfig}.
-     * @param legacyPageConfig The legacy {@link ShopConfig.PageConfig}.
-     * @return The created {@link CategoryConfigV2.PageConfig}.
-     */
-    private @NotNull CategoryConfigV2.PageConfig createCategoryPageConfig(@NotNull ShopConfig.PageConfig legacyPageConfig) {
-        List<CategoryConfigV2.ButtonConfig> buttonConfigList = new ArrayList<>();
-
-        for(ShopConfig.Button legacyButtonConfig : legacyPageConfig.buttons()) {
-            CategoryConfigV2.TransactionData transactionData = getTransactionData(legacyButtonConfig.transactionData());
-
-            CategoryConfigV2.ButtonConfig categoryButtonConfig = new CategoryConfigV2.ButtonConfig(
-                    legacyButtonConfig.buttonType(),
-                    legacyButtonConfig.slot(),
-                    null,
-                    legacyButtonConfig.displayItem(),
-                    transactionData,
-                    null);
-
-            buttonConfigList.add(categoryButtonConfig);
-        }
-
-        return new CategoryConfigV2.PageConfig(buttonConfigList);
-    }
-
-    /**
-     * Create the {@link CategoryConfigV2.TransactionData} from the {@link ShopConfig.TransactionData}.
-     * @param legacyTransactionData The legacy {@link ShopConfig.TransactionData}.
-     * @return The created {@link CategoryConfigV2.TransactionData}.
-     */
-    private @NotNull CategoryConfigV2.TransactionData getTransactionData(@NotNull ShopConfig.TransactionData legacyTransactionData) {
-        return new CategoryConfigV2.TransactionData(
-                legacyTransactionData.transactionStyle(),
-                legacyTransactionData.transactionName(),
-                new CategoryConfigV2.PriceConfig(Objects.requireNonNullElse(legacyTransactionData.buyPrice(), -1.0), Objects.requireNonNullElse(legacyTransactionData.sellPrice(), -1.0), -1, -1),
-                legacyTransactionData.displayItem(),
-                legacyTransactionData.transactionItem(),
-                legacyTransactionData.buyCommands(),
-                legacyTransactionData.sellCommands(),
-                new CategoryConfigV2.IslandSizeData(false, null, null),
-                new CategoryConfigV2.PrestigeMultiplierData(null, true, true, true, null, null, null));
+        return fileName.substring(0, lastDotIndex);
     }
 }

@@ -17,11 +17,20 @@
 */
 package com.github.lukesky19.skyshop.prices;
 
+import com.github.lukesky19.skyshop.configuration.category.data.CategoryConfigV4;
 import org.bukkit.inventory.ItemType;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
- * This record stores the cached sell prices for a given {@link ItemType}.
- * @param money The cached money.
- * @param points The cached player points.
+ * This record stores the transaction id and {@link CategoryConfigV4.PriceConfig} for a given {@link ItemType}.
+ * @param categoryPermission The permission required for the category the transaction is in.
+ * @param transactionPermission The permission required for the transaction.
+ * @param transactionId The transaction id.
+ * @param priceConfig The cached {@link CategoryConfigV4.PriceConfig}
  */
-public record PriceCache(double money, int points) {}
+public record PriceCache(
+        @Nullable String categoryPermission,
+        @Nullable String transactionPermission,
+        @NotNull String transactionId,
+        @NotNull CategoryConfigV4.PriceConfig priceConfig) {}

@@ -3,7 +3,7 @@
 #########################################################
 # This file acts as the entry point to all other shops.
 # This file is required for the plugin to function.
-config-version: "3.0.0.0"
+version: 5
 gui-type: CHEST_27
 gui-name: "<aqua><bold>Example Shop</bold></aqua>"
 pages:

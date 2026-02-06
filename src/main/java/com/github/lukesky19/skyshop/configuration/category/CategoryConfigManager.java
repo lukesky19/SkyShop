@@ -18,7 +18,6 @@
 package com.github.lukesky19.skyshop.configuration.category;
 
 import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
-import com.github.lukesky19.skylib.api.common.abstracts.config.KeyValueConfigManager;
 import com.github.lukesky19.skylib.libs.configurate.ConfigurateException;
 import com.github.lukesky19.skylib.libs.configurate.ConfigurationNode;
 import com.github.lukesky19.skylib.libs.configurate.serialize.SerializationException;
@@ -27,18 +26,20 @@ import com.github.lukesky19.skylib.libs.configurate.yaml.YamlConfigurationLoader
 import com.github.lukesky19.skyshop.SkyShop;
 import com.github.lukesky19.skyshop.api.configuration.TransactionConfiguration;
 import com.github.lukesky19.skyshop.api.serializer.Serializer;
-import com.github.lukesky19.skyshop.configuration.category.gui.CategoryConfig;
-import com.github.lukesky19.skyshop.configuration.category.gui.CategoryConfigV2;
+import com.github.lukesky19.skyshop.configuration.category.data.CategoryConfigV2;
+import com.github.lukesky19.skyshop.configuration.category.data.CategoryConfigV3;
+import com.github.lukesky19.skyshop.configuration.category.data.CategoryConfigV4;
 import com.github.lukesky19.skyshop.configuration.category.serializer.migration.MultiplierConfigurationSerializer;
 import com.github.lukesky19.skyshop.configuration.category.transaction.CommandConfiguration;
 import com.github.lukesky19.skyshop.configuration.category.transaction.IslandSizeConfiguration;
 import com.github.lukesky19.skyshop.configuration.category.transaction.ItemConfiguration;
 import com.github.lukesky19.skyshop.configuration.category.transaction.migration.PrestigeMultiplierData;
-import com.github.lukesky19.skyshop.configuration.settings.Settings;
 import com.github.lukesky19.skyshop.configuration.settings.SettingsManager;
-import com.github.lukesky19.skyshop.configuration.type_serializer.TransactionConfigurationSerializer;
+import com.github.lukesky19.skyshop.configuration.settings.data.SettingsV4;
+import com.github.lukesky19.skyshop.configuration.util.TransactionConfigurationSerializer;
 import com.github.lukesky19.skyshop.prices.PriceManager;
 import com.github.lukesky19.skyshop.registry.RegistryManager;
+import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jspecify.annotations.NonNull;
@@ -47,20 +48,21 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Stream;
 
 /**
  * This class manages everything related to handling the plugin's category config files.
-*/
-public class CategoryConfigManager extends KeyValueConfigManager<String, CategoryConfig> {
+ */
+public class CategoryConfigManager {
+    private final @NotNull SkyShop skyShop;
+    private final @NotNull ComponentLogger logger;
     private final @NotNull SettingsManager settingsManager;
     private final @NotNull PriceManager priceManager;
     private final @NotNull RegistryManager registryManager;
-
     private final @NotNull TransactionConfigurationSerializer serializer;
+
+    private final @NotNull Map<String, CategoryConfigV4> configMap = new HashMap<>();
 
     /**
      * Constructor
@@ -68,19 +70,27 @@ public class CategoryConfigManager extends KeyValueConfigManager<String, Categor
      * @param settingsManager A {@link SettingsManager} instance.
      * @param priceManager A {@link PriceManager} instance.
      * @param registryManager A {@link RegistryManager} instance.
-    */
+     */
     public CategoryConfigManager(
             @NotNull SkyShop skyShop,
             @NotNull SettingsManager settingsManager,
             @NotNull PriceManager priceManager,
             @NotNull RegistryManager registryManager) {
-        super(skyShop);
-
+        this.skyShop = skyShop;
+        this.logger = skyShop.getComponentLogger();
         this.settingsManager = settingsManager;
         this.priceManager = priceManager;
         this.registryManager = registryManager;
-
         this.serializer = new TransactionConfigurationSerializer(registryManager);
+    }
+
+    /**
+     * Get the {@link CategoryConfigV4} for the id provided.
+     * @param categoryId The id.
+     * @return The {@link CategoryConfigV4} or null.
+     */
+    public @Nullable CategoryConfigV4 getConfiguration(@NotNull String categoryId) {
+        return configMap.get(categoryId);
     }
 
     /**
@@ -88,46 +98,37 @@ public class CategoryConfigManager extends KeyValueConfigManager<String, Categor
      * @return A {@link Set} of {@link String}s for the known category config ids loaded.
      */
     public @NotNull Set<@NotNull String> getCategoryIds() {
-        return dataMap.keySet();
+        return configMap.keySet();
     }
 
     /**
      * Load all category gui configuration files in SkyShop/category
      */
-    @Override
     public void loadConfigurations() {
-        // Clear cached sell prices.
         priceManager.clearCache();
+        configMap.clear();
 
-        // Clear the current loaded configurations
-        dataMap.clear();
-
-        // Save bundled config if first run
         saveBundledConfig();
 
-        // Create the path to the category directory.
-        Path categoryPath = Path.of(plugin.getDataFolder() + File.separator + "category");
+        Path categoryPath = Path.of(skyShop.getDataFolder() + File.separator + "category");
 
-        // Walk through all files
         try(Stream<Path> stream = Files.walk(categoryPath)) {
-            // Loop through each path in the stream
-            for(Path path : stream.toList()) {
-                // Ignore directories
-                if(path.toFile().isDirectory()) continue;
+            stream.filter(path -> !path.toFile().isDirectory()).forEach(path -> {
+                String identifier = getFileNameWithoutExtension(path);
 
-                // Get the category name, which is the file name without the extension
-                String fileNameWithoutExtension = getFileNameWithoutExtension(path);
-
-                // Attempt to load the configuration
-                loadConfiguration(fileNameWithoutExtension, CategoryConfig.class, path);
-            }
+                loadConfiguration(identifier, path);
+            });
         } catch (IOException e) {
             logger.error(AdventureUtil.deserialize("Failed to load category configuration files. " + e.getMessage()));
         }
     }
 
-    @Override
-    public void loadConfiguration(@NonNull String identifier, @NotNull Class<CategoryConfig> configClass, @NotNull Path configurationPath) {
+    /**
+     * Load the configuration.
+     * @param identifier The config version identifier.
+     * @param configurationPath The configuration path.
+     */
+    public void loadConfiguration(@NotNull String identifier, @NotNull Path configurationPath) {
         YamlConfigurationLoader loader = YamlConfigurationLoader.builder()
                 .nodeStyle(NodeStyle.BLOCK)
                 .path(configurationPath)
@@ -139,95 +140,70 @@ public class CategoryConfigManager extends KeyValueConfigManager<String, Categor
 
         try {
             ConfigurationNode root = loader.load();
-            ConfigurationNode versionNode = root.node("config-version");
-            @Nullable String configVersion = versionNode.virtual() ? null : versionNode.getString();
+            int version = getVersion(root);
 
-            @Nullable CategoryConfig categoryConfig;
-            switch(configVersion) {
-                case "3.0.0.0" -> {
-                    categoryConfig = root.get(CategoryConfig.class);
+            @Nullable CategoryConfigV4 categoryConfig;
+            switch(version) {
+                case 4 -> {
+                    categoryConfig = root.get(CategoryConfigV4.class);
                     if(categoryConfig == null) {
-                        logger.warn(AdventureUtil.deserialize("Failed to load version 3.0.0.0 or newer configuration file " + (identifier + ".yml") + ". Class name: " + this.getClass().getName()));
+                        logger.warn(AdventureUtil.deserialize("Failed to load version 4 configuration file " + (identifier + ".yml") + ". Class name: " + this.getClass().getName()));
                         return;
                     }
                 }
 
-                case "2.1.0.0", "2.0.0.0" -> {
-                    @Nullable CategoryConfigV2 categoryConfigV2 = root.get(CategoryConfigV2.class);
-                    if(categoryConfigV2 == null) {
-                        logger.warn(AdventureUtil.deserialize("Failed to load version 2.0.0.0 or 2.1.0.0 configuration file " + (identifier + ".yml") + ". Class name: " + this.getClass().getName()));
+                case 3 -> { // Former: 3.0.0.0
+                    CategoryConfigV3 categoryConfigV3 = root.get(CategoryConfigV3.class);
+                    if(categoryConfigV3 == null) {
+                        logger.warn(AdventureUtil.deserialize("Failed to load version 3 configuration file " + (identifier + ".yml") + ". Class name: " + this.getClass().getName()));
                         return;
                     }
 
-                    // Migrate V2 config to V3
-                    categoryConfig = migrateV2Configuration(categoryConfigV2);
+                    categoryConfig = versionThreeToFour(identifier, categoryConfigV3);
+
+                    saveConfiguration(configurationPath, categoryConfig);
+                }
+
+                // 2.0.0.0 is version 1 because for some reason I used 2.0.0.0 when converting shop files to category files.
+                // So technically, 2.0.0.0 is the first version for category files.
+                case 2, 1 -> { // 2 = Former 2.1.0.0, 1 = Former 2.0.0.0
+                    CategoryConfigV2 categoryConfigV2 = root.get(CategoryConfigV2.class);
+                    if(categoryConfigV2 == null) {
+                        logger.warn(AdventureUtil.deserialize("Failed to load version 1 or 2 configuration file " + (identifier + ".yml") + ". Class name: " + this.getClass().getName()));
+                        return;
+                    }
+
+                    // Migrate V2 config to V4
+                    categoryConfig = versionTwoToFour(identifier, categoryConfigV2);
 
                     // Store the existing serializer if any
                     String id = "skyprestige:multiplier";
                     @Nullable Serializer existingSerializer = registryManager.getSerializer(id);
 
-                    // Save updated configuration
-                    try {
-                        // Temporarily overwrite the serializer for prestige multiplier for migration purposes
-                        registryManager.registerSerializer(id, new MultiplierConfigurationSerializer());
+                    // Temporarily overwrite the serializer for prestige multiplier for migration purposes
+                    registryManager.registerSerializer(id, new MultiplierConfigurationSerializer());
 
-                        YamlConfigurationLoader yamlConfigurationLoader = YamlConfigurationLoader.builder()
-                                .nodeStyle(NodeStyle.BLOCK)
-                                .path(configurationPath)
-                                .indent(4)
-                                .defaultOptions(opts ->
-                                        opts.serializers(build ->
-                                                build.registerExact(TransactionConfiguration.class, serializer)))
-                                .build();
+                    // Save the configuration
+                    saveConfiguration(configurationPath, categoryConfig);
 
-                        ConfigurationNode node = yamlConfigurationLoader.createNode();
-
-                        node.set(configClass, categoryConfig);
-
-                        yamlConfigurationLoader.save(node);
-
-                        // Revert temporarily overwritten serializer
-                        if(existingSerializer != null) {
-                            registryManager.registerSerializer(id, existingSerializer);
-                        } else {
-                            registryManager.unregisterSerializer(id);
-                        }
-                    } catch(SerializationException e) {
-                        // Revert temporarily overwritten serializer
-                        if(existingSerializer != null) {
-                            registryManager.registerSerializer(id, existingSerializer);
-                        } else {
-                            registryManager.unregisterSerializer(id);
-                        }
-
-                        logger.warn(AdventureUtil.deserialize("Failed to save migrated configuration (version 2 -> 3) configuration file " + (identifier + ".yml") + ". Class name: " + this.getClass().getName() + ". Error: " + e.getMessage()));
-                        return;
+                    // Revert temporarily overwritten serializer
+                    if(existingSerializer != null) {
+                        registryManager.registerSerializer(id, existingSerializer);
+                    } else {
+                        registryManager.unregisterSerializer(id);
                     }
 
                     // Re-load configuration from disk
                     // This is required so that the prestige multiplier transaction configuration uses the SkyPrestige class and not the migration class from SkyShop
-                    loadConfiguration(identifier, configClass, configurationPath);
+                    loadConfiguration(identifier, configurationPath);
 
-                    return;
-                }
-
-                case null -> {
-                    logger.warn(AdventureUtil.deserialize("Failed to load configuration file " + (identifier + ".yml") + " due to a null config version. Class name: " + this.getClass().getName()));
                     return;
                 }
 
                 default -> {
-                    logger.warn(AdventureUtil.deserialize("Failed to load configuration file " + (identifier + ".yml") + " due to an unsupported config version. Class name: " + this.getClass().getName()));
+                    logger.warn(AdventureUtil.deserialize("Failed to load configuration file " + (identifier + ".yml") + " due to an unsupported config version. Version: " + version + ". Class name: " + this.getClass().getName()));
                     return;
                 }
-            }
-
-            // Migrate configuration
-            @Nullable CategoryConfig migratedConfiguration = migrateConfiguration(categoryConfig);
-            // If migration failed, return
-            if(migratedConfiguration == null) {
-                logger.warn(AdventureUtil.deserialize("Configuration migration failed for file " + (identifier + ".yml") + ". Class name: " + this.getClass().getName()));
-                return;
             }
 
             // Check if the configuration is invalid
@@ -236,23 +212,22 @@ public class CategoryConfigManager extends KeyValueConfigManager<String, Categor
                 return;
             }
 
-            // Save the migrated configuration if different
-            if(categoryConfig != migratedConfiguration) {
-                saveConfiguration(configClass, configurationPath, migratedConfiguration);
-            }
-
             // Cache sell prices
             priceManager.cacheCategorySellPrices(categoryConfig);
 
             // Store the configuration
-            setData(identifier, migratedConfiguration);
+            configMap.put(identifier, categoryConfig);
         } catch (ConfigurateException configurateException) {
             logger.error(AdventureUtil.deserialize("Failed to load the configuration. Error: " + configurateException.getMessage()));
         }
     }
 
-    @Override
-    public void saveConfiguration(@NotNull Class<CategoryConfig> configClass, @NotNull Path configurationPath, @NonNull CategoryConfig configuration) {
+    /**
+     * Save the configuration.
+     * @param configurationPath The path to save to.
+     * @param configuration The configuration.
+     */
+    public void saveConfiguration(@NotNull Path configurationPath, @NonNull CategoryConfigV4 configuration) {
         try {
             YamlConfigurationLoader yamlConfigurationLoader = YamlConfigurationLoader.builder()
                     .nodeStyle(NodeStyle.BLOCK)
@@ -265,7 +240,7 @@ public class CategoryConfigManager extends KeyValueConfigManager<String, Categor
 
             ConfigurationNode node = yamlConfigurationLoader.createNode();
 
-            node.set(configClass, configuration);
+            node.set(CategoryConfigV4.class, configuration);
 
             yamlConfigurationLoader.save(node);
         } catch (ConfigurateException configurateException) {
@@ -275,100 +250,200 @@ public class CategoryConfigManager extends KeyValueConfigManager<String, Categor
 
     /**
      * Save the example category configuration files if they don't exist.
-     * Will only save if {@link Settings#firstRun()} is true.
+     * Will only save if {@link SettingsV4#firstRun()} is true.
      */
-    @Override
     public void saveBundledConfig() {
-        Settings settings = settingsManager.getConfiguration();
+        SettingsV4 settings = settingsManager.getConfiguration();
         if(settings == null) return;
         if(!settings.firstRun()) return;
 
-        Path exampleMenuPath = Path.of(plugin.getDataFolder() + File.separator + "category" + File.separator + "menu.yml");
-        Path exampleShopPath = Path.of(plugin.getDataFolder() + File.separator + "category" + File.separator + "example.yml");
+        Path exampleMenuPath = Path.of(skyShop.getDataFolder() + File.separator + "category" + File.separator + "menu.yml");
+        Path exampleShopPath = Path.of(skyShop.getDataFolder() + File.separator + "category" + File.separator + "example.yml");
 
         // Save the example menu category if it doesn't exist
         if(!exampleMenuPath.toFile().exists()) {
-            plugin.saveResource("category" + File.separator + "menu.yml", false);
+            skyShop.saveResource("category" + File.separator + "menu.yml", false);
         }
 
         // Save the example shop category if it doesn't exist
         if(!exampleShopPath.toFile().exists()) {
-            plugin.saveResource("category" + File.separator + "example.yml", false);
+            skyShop.saveResource("category" + File.separator + "example.yml", false);
         }
 
         settingsManager.setFirstRunFalse();
     }
 
-    @Override
-    public @Nullable CategoryConfig migrateConfiguration(@NonNull CategoryConfig configuration) {
-        switch(configuration.configVersion()) {
-            case "3.0.0.0" -> {
-                // Latest Version, do nothing
-                return configuration;
-            }
-
-            case "2.1.0.0", "2.0.0.0" -> {
-                logger.warn(AdventureUtil.deserialize("Version 2 configuration cannot be migrated by this method. Class name: " + this.getClass().getName()));
-                logger.info(AdventureUtil.deserialize("It should of been migrated before this point."));
-                return null;
-            }
-
-            case null -> {
-                logger.warn(AdventureUtil.deserialize("Failed to migrate configuration due to a null config version. Class name: " + this.getClass().getName()));
-                return null;
-            }
-
-            default -> {
-                logger.warn(AdventureUtil.deserialize("Failed to migrate configuration due to an unsupported config version. Class name: " + this.getClass().getName()));
-                return null;
-            }
-        }
-    }
-
-    @Override
-    public boolean validateConfiguration(@Nullable CategoryConfig configuration) {
+    /**
+     * Validate the configuration.
+     * @param configuration The configuration.
+     * @return true if valid, false if not.
+     */
+    public boolean validateConfiguration(@Nullable CategoryConfigV4 configuration) {
         return configuration != null;
     }
 
-    @NotNull
-    private CategoryConfig migrateV2Configuration(@NotNull CategoryConfigV2 categoryConfigV2) {
-        List<CategoryConfig.PageConfig> pageConfigList = new ArrayList<>();
-        categoryConfigV2.gui().pages().forEach(pageConfig -> {
-            List<CategoryConfig.ButtonConfig> buttonConfigList = new ArrayList<>();
-            pageConfig.buttons().forEach(buttonConfig -> {
-                CategoryConfigV2.TransactionData legacyTransData = buttonConfig.transactionData();
-                CategoryConfig.TransactionData transactionData = new CategoryConfig.TransactionData(
-                        legacyTransData.transactionStyle(),
-                        legacyTransData.transactionName(),
-                        new CategoryConfig.PriceConfig(
-                                legacyTransData.prices().buyPrice(),
-                                legacyTransData.prices().sellPrice(),
-                                legacyTransData.prices().buyPoints(),
-                                legacyTransData.prices().sellPoints()),
-                        legacyTransData.displayItem(),
+    /**
+     * Get the version number.
+     * @param root The root {@link ConfigurationNode}.
+     * @return The config version.
+     */
+    private int getVersion(@NotNull ConfigurationNode root) {
+        ConfigurationNode versionNode = root.node("version");
+        int version = versionNode.getInt();
+
+        ConfigurationNode legacyVersionNode = root.node("config-version");
+        @Nullable String legacyVersion = legacyVersionNode.virtual() ? null : legacyVersionNode.getString();
+        if(legacyVersion != null) {
+            try {
+                switch (legacyVersion) {
+                    case "3.1.0.0" -> {
+                        versionNode.set(4);
+                        version = 4;
+                    }
+
+                    case "3.0.0.0" -> {
+                        versionNode.set(3);
+                        version = 3;
+                    }
+
+                    case "2.1.0.0" -> {
+                        versionNode.set(2);
+                        version = 2;
+                    }
+
+                    case "2.0.0.0" -> {
+                        versionNode.set(1);
+                        version = 1;
+                    }
+
+                    default -> {
+                        versionNode.set(0);
+                        version = 0;
+                    }
+                }
+            } catch (SerializationException e) {
+                logger.warn(AdventureUtil.deserialize("Failed to convert String-based version to numeric version"));
+                version = 0;
+            }
+        }
+
+        return version;
+    }
+
+    /**
+     * Converts {@link CategoryConfigV2} configuration to {@link CategoryConfigV4}.
+     * @param identifier The configuration identifier.
+     * @param categoryConfigV2 The {@link CategoryConfigV2}.
+     * @return The {@link CategoryConfigV4}.
+     */
+    private @NotNull CategoryConfigV4 versionTwoToFour(@NotNull String identifier, @NotNull CategoryConfigV2 categoryConfigV2) {
+        List<CategoryConfigV3.PageConfig> pageConfigList = new ArrayList<>();
+
+        for(CategoryConfigV2.PageConfig pageConfig : categoryConfigV2.gui().pages()) {
+            List<CategoryConfigV3.ButtonConfig> buttonConfigList = new ArrayList<>();
+            for(CategoryConfigV2.ButtonConfig buttonConfig : pageConfig.buttons()) {
+                CategoryConfigV2.TransactionData legacyTransactionData = buttonConfig.transactionData();
+                CategoryConfigV3.TransactionData transactionData = new CategoryConfigV3.TransactionData(
+                        legacyTransactionData.transactionStyle(),
+                        legacyTransactionData.transactionName(),
+                        new CategoryConfigV3.PriceConfig(
+                                legacyTransactionData.prices().buyPrice(),
+                                legacyTransactionData.prices().sellPrice(),
+                                legacyTransactionData.prices().buyPoints(),
+                                legacyTransactionData.prices().sellPoints()),
+                        legacyTransactionData.displayItem(),
                         getTransactionConfigurations(buttonConfig.transactionData())
                 );
 
-                buttonConfigList.add(new CategoryConfig.ButtonConfig(
+                buttonConfigList.add(new CategoryConfigV3.ButtonConfig(
                         buttonConfig.buttonType(),
                         buttonConfig.slot(),
                         buttonConfig.shopName(),
                         buttonConfig.permission(),
                         buttonConfig.displayItem(),
                         transactionData));
-            });
-            pageConfigList.add(new CategoryConfig.PageConfig(buttonConfigList));
-        });
+            }
 
-        return new CategoryConfig("3.0.0.0",
+            pageConfigList.add(new CategoryConfigV3.PageConfig(buttonConfigList));
+        }
+
+        CategoryConfigV3 categoryConfigV3 = new CategoryConfigV3(
+                "3.0.0.0",
                 categoryConfigV2.permission(),
                 categoryConfigV2.gui().guiType(),
                 categoryConfigV2.gui().name(),
                 pageConfigList);
+
+        return versionThreeToFour(identifier, categoryConfigV3);
     }
 
-    @NotNull
-    private List<TransactionConfiguration> getTransactionConfigurations(@NotNull CategoryConfigV2.TransactionData legacyTransactionData) {
+    /**
+     * Converts version three to version four (latest).
+     * @return The {@link CategoryConfigV4}.
+     */
+    private @NotNull CategoryConfigV4 versionThreeToFour(@NotNull String identifier, @NotNull CategoryConfigV3 categoryConfigV3) {
+        int pageNum = 0;
+        List<CategoryConfigV4.PageConfig> pageConfigList = new ArrayList<>();
+        for(CategoryConfigV3.PageConfig pageConfig : categoryConfigV3.pages()) {
+            List<CategoryConfigV4.ButtonConfig> buttonConfigList = new ArrayList<>();
+
+            int buttonNum = 0;
+            for(CategoryConfigV3.ButtonConfig buttonConfig : pageConfig.buttons()) {
+                CategoryConfigV3.TransactionData legacyTransactionData = buttonConfig.transactionData();
+                CategoryConfigV4.TransactionData transactionData = legacyTransactionData != null ?
+                        new CategoryConfigV4.TransactionData(
+                                identifier + ":" + pageNum + ":" + buttonNum,
+                                legacyTransactionData.transactionStyle(),
+                                legacyTransactionData.transactionName(),
+                                new CategoryConfigV4.PriceConfig(
+                                        new CategoryConfigV4.PriceModifier(
+                                                -1,
+                                                -1,
+                                                -1,
+                                                -1,
+                                                -1),
+                                        new CategoryConfigV4.PriceModifier(
+                                                -1,
+                                                -1,
+                                                -1,
+                                                -1,
+                                                -1),
+                                        legacyTransactionData.prices().buyPrice(),
+                                        legacyTransactionData.prices().buyPoints(),
+                                        legacyTransactionData.prices().sellPrice(),
+                                        legacyTransactionData.prices().sellPoints()),
+                                legacyTransactionData.displayItem(),
+                                legacyTransactionData.transactionList())
+                        : null;
+
+                buttonConfigList.add(new CategoryConfigV4.ButtonConfig(
+                        buttonConfig.buttonType(),
+                        buttonConfig.slot(),
+                        buttonConfig.shopName(),
+                        buttonConfig.permission(),
+                        buttonConfig.displayItem(),
+                        transactionData));
+
+                buttonNum++;
+            }
+
+            pageConfigList.add(new CategoryConfigV4.PageConfig(buttonConfigList));
+        }
+
+        return new CategoryConfigV4(
+                4,
+                categoryConfigV3.permission(),
+                categoryConfigV3.guiType(),
+                categoryConfigV3.guiName(),
+                pageConfigList);
+    }
+
+    /**
+     * Get the {@link List} of {@link TransactionConfiguration}, converting the version 2 format to the version 3+ format.
+     * @param legacyTransactionData The {@link CategoryConfigV2.TransactionData}.
+     * @return The {@link List} of {@link TransactionConfiguration}.
+     */
+    private @NotNull List<TransactionConfiguration> getTransactionConfigurations(@NotNull CategoryConfigV2.TransactionData legacyTransactionData) {
         List<TransactionConfiguration> transactionConfigurations = new ArrayList<>();
         transactionConfigurations.add(new ItemConfiguration(1, "skyshop:item", legacyTransactionData.transactionItem(), true));
         transactionConfigurations.add(new CommandConfiguration(1, "skyshop:commands", legacyTransactionData.buyCommands(), legacyTransactionData.sellCommands()));

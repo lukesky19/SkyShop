@@ -19,8 +19,8 @@ package com.github.lukesky19.skyshop.commands.arguments;
 
 import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
 import com.github.lukesky19.skyshop.SkyShop;
-import com.github.lukesky19.skyshop.configuration.locale.Locale;
 import com.github.lukesky19.skyshop.configuration.locale.LocaleManager;
+import com.github.lukesky19.skyshop.configuration.locale.data.LocaleV5;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
@@ -54,7 +54,7 @@ public class ReloadCommand {
                 .executes(ctx -> {
                     skyShop.reload();
 
-                    Locale locale = localeManager.getConfiguration();
+                    LocaleV5 locale = localeManager.getConfiguration();
 
                     if(ctx.getSource().getSender() instanceof Player player) {
                         player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.configReload()));

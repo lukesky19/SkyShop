@@ -15,11 +15,12 @@
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-package com.github.lukesky19.skyshop.configuration.sellall;
+package com.github.lukesky19.skyshop.configuration.sellall.data;
 
 import com.github.lukesky19.skylib.api.gui.GUIType;
 import com.github.lukesky19.skylib.api.itemstack.ItemStackConfig;
 import com.github.lukesky19.skylib.libs.configurate.objectmapping.ConfigSerializable;
+import com.github.lukesky19.skyshop.gui.SellAllGUI;
 import com.github.lukesky19.skyshop.util.ButtonType;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
@@ -28,21 +29,18 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 
 /**
- * This record contains the configuration for version 2.0.0.0 and 2.1.0.0.
- * @param configVersion The file's config version.
- * @param gui The {@link GuiData} configuration.
+ * This record contains the configuration to create the {@link SellAllGUI}.
+ * @param version The file's config version.
+ * @param guiType The {@link GUIType}.
+ * @param guiName The name to display inside the GUI.
+ * @param buttons The {@link List} of {@link SellAllGUIConfigV3.Button}s.
  */
 @ConfigSerializable
-public record SellAllConfigV2(@Nullable String configVersion, @NotNull GuiData gui) {
-    /**
-     * This record contains the actual configuration for creating the initial GUI.
-     * @param guiType The {@link GUIType} as a {@link String}.
-     * @param name The name to display inside the GUI.
-     * @param buttons The {@link List} of {@link Button}s.
-     */
-    @ConfigSerializable
-    public record GuiData(@Nullable GUIType guiType, @Nullable String name, @NotNull List<@NotNull Button> buttons) {}
-
+public record SellAllGUIConfigV3(
+        int version,
+        @Nullable GUIType guiType,
+        @Nullable String guiName,
+        @NotNull List<@NotNull Button> buttons) {
     /**
      * This record contains the configuration to create buttons to be displayed.
      * @param buttonType The {@link ButtonType}.

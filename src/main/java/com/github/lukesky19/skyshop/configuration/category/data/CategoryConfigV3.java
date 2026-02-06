@@ -15,7 +15,7 @@
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-package com.github.lukesky19.skyshop.configuration.category.gui;
+package com.github.lukesky19.skyshop.configuration.category.data;
 
 import com.github.lukesky19.skylib.api.gui.GUIType;
 import com.github.lukesky19.skylib.api.itemstack.ItemStackConfig;
@@ -30,14 +30,17 @@ import java.util.List;
 
 /**
  * This record contains the configuration to create a category GUIs.
+ * @apiNote This is version 3 of the configuration for migration purposes only.
+ * Version 3 = 3.0.0.0 in the old version format.
  * @param configVersion The file's config version.
  * @param permission The permission required to access the category.
  * @param guiType The {@link GUIType}.
  * @param guiName The name to display inside the GUI.
- * @param pages The {@link List} of {@link CategoryConfig.PageConfig}s.
+ * @param pages The {@link List} of {@link CategoryConfigV3.PageConfig}s.
  */
+@Deprecated(since = "3.1.0.0")
 @ConfigSerializable
-public record CategoryConfig(
+public record CategoryConfigV3(
         @Nullable String configVersion,
         @Nullable String permission,
         @Nullable GUIType guiType,

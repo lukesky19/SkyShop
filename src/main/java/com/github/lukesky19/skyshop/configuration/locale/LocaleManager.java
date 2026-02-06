@@ -18,14 +18,16 @@
 package com.github.lukesky19.skyshop.configuration.locale;
 
 import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
-import com.github.lukesky19.skylib.api.common.abstracts.SkyPlugin;
-import com.github.lukesky19.skylib.api.common.abstracts.config.SimpleConfigManager;
 import com.github.lukesky19.skylib.api.configurate.ConfigurationUtility;
 import com.github.lukesky19.skylib.libs.configurate.ConfigurateException;
 import com.github.lukesky19.skylib.libs.configurate.ConfigurationNode;
+import com.github.lukesky19.skylib.libs.configurate.serialize.SerializationException;
 import com.github.lukesky19.skylib.libs.configurate.yaml.YamlConfigurationLoader;
-import com.github.lukesky19.skyshop.configuration.settings.Settings;
+import com.github.lukesky19.skyshop.SkyShop;
+import com.github.lukesky19.skyshop.configuration.locale.data.*;
 import com.github.lukesky19.skyshop.configuration.settings.SettingsManager;
+import com.github.lukesky19.skyshop.configuration.settings.data.SettingsV4;
+import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jspecify.annotations.NonNull;
@@ -37,13 +39,16 @@ import java.util.List;
 /**
  * This class manages everything related to handling the plugin's locale configuration.
  */
-public class LocaleManager extends SimpleConfigManager<Locale> {
+public class LocaleManager {
+    private final @NotNull SkyShop skyShop;
+    private final @NotNull ComponentLogger logger;
     private final @NotNull SettingsManager settingsManager;
+
     /**
      * The plugin's default locale. Used when the locale configuration is invalid.
      */
-    public final @NotNull Locale DEFAULT_LOCALE = new Locale(
-            "3.0.0.0",
+    private final @NotNull LocaleV5 DEFAULT_LOCALE = new LocaleV5(
+            5,
             "<aqua><bold>SkyShop</bold></aqua><gray> ▪ </gray>",
             List.of("<aqua>SkyShop is developed by <white><bold>lukeskywlker19</bold></white>.</aqua>",
                     "<aqua>Source code is released on GitHub: <click:OPEN_URL:https://github.com/lukesky19><yellow><underlined><bold>https://github.com/lukesky19</bold></underlined></yellow></click></aqua>",
@@ -62,15 +67,15 @@ public class LocaleManager extends SimpleConfigManager<Locale> {
             "<red>You do not have enough items to sell.</red>",
             "<red>You lack the money to buy this item.</red>",
             "<red>You lack the player points to buy this item.</red>",
-            new Locale.SuccessMessages(
+            new LocaleV5.SuccessMessages(
                     "<white>Purchased <yellow><amount> <transaction_name></yellow> for $<yellow><money></yellow> and <yellow><player_points></yellow> player points. Balance: <yellow><money_balance></yellow> Player Points: <yellow><player_points_balance></yellow></white>",
                     "<white>Purchased <yellow><amount> <transaction_name></yellow> for <yellow><money></yellow>. Balance: <yellow><money_balance></yellow></white>",
                     "<white>Purchased <yellow><amount> <transaction_name></yellow> for <yellow><player_points></yellow> player points. Player Points: <yellow><player_points_balance></yellow></white>"),
-            new Locale.SuccessMessages(
+            new LocaleV5.SuccessMessages(
                     "<white>Sold <yellow><amount> <transaction_name></yellow> for $<yellow><money></yellow> and <yellow><player_points></yellow> player points. Balance: <yellow><money_balance></yellow> Player Points: <yellow><player_points_balance></yellow></white>",
                     "<white>Sold <yellow><amount> <transaction_name></yellow> for <yellow><money></yellow>. Balance: <yellow><money_balance></yellow></white>",
                     "<white>Sold <yellow><amount> <transaction_name></yellow> for <yellow><player_points></yellow> player points. Player Points: <yellow><player_points_balance></yellow></white>"),
-            new Locale.SuccessMessages(
+            new LocaleV5.SuccessMessages(
                     "<white>Successfully sold all items for $<yellow><money></yellow> and <yellow><player_points></yellow> player points. Balance: <yellow><money_balance></yellow> Player Points: <yellow><player_points_balance></yellow></white>",
                     "<white>Successfully sold all items for $<yellow><money></yellow>. Updated Balance: <yellow><money_Balance></yellow></white>",
                     "<white>Successfully sold all items for <yellow><player_points></yellow> player points. Updated Balance: <yellow><player_points_balance></yellow></white>"),
@@ -81,20 +86,22 @@ public class LocaleManager extends SimpleConfigManager<Locale> {
             "<red>Unable to open this GUI because of a configuration error.</red>",
             "<red>Unable to open the stats GUI as stats tracking is disabled.</red>",
             "<red>Unable to complete this transaction due to an error.</red>",
-            new Locale.IslandSizeMessages(
+            new LocaleV5.IslandSizeMessages(
                     "<red>You must be on your island to buy or sell island size.</red>",
                     "<red>Your island is too small to sell any island size.</red>",
                     "<red>Your island is at the maximum size it can be expanded to.</red>"),
             "<red>You do not have permission to access this shop category.</red>",
             "<red>You do not have permission to access this button.</red>");
+    private @Nullable LocaleV5 configuration;
 
     /**
      * Constructor
-     * @param plugin A {@link SkyPlugin}.
+     * @param skyShop A {@link SkyShop} instance.
      * @param settingsManager A {@link SettingsManager} instance.
      */
-    public LocaleManager(@NotNull SkyPlugin plugin, @NotNull SettingsManager settingsManager) {
-        super(plugin, Locale.class);
+    public LocaleManager(@NotNull SkyShop skyShop, @NotNull SettingsManager settingsManager) {
+        this.skyShop = skyShop;
+        this.logger = skyShop.getComponentLogger();
         this.settingsManager = settingsManager;
     }
 
@@ -102,15 +109,16 @@ public class LocaleManager extends SimpleConfigManager<Locale> {
      * Gets the plugin's locale if not null or the default locale otherwise.
      * @return The plugin's locale if not null or the default locale otherwise.
      */
-    @Override
-    public @NotNull Locale getConfiguration() {
+    public @NotNull LocaleV5 getConfiguration() {
         if(configuration == null) return DEFAULT_LOCALE;
         return configuration;
     }
 
-    @Override
+    /**
+     * Load the locale configuration.
+     */
     public void loadConfiguration() {
-        Settings settings = settingsManager.getConfiguration();
+        SettingsV4 settings = settingsManager.getConfiguration();
         if(settings == null) {
             logger.warn(AdventureUtil.deserialize("Failed to load plugin's locale due to plugin settings being null."));
             return;
@@ -121,14 +129,9 @@ public class LocaleManager extends SimpleConfigManager<Locale> {
         }
 
         String localeString = settings.locale();
-        Path path = Path.of(plugin.getDataFolder() + File.separator + "locale" + File.separator + (localeString + ".yml"));
-        setConfigurationPath(path);
+        Path configurationPath = Path.of(skyShop.getDataFolder() + File.separator + "locale" + File.separator + (localeString + ".yml"));
 
         configuration = null;
-        if(configurationPath == null) {
-            logger.warn(AdventureUtil.deserialize("Unable to load configuration because the configuration path was not set."));
-            return;
-        }
 
         if(!configurationPath.toFile().exists()) {
             saveBundledConfig();
@@ -137,29 +140,116 @@ public class LocaleManager extends SimpleConfigManager<Locale> {
         YamlConfigurationLoader loader = ConfigurationUtility.getYamlConfigurationLoader(configurationPath);
         try {
             ConfigurationNode root = loader.load();
-            ConfigurationNode versionNode = root.node("config-version");
-            @Nullable String configVersion = versionNode.virtual() ? null : versionNode.getString();
+            int version = getVersion(root);
 
-            @Nullable Locale locale;
-            switch(configVersion) {
-                case "3.0.0.0" -> {
-                    locale = root.get(Locale.class);
+            @Nullable LocaleV5 locale;
+            switch(version) {
+                case 5 -> {
+                    locale = root.get(LocaleV5.class);
                     if(locale == null) {
-                        logger.warn(AdventureUtil.deserialize("Failed to load version 3.0.0.0 or newer configuration file " + (localeString + ".yml") + ". Class name: " + this.getClass().getName()));
+                        logger.warn(AdventureUtil.deserialize("Failed to load version 5 file " + (localeString + ".yml") + ". Class name: " + this.getClass().getName()));
                         return;
                     }
                 }
 
-                case "2.1.0.0" -> {
-                    @Nullable Locale_2_1_0_0 locale_2_1_0_0 = root.get(Locale_2_1_0_0.class);
-                    if(locale_2_1_0_0 == null) {
-                        logger.warn(AdventureUtil.deserialize("Failed to load version 2.1.0.0 configuration file " + (localeString + ".yml") + ". Class name: " + this.getClass().getName()));
+                case 4 -> {
+                    @Nullable LocaleV4 localeV4 = root.get(LocaleV4.class);
+                    if(localeV4 == null) {
+                        logger.warn(AdventureUtil.deserialize("Failed to load version 4 file " + (localeString + ".yml") + ". Class name: " + this.getClass().getName()));
                         return;
                     }
 
-                    locale = new Locale(
-                            "3.0.0.0",
-                            locale_2_1_0_0.prefix(),
+                    locale = new LocaleV5(
+                            5,
+                            localeV4.prefix(),
+                            localeV4.help(),
+                            localeV4.configReload(),
+                            localeV4.notEnoughItems(),
+                            localeV4.insufficientMoney(),
+                            localeV4.insufficientPlayerPoints(),
+                            new LocaleV5.SuccessMessages(
+                                    localeV4.buySuccess().moneyAndPoints(),
+                                    localeV4.buySuccess().money(),
+                                    localeV4.buySuccess().points()),
+                            new LocaleV5.SuccessMessages(
+                                    localeV4.sellSuccess().moneyAndPoints(),
+                                    localeV4.sellSuccess().money(),
+                                    localeV4.sellSuccess().points()),
+                            new LocaleV5.SuccessMessages(
+                                    localeV4.sellallSuccess().moneyAndPoints(),
+                                    localeV4.sellallSuccess().money(),
+                                    localeV4.sellallSuccess().points()),
+                            localeV4.sellallUnsellable(),
+                            localeV4.unbuyable(),
+                            localeV4.unsellable(),
+                            localeV4.inGameOnly(),
+                            localeV4.guiOpenError(),
+                            localeV4.statsDisabledGuiError(),
+                            localeV4.transactionError(),
+                            new LocaleV5.IslandSizeMessages(
+                                    localeV4.islandSizeMessages().notOnIsland(),
+                                    localeV4.islandSizeMessages().islandTooSmall(),
+                                    localeV4.islandSizeMessages().islandMaxSize()),
+                            localeV4.categoryNoPermission(),
+                            localeV4.buttonNoPermission());
+
+                    saveConfiguration(configurationPath, locale);
+                }
+
+                case 3 -> {
+                    @Nullable LocaleV3 localeV3 = root.get(LocaleV3.class);
+                    if(localeV3 == null) {
+                        logger.warn(AdventureUtil.deserialize("Failed to load version 3 file " + (localeString + ".yml") + ". Class name: " + this.getClass().getName()));
+                        return;
+                    }
+
+                    locale = new LocaleV5(
+                            5,
+                            localeV3.prefix(),
+                            localeV3.help(),
+                            localeV3.configReload(),
+                            localeV3.notEnoughItems(),
+                            localeV3.insufficientMoney(),
+                            localeV3.insufficientPlayerPoints(),
+                            new LocaleV5.SuccessMessages(
+                                    localeV3.buyItemSuccess().moneyAndPoints(),
+                                    localeV3.buyItemSuccess().money(),
+                                    localeV3.buyItemSuccess().points()),
+                            new LocaleV5.SuccessMessages(
+                                    localeV3.sellItemSuccess().moneyAndPoints(),
+                                    localeV3.sellItemSuccess().money(),
+                                    localeV3.sellItemSuccess().points()),
+                            new LocaleV5.SuccessMessages(
+                                    localeV3.sellallSuccess().moneyAndPoints(),
+                                    localeV3.sellallSuccess().money(),
+                                    localeV3.sellallSuccess().points()),
+                            localeV3.sellallUnsellable(),
+                            localeV3.unbuyable(),
+                            localeV3.unsellable(),
+                            localeV3.inGameOnly(),
+                            localeV3.guiOpenError(),
+                            localeV3.statsDisabledGuiError(),
+                            localeV3.transactionError(),
+                            new LocaleV5.IslandSizeMessages(
+                                    localeV3.islandSizeMessages().notOnIsland(),
+                                    localeV3.islandSizeMessages().islandTooSmall(),
+                                    localeV3.islandSizeMessages().islandMaxSize()),
+                            localeV3.categoryNoPermission(),
+                            localeV3.buttonNoPermission());
+
+                    saveConfiguration(configurationPath, locale);
+                }
+
+                case 2 -> {
+                    @Nullable LocaleV2 localeV2 = root.get(LocaleV2.class);
+                    if(localeV2 == null) {
+                        logger.warn(AdventureUtil.deserialize("Failed to load version 2 file " + (localeString + ".yml") + ". Class name: " + this.getClass().getName()));
+                        return;
+                    }
+
+                    locale = new LocaleV5(
+                            5,
+                            localeV2.prefix(),
                             List.of("<aqua>SkyShop is developed by <white><bold>lukeskywlker19</bold></white>.</aqua>",
                                     "<aqua>Source code is released on GitHub: <click:OPEN_URL:https://github.com/lukesky19><yellow><underlined><bold>https://github.com/lukesky19</bold></underlined></yellow></click></aqua>",
                                     " ",
@@ -173,172 +263,127 @@ public class LocaleManager extends SimpleConfigManager<Locale> {
                                     "<white>/</white><aqua>sell</aqua> <yellow>all</yellow>",
                                     "<white>/</white><aqua>sell</aqua> <yellow>hand</yellow>",
                                     "<white>/</white><aqua>sell</aqua> <yellow>hand all</yellow>"),
-                            locale_2_1_0_0.configReload(),
-                            locale_2_1_0_0.notEnoughItems(),
-                            locale_2_1_0_0.insufficientMoney(),
-                            locale_2_1_0_0.insufficientPlayerPoints(),
-                            new Locale.SuccessMessages(
-                                    locale_2_1_0_0.buyItemSuccess().moneyAndPoints(),
-                                    locale_2_1_0_0.buyItemSuccess().money(),
-                                    locale_2_1_0_0.buyItemSuccess().points()),
-                            new Locale.SuccessMessages(
-                                    locale_2_1_0_0.sellItemSuccess().moneyAndPoints(),
-                                    locale_2_1_0_0.sellItemSuccess().money(),
-                                    locale_2_1_0_0.sellItemSuccess().points()),
-                            new Locale.SuccessMessages(
-                                    locale_2_1_0_0.sellallSuccess().moneyAndPoints(),
-                                    locale_2_1_0_0.sellallSuccess().money(),
-                                    locale_2_1_0_0.sellallSuccess().points()),
-                            locale_2_1_0_0.sellallUnsellable(),
-                            locale_2_1_0_0.unbuyable(),
-                            locale_2_1_0_0.unsellable(),
-                            locale_2_1_0_0.inGameOnly(),
-                            locale_2_1_0_0.guiOpenError(),
-                            locale_2_1_0_0.statsDisabledGuiError(),
-                            locale_2_1_0_0.transactionError(),
-                            new Locale.IslandSizeMessages(
-                                    locale_2_1_0_0.islandSizeMessages().notOnIsland(),
-                                    locale_2_1_0_0.islandSizeMessages().islandTooSmall(),
-                                    locale_2_1_0_0.islandSizeMessages().islandMaxSize()),
-                            locale_2_1_0_0.categoryNoPermission(),
-                            locale_2_1_0_0.buttonNoPermission());
-
-                    // Save updated configuration
-                    saveConfiguration(locale);
-
-                    this.configuration = locale;
-
-                    return;
-                }
-
-                case "2.0.0.0" -> {
-                    @Nullable Locale_2_0_0_0 locale_2_0_0_0 = root.get(Locale_2_0_0_0.class);
-                    if(locale_2_0_0_0 == null) {
-                        logger.warn(AdventureUtil.deserialize("Failed to load version 2.0.0.0 configuration file " + (localeString + ".yml") + ". Class name: " + this.getClass().getName()));
-                        return;
-                    }
-
-                    locale = new Locale(
-                            "3.0.0.0",
-                            locale_2_0_0_0.prefix(),
-                            List.of("<aqua>SkyShop is developed by <white><bold>lukeskywlker19</bold></white>.</aqua>",
-                                    "<aqua>Source code is released on GitHub: <click:OPEN_URL:https://github.com/lukesky19><yellow><underlined><bold>https://github.com/lukesky19</bold></underlined></yellow></click></aqua>",
-                                    " ",
-                                    "<aqua><bold>List of Commands:</bold></aqua>",
-                                    "<white>/</white><aqua>shop</aqua>",
-                                    "<white>/</white><aqua>shop</aqua> <yellow>help</yellow>",
-                                    "<white>/</white><aqua>shop</aqua> <yellow>reload</yellow>",
-                                    "<white>/</white><aqua>shop</aqua> <yellow>sellall</yellow>",
-                                    "<white>/</white><aqua>shop</aqua> <yellow>stats</yellow>",
-                                    "<white>/</white><aqua>shop</aqua> <yellow>open <category></yellow>",
-                                    "<white>/</white><aqua>sell</aqua> <yellow>all</yellow>",
-                                    "<white>/</white><aqua>sell</aqua> <yellow>hand</yellow>",
-                                    "<white>/</white><aqua>sell</aqua> <yellow>hand all</yellow>"),
-                            locale_2_0_0_0.configReload(),
-                            locale_2_0_0_0.notEnoughItems(),
-                            locale_2_0_0_0.insufficientFunds(),
+                            localeV2.configReload(),
+                            localeV2.notEnoughItems(),
+                            localeV2.insufficientFunds(),
                             "<red>You lack the player points to buy this item.</red>",
-                            new Locale.SuccessMessages(
+                            new LocaleV5.SuccessMessages(
                                     "<white>Purchased <yellow><amount> <transaction_name></yellow> for $<yellow><money></yellow> and <yellow><player_points></yellow> player points. Balance: <yellow><money_balance></yellow> Player Points: <yellow><player_points_balance></yellow></white>",
                                     "<white>Purchased <yellow><amount> <transaction_name></yellow> for $<yellow><money></yellow>. Balance: <yellow><money_balance></yellow></white>",
                                     "<white>Purchased <yellow><amount> <transaction_name></yellow> for <yellow><player_points></yellow> player points. Player Points: <yellow><player_points_balance></yellow></white>"),
-                            new Locale.SuccessMessages(
+                            new LocaleV5.SuccessMessages(
                                     "<white>Sold <yellow><amount> <transaction_name></yellow> for $<yellow><money></yellow> and <yellow><player_points></yellow> player points. Balance: <yellow><money_balance></yellow> Player Points: <yellow><player_points_balance></yellow></white>",
                                     "<white>Sold <yellow><amount> <transaction_name></yellow> for $<yellow><money></yellow>. Balance: <yellow><money_balance></yellow></white>",
                                     "<white>Sold <yellow><amount> <transaction_name></yellow> for <yellow><player_points></yellow> player points. Player Points: <yellow><player_points_balance></yellow></white>"),
-                            new Locale.SuccessMessages(
+                            new LocaleV5.SuccessMessages(
                                     "<white>Successfully sold all items for $<yellow><money></yellow> and <yellow><player_points></yellow> player points. Balance: <yellow><money_balance></yellow> Player Points: <yellow><player_points_balance></yellow></white>",
-                                    updatePlaceholders(locale_2_0_0_0.sellallSuccess()),
+                                    updatePlaceholders(localeV2.sellallSuccess()),
                                     "<white>Successfully sold all items for <yellow><player_points></yellow> player points. Updated Balance: <yellow><player_points_balance></yellow></white>"),
-                            locale_2_0_0_0.sellallUnsellable(),
-                            locale_2_0_0_0.unbuyable(),
-                            locale_2_0_0_0.unsellable(),
-                            locale_2_0_0_0.inGameOnly(),
-                            locale_2_0_0_0.guiOpenError(),
-                            locale_2_0_0_0.statsDisabledGuiError(),
+                            localeV2.sellallUnsellable(),
+                            localeV2.unbuyable(),
+                            localeV2.unsellable(),
+                            localeV2.inGameOnly(),
+                            localeV2.guiOpenError(),
+                            localeV2.statsDisabledGuiError(),
                             "<red>Unable to complete this transaction due to an error.</red>",
-                            new Locale.IslandSizeMessages(
+                            new LocaleV5.IslandSizeMessages(
                                     "<red>You must be on your island to buy or sell island size.</red>",
                                     "<red>Your island is too small to sell any island size.</red>",
                                     "<red>Your island is at the maximum size it can be expanded to.</red>"),
                             "<red>You do not have permission to access this shop category.</red>",
                             "<red>You do not have permission to access this button.</red>");
 
-                    // Save updated configuration
-                    saveConfiguration(locale);
-
-                    this.configuration = locale;
-
-                    return;
+                    saveConfiguration(configurationPath, locale);
                 }
 
-                case null -> {
-                    logger.warn(AdventureUtil.deserialize("Failed to load configuration file " + (localeString + ".yml") + " due to a null config version. Class name: " + this.getClass().getName()));
-                    return;
+                case 1 -> {
+                    @Nullable LocaleV1 localeV1 = root.get(LocaleV1.class);
+                    if(localeV1 == null) {
+                        logger.warn(AdventureUtil.deserialize("Failed to load version 1 file " + (localeString + ".yml") + ". Class name: " + this.getClass().getName()));
+                        return;
+                    }
+
+                    locale = new LocaleV5(
+                            5,
+                            localeV1.prefix(),
+                            localeV1.help(),
+                            localeV1.configReload(),
+                            localeV1.notEnoughItems(),
+                            localeV1.insufficientFunds(),
+                            "<red>You lack the player points to buy this item.</red>",
+                            new LocaleV5.SuccessMessages(
+                                    "<white>Purchased <yellow><amount> <transaction_name></yellow> for $<yellow><money></yellow> and <yellow><player_points></yellow> player points. Balance: <yellow><money_balance></yellow> Player Points: <yellow><player_points_balance></yellow></white>",
+                                    "<white>Purchased <yellow><amount> <transaction_name></yellow> for $<yellow><money></yellow>. Balance: <yellow><money_balance></yellow></white>",
+                                    "<white>Purchased <yellow><amount> <transaction_name></yellow> for <yellow><player_points></yellow> player points. Player Points: <yellow><player_points_balance></yellow></white>"),
+                            new LocaleV5.SuccessMessages(
+                                    "<white>Sold <yellow><amount> <transaction_name></yellow> for $<yellow><money></yellow> and <yellow><player_points></yellow> player points. Balance: <yellow><money_balance></yellow> Player Points: <yellow><player_points_balance></yellow></white>",
+                                    "<white>Sold <yellow><amount> <transaction_name></yellow> for $<yellow><money></yellow>. Balance: <yellow><money_balance></yellow></white>",
+                                    "<white>Sold <yellow><amount> <transaction_name></yellow> for <yellow><player_points></yellow> player points. Player Points: <yellow><player_points_balance></yellow></white>"),
+                            new LocaleV5.SuccessMessages(
+                                    "<white>Successfully sold all items for $<yellow><money></yellow> and <yellow><player_points></yellow> player points. Balance: <yellow><money_balance></yellow> Player Points: <yellow><player_points_balance></yellow></white>",
+                                    "<white>Successfully sold all items for $<yellow><money></yellow>. Updated Balance: <yellow><money_balance></yellow></white>",
+                                    "<white>Successfully sold all items for <yellow><player_points></yellow> player points. Updated Balance: <yellow><player_points_balance></yellow></white>"),
+                            localeV1.sellallUnsellable(),
+                            localeV1.unbuyable(),
+                            localeV1.unsellable(),
+                            localeV1.inGameOnly(),
+                            "<red>Unable to open this GUI because of a configuration error.</red>",
+                            "<red>Unable to open the stats GUI as stats tracking is disabled.</red>",
+                            "<red>Unable to complete this transaction due to an error.</red>",
+                            new LocaleV5.IslandSizeMessages(
+                                    "<red>You must be on your island to buy or sell island size.</red>",
+                                    "<red>Your island is too small to sell any island size.</red>",
+                                    "<red>Your island is at the maximum size it can be expanded to.</red>"),
+                            "<red>You do not have permission to access this shop category.</red>",
+                            "<red>You do not have permission to access this button.</red>");
+
+                    saveConfiguration(configurationPath, locale);
                 }
 
                 default -> {
-                    logger.warn(AdventureUtil.deserialize("Failed to load configuration file " + (localeString + ".yml") + " due to an unsupported config version. Class name: " + this.getClass().getName()));
+                    logger.warn(AdventureUtil.deserialize("Failed to load configuration file " + (localeString + ".yml") + " due to an unsupported config version. Version: " + version + " Class name: " + this.getClass().getName()));
                     return;
                 }
             }
 
-            // Migrate configuration
-            @Nullable Locale migratedLocale = migrateConfiguration(locale);
-            // If migration failed, return
-            if(migratedLocale == null) {
-                logger.warn(AdventureUtil.deserialize("Configuration migration failed for file " + (localeString + ".yml") + ". Class name: " + this.getClass().getName()));
-                return;
-            }
-
             // Check if the configuration is invalid
-            if(!validateConfiguration(migratedLocale)) {
+            if(!validateConfiguration(locale)) {
                 logger.warn(AdventureUtil.deserialize("Configuration validation failed for file " + (localeString + ".yml") + ". Class name: " + this.getClass().getName()));
                 return;
             }
 
-            // Save the migrated configuration if different
-            if(migratedLocale != locale) {
-                saveConfiguration(migratedLocale);
-            }
-
-            this.configuration = migratedLocale;
+            this.configuration = locale;
         } catch (ConfigurateException configurateException) {
             logger.error(AdventureUtil.deserialize("Failed to load configuration. Error: " + configurateException.getMessage()));
         }
     }
 
-    @Override
+    /**
+     * Save the default bundled locale configuration files.
+     */
     public void saveBundledConfig() {
-        Path path = Path.of(plugin.getDataFolder() + File.separator + "locale" + File.separator + "en_US.yml");
+        Path path = Path.of(skyShop.getDataFolder() + File.separator + "locale" + File.separator + "en_US.yml");
         if(!path.toFile().exists()) {
-            plugin.saveResource("locale" + File.separator + "en_US.yml", false);
+            skyShop.saveResource("locale" + File.separator + "en_US.yml", false);
         }
     }
 
-    @Override
-    public @Nullable Locale migrateConfiguration(@NonNull Locale configuration) {
-        switch(configuration.configVersion()) {
-            case "3.0.0.0" -> {
-                // Latest Version, do nothing
-                return configuration;
-            }
+    /**
+     * Save the configuration.
+     * @param configurationPath The path to save to.
+     * @param configuration The configuration.
+     */
+    public void saveConfiguration(@NotNull Path configurationPath, @NonNull LocaleV5 configuration) {
+        try {
+            YamlConfigurationLoader loader = ConfigurationUtility.getYamlConfigurationLoader(configurationPath);
 
-            case "2.1.0.0", "2.0.0.0" -> {
-                logger.warn(AdventureUtil.deserialize("Version 2 configuration cannot be migrated by this method. Class name: " + this.getClass().getName()));
-                logger.info(AdventureUtil.deserialize("It should of been migrated before this point."));
-                return null;
-            }
+            ConfigurationNode node = loader.createNode();
 
-            case null -> {
-                logger.warn(AdventureUtil.deserialize("Failed to migrate configuration due to a null config version. Class name: " + this.getClass().getName()));
-                return null;
-            }
+            node.set(LocaleV5.class, configuration);
 
-            default -> {
-                logger.warn(AdventureUtil.deserialize("Failed to migrate configuration due to an unsupported config version. Class name: " + this.getClass().getName()));
-                return null;
-            }
+            loader.save(node);
+        } catch (ConfigurateException configurateException) {
+            logger.error(AdventureUtil.deserialize("Failed to save locale configuration. Error: " + configurateException.getMessage()));
         }
     }
 
@@ -359,9 +404,10 @@ public class LocaleManager extends SimpleConfigManager<Locale> {
     /**
      * Checks if any locale strings are missing.
      * Sets locale to null if so, resulting in the default locale being used.
+     * @param configuration The locale configuration to validate.
+     * @return true if valid, false if not.
      */
-    @Override
-    public boolean validateConfiguration(@Nullable Locale configuration) {
+    public boolean validateConfiguration(@Nullable LocaleV5 configuration) {
         if(configuration == null) return false;
 
         if (configuration.prefix() == null
@@ -398,5 +444,48 @@ public class LocaleManager extends SimpleConfigManager<Locale> {
         }
 
         return true;
+    }
+
+    /**
+     * Get the version number.
+     * @param root The root {@link ConfigurationNode}.
+     * @return The config version.
+     */
+    private int getVersion(@NotNull ConfigurationNode root) {
+        ConfigurationNode versionNode = root.node("version");
+        int version = versionNode.getInt();
+
+        ConfigurationNode legacyVersionNode = root.node("config-version");
+        @Nullable String legacyVersion = legacyVersionNode.virtual() ? null : legacyVersionNode.getString();
+        if(legacyVersion != null) {
+            try {
+                switch (legacyVersion) {
+                    case "3.0.0.0" -> {
+                        versionNode.set(4);
+                        version = 4;
+                    }
+
+                    case "2.1.0.0" -> {
+                        versionNode.set(3);
+                        version = 3;
+                    }
+
+                    case "2.0.0.0" -> {
+                        versionNode.set(2);
+                        version = 2;
+                    }
+
+                    default -> {
+                        versionNode.set(1);
+                        version = 1;
+                    }
+                }
+            } catch (SerializationException e) {
+                logger.warn(AdventureUtil.deserialize("Failed to convert String-based version to numeric version"));
+                version = 0;
+            }
+        }
+
+        return version;
     }
 }

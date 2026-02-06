@@ -38,16 +38,19 @@ import java.util.concurrent.CompletableFuture;
 public class StatsTable {
     private final @NotNull SkyShop skyShop;
     private final @NotNull QueueManager queueManager;
+    private final @NotNull VersionsTable versionsTable;
     private final @NotNull String tableName = "stats";
 
     /**
      * Constructor
      * @param skyShop A {@link SkyShop} instance.
      * @param queueManager A {@link QueueManager} instance.
+     * @param versionsTable A {@link VersionsTable} instance.
      */
-    public StatsTable(@NotNull SkyShop skyShop, @NotNull QueueManager queueManager) {
+    public StatsTable(@NotNull SkyShop skyShop, @NotNull QueueManager queueManager, @NotNull VersionsTable versionsTable) {
         this.skyShop = skyShop;
         this.queueManager = queueManager;
+        this.versionsTable = versionsTable;
     }
 
     /**
@@ -61,7 +64,8 @@ public class StatsTable {
                 "last_updated LONG NOT NULL DEFAULT 0)";
         String indexCreationSql = "CREATE INDEX IF NOT EXISTS idx_item_types ON " + tableName + "(item_type);";
 
-        queueManager.queueBulkWriteTransaction(List.of(tableCreationSql, indexCreationSql));
+        queueManager.queueBulkWriteTransaction(List.of(tableCreationSql, indexCreationSql))
+                .thenCompose(v -> versionsTable.updateVersion(tableName, 1));
     }
 
     /**

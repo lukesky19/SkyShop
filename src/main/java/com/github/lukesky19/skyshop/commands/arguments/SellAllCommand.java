@@ -21,10 +21,10 @@ import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
 import com.github.lukesky19.skylib.api.gui.impl.UUIDGUIManager;
 import com.github.lukesky19.skyshop.SkyShop;
 import com.github.lukesky19.skyshop.api.SkyShopAPI;
-import com.github.lukesky19.skyshop.configuration.locale.Locale;
 import com.github.lukesky19.skyshop.configuration.locale.LocaleManager;
-import com.github.lukesky19.skyshop.configuration.sellall.SellAllConfig;
+import com.github.lukesky19.skyshop.configuration.locale.data.LocaleV5;
 import com.github.lukesky19.skyshop.configuration.sellall.SellAllManager;
+import com.github.lukesky19.skyshop.configuration.sellall.data.SellAllGUIConfigV3;
 import com.github.lukesky19.skyshop.gui.SellAllGUI;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
@@ -68,10 +68,10 @@ public class SellAllCommand {
                 .requires(ctx -> ctx.getSender().hasPermission("skyshop.commands.skyshop.sellall") && ctx.getSender() instanceof Player)
                 .executes(ctx -> {
                     Player player = (Player) ctx.getSource().getSender();
-                    Locale locale = localeManager.getConfiguration();
+                    LocaleV5 locale = localeManager.getConfiguration();
                     ComponentLogger logger = skyShop.getComponentLogger();
 
-                    SellAllConfig sellAllConfig = sellAllManager.getConfiguration();
+                    SellAllGUIConfigV3 sellAllConfig = sellAllManager.getConfiguration();
                     if(sellAllConfig == null) {
                         logger.error(AdventureUtil.deserialize("Unable to open the sell all GUI for player " + player.getName() + " due to a configuration error."));
                         player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.guiOpenError()));

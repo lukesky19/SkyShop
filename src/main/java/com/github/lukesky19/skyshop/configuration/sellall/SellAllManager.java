@@ -18,154 +18,195 @@
 package com.github.lukesky19.skyshop.configuration.sellall;
 
 import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
-import com.github.lukesky19.skylib.api.common.abstracts.config.SimpleConfigManager;
 import com.github.lukesky19.skylib.api.configurate.ConfigurationUtility;
 import com.github.lukesky19.skylib.libs.configurate.ConfigurateException;
 import com.github.lukesky19.skylib.libs.configurate.ConfigurationNode;
+import com.github.lukesky19.skylib.libs.configurate.serialize.SerializationException;
 import com.github.lukesky19.skylib.libs.configurate.yaml.YamlConfigurationLoader;
 import com.github.lukesky19.skyshop.SkyShop;
+import com.github.lukesky19.skyshop.configuration.sellall.data.SellAllGUIConfigV1;
+import com.github.lukesky19.skyshop.configuration.sellall.data.SellAllGUIConfigV2;
+import com.github.lukesky19.skyshop.configuration.sellall.data.SellAllGUIConfigV3;
+import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jspecify.annotations.NonNull;
 
 import java.io.File;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * This class manages everything related to handling the plugin's sellall.yml file.
  */
-public class SellAllManager extends SimpleConfigManager<SellAllConfig> {
+public class SellAllManager {
+    private final @NotNull SkyShop skyShop;
+    private final @NotNull ComponentLogger logger;
+    private @Nullable SellAllGUIConfigV3 configuration;
+
     /**
      * Constructor
      * @param skyShop A {@link SkyShop} instance.
      */
     public SellAllManager(@NotNull SkyShop skyShop) {
-        super(skyShop, Path.of(skyShop.getDataFolder() + File.separator + "sellall.yml"), SellAllConfig.class);
+        this.skyShop = skyShop;
+        this.logger = skyShop.getComponentLogger();
     }
 
-    @Override
-    public void loadConfiguration() {
-        configuration = null;
-        if(configurationPath == null) {
-            logger.warn(AdventureUtil.deserialize("Unable to load configuration because the configuration path was not set."));
-            return;
-        }
+    /**
+     * Get the {@link SellAllGUIConfigV3} or null.
+     * @return The {@link SellAllGUIConfigV3} or null.
+     */
+    public @Nullable SellAllGUIConfigV3 getConfiguration() {
+        return configuration;
+    }
 
-        saveBundledConfig();
+    /**
+     * Load the sellall GUI configuration.
+     */
+    public void loadConfiguration() {
+        @NotNull Path configurationPath = Path.of(skyShop.getDataFolder() + File.separator + "sellall.yml");
+        configuration = null;
+
+        saveBundledConfig(configurationPath);
 
         YamlConfigurationLoader loader = ConfigurationUtility.getYamlConfigurationLoader(configurationPath);
         try {
             ConfigurationNode root = loader.load();
-            ConfigurationNode versionNode = root.node("config-version");
-            @Nullable String configVersion = versionNode.virtual() ? null : versionNode.getString();
+            int version = getVersion(root);
 
-            @Nullable SellAllConfig sellAllConfig;
-            switch(configVersion) {
-                case "3.0.0.0" -> {
-                    sellAllConfig = root.get(SellAllConfig.class);
+            @Nullable SellAllGUIConfigV3 sellAllConfig;
+            switch(version) {
+                case 3 -> {
+                    sellAllConfig = root.get(SellAllGUIConfigV3.class);
                     if(sellAllConfig == null) {
-                        logger.warn(AdventureUtil.deserialize("Failed to load version 3.0.0.0 or newer configuration file sellall.yml. Class name: " + this.getClass().getName()));
+                        logger.warn(AdventureUtil.deserialize("Failed to load version 3 configuration file sellall.yml. Class name: " + this.getClass().getName()));
                         return;
                     }
                 }
 
-                case "2.0.0.0" -> {
-                    @Nullable SellAllConfigV2 sellAllConfigV2 = root.get(SellAllConfigV2.class);
+                case 2 -> {
+                    SellAllGUIConfigV2 sellAllConfigV2 = root.get(SellAllGUIConfigV2.class);
                     if(sellAllConfigV2 == null) {
-                        logger.warn(AdventureUtil.deserialize("Failed to load version 2.1.0.0 configuration file sellall.yml. Class name: " + this.getClass().getName()));
+                        logger.warn(AdventureUtil.deserialize("Failed to load version 2 configuration file sellall.yml. Class name: " + this.getClass().getName()));
                         return;
                     }
 
-                    List<SellAllConfig.Button> buttonList = new ArrayList<>();
-                    sellAllConfigV2.gui().buttons().forEach(button ->
-                            buttonList.add(new SellAllConfig.Button(button.buttonType(), button.slot(), button.displayItem())));
+                    sellAllConfig = new SellAllGUIConfigV3(
+                            3,
+                            sellAllConfigV2.guiType(),
+                            sellAllConfigV2.guiName(),
+                            sellAllConfigV2.buttons().stream().map(button ->
+                                    new SellAllGUIConfigV3.Button(button.buttonType(), button.slot(), button.displayItem())).toList());
 
-                    sellAllConfig = new SellAllConfig(
-                            sellAllConfigV2.configVersion(),
-                            sellAllConfigV2.gui().guiType(),
-                            sellAllConfigV2.gui().name(),
-                            buttonList);
-
-                    // Save updated configuration
-                    saveConfiguration(sellAllConfig);
-
-                    this.configuration = sellAllConfig;
-
-                    return;
+                    saveConfiguration(configurationPath, sellAllConfig);
                 }
 
-                case null -> {
-                    logger.warn(AdventureUtil.deserialize("Failed to load configuration file sellall.yml due to a null config version. Class name: " + this.getClass().getName()));
-                    return;
+                case 1 -> {
+                    @Nullable SellAllGUIConfigV1 sellAllConfigV1 = root.get(SellAllGUIConfigV1.class);
+                    if(sellAllConfigV1 == null) {
+                        logger.warn(AdventureUtil.deserialize("Failed to load version 1 configuration file sellall.yml. Class name: " + this.getClass().getName()));
+                        return;
+                    }
+
+                    sellAllConfig = new SellAllGUIConfigV3(
+                            3,
+                            sellAllConfigV1.gui().guiType(),
+                            sellAllConfigV1.gui().name(),
+                            sellAllConfigV1.gui().buttons().stream().map(button ->
+                                    new SellAllGUIConfigV3.Button(button.buttonType(), button.slot(), button.displayItem())).toList());
+
+                    saveConfiguration(configurationPath, sellAllConfig);
                 }
 
                 default -> {
-                    logger.warn(AdventureUtil.deserialize("Failed to load configuration file sellall.yml due to an unsupported config version. Class name: " + this.getClass().getName()));
+                    logger.warn(AdventureUtil.deserialize("Failed to load configuration file sellall.yml due to an unsupported config version. Version: " + version + " Class name: " + this.getClass().getName()));
                     return;
                 }
             }
 
-            // Migrate configuration
-            @Nullable SellAllConfig migratedConfiguration = migrateConfiguration(sellAllConfig);
-            // If migration failed, return
-            if(migratedConfiguration == null) {
-                logger.warn(AdventureUtil.deserialize("Configuration migration failed for file sellall.yml. Class name: " + this.getClass().getName()));
-                return;
-            }
-
             // Check if the configuration is invalid
-            if(!validateConfiguration(migratedConfiguration)) {
-                logger.warn(AdventureUtil.deserialize("Configuration validation failed. Class name: " + this.getClass().getName()));
+            if(!validateConfiguration(sellAllConfig)) {
+                logger.warn(AdventureUtil.deserialize("Sellall GUI configuration validation failed. Class name: " + this.getClass().getName()));
                 return;
             }
 
-            // Save the migrated configuration if different
-            if(migratedConfiguration != sellAllConfig) {
-                saveConfiguration(migratedConfiguration);
-            }
-
-            this.configuration = migratedConfiguration;
+            this.configuration = sellAllConfig;
         } catch (ConfigurateException configurateException) {
             logger.error(AdventureUtil.deserialize("Failed to load configuration. Error: " + configurateException.getMessage()));
         }
     }
 
-    @Override
-    public void saveBundledConfig() {
-        if(configurationPath == null) return;
-        if(!configurationPath.toFile().exists()) plugin.saveResource("sellall.yml", false);
+    /**
+     * Save the default sell all GUI configuration if it doesn't exist on the disk.
+     * @param configurationPath The {@link Path} to the configuration on the disk.
+     */
+    public void saveBundledConfig(@NotNull Path configurationPath) {
+        if(!configurationPath.toFile().exists()) skyShop.saveResource("sellall.yml", false);
     }
 
-    @Override
-    public @Nullable SellAllConfig migrateConfiguration(@NonNull SellAllConfig configuration) {
-        switch(configuration.configVersion()) {
-            case "3.0.0.0" -> {
-                // Latest Version, do nothing
-                return configuration;
-            }
+    /**
+     * Save the configuration.
+     * @param configurationPath The path to save to.
+     * @param configuration The configuration.
+     */
+    public void saveConfiguration(@NotNull Path configurationPath, @NonNull SellAllGUIConfigV3 configuration) {
+        try {
+            YamlConfigurationLoader loader = ConfigurationUtility.getYamlConfigurationLoader(configurationPath);
 
-            case "2.0.0.0" -> {
-                logger.warn(AdventureUtil.deserialize("Version 2 configuration cannot be migrated by this method. Class name: " + this.getClass().getName()));
-                logger.info(AdventureUtil.deserialize("It should of been migrated before this point."));
-                return null;
-            }
+            ConfigurationNode node = loader.createNode();
 
-            case null -> {
-                logger.warn(AdventureUtil.deserialize("Failed to migrate configuration due to a null config version. Class name: " + this.getClass().getName()));
-                return null;
-            }
+            node.set(SellAllGUIConfigV3.class, configuration);
 
-            default -> {
-                logger.warn(AdventureUtil.deserialize("Failed to migrate configuration due to an unsupported config version. Class name: " + this.getClass().getName()));
-                return null;
-            }
+            loader.save(node);
+        } catch (ConfigurateException configurateException) {
+            logger.error(AdventureUtil.deserialize("Failed to save sellall GUI configuration. Error: " + configurateException.getMessage()));
         }
     }
 
-    @Override
-    public boolean validateConfiguration(@Nullable SellAllConfig configuration) {
+    /**
+     * Checks if the sellall GUI configuration is valid (not null).
+     * @param configuration The {@link SellAllGUIConfigV3} to validate.
+     * @return true if valid, false if not.
+     */
+    public boolean validateConfiguration(@Nullable SellAllGUIConfigV3 configuration) {
         return configuration != null;
+    }
+
+    /**
+     * Get the version number.
+     * @param root The root {@link ConfigurationNode}.
+     * @return The config version.
+     */
+    private int getVersion(@NotNull ConfigurationNode root) {
+        ConfigurationNode versionNode = root.node("version");
+        int version = versionNode.getInt();
+
+        ConfigurationNode legacyVersionNode = root.node("config-version");
+        @Nullable String legacyVersion = legacyVersionNode.virtual() ? null : legacyVersionNode.getString();
+        if(legacyVersion != null) {
+            try {
+                switch (legacyVersion) {
+                    case "3.0.0.0" -> {
+                        versionNode.set(2);
+                        version = 2;
+                    }
+
+                    case "2.0.0.0" -> {
+                        versionNode.set(1);
+                        version = 1;
+                    }
+
+                    default -> {
+                        logger.warn(AdventureUtil.deserialize("Failed to convert String-based version to numeric version"));
+                        version = 0;
+                    }
+                }
+            } catch (SerializationException e) {
+                logger.warn(AdventureUtil.deserialize("Failed to convert String-based version to numeric version"));
+                version = 0;
+            }
+        }
+
+        return version;
     }
 }

@@ -27,7 +27,7 @@ import com.github.lukesky19.skylib.api.itemstack.ItemStackBuilder;
 import com.github.lukesky19.skylib.api.itemstack.ItemStackConfig;
 import com.github.lukesky19.skyshop.SkyShop;
 import com.github.lukesky19.skyshop.api.SkyShopAPI;
-import com.github.lukesky19.skyshop.configuration.sellall.SellAllConfig;
+import com.github.lukesky19.skyshop.configuration.sellall.data.SellAllGUIConfigV3;
 import com.github.lukesky19.skyshop.util.ButtonType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -49,20 +49,20 @@ import java.util.UUID;
 public class SellAllGUI extends ChestGUI<UUID> {
     private final @NotNull IGUIManager<UUID> guiManager;
     private final @NotNull SkyShopAPI skyShopAPI;
-    private final @NotNull SellAllConfig sellAllConfig;
+    private final @NotNull SellAllGUIConfigV3 sellAllConfig;
 
     /**
      * Constructor
      * @param skyShop A {@link SkyShop} instance.
      * @param guiManager A {@link UUIDGUIManager} instance.
-     * @param sellAllConfig The {@link SellAllConfig} to create the GUI with.
+     * @param sellAllConfig The {@link SellAllGUIConfigV3} to create the GUI with.
      * @param skyShopAPI A {@link SkyShopAPI} instance.
      * @param player The {@link Player} who opened the GUI.
      */
     public SellAllGUI(
             @NotNull SkyShop skyShop,
             @NotNull IGUIManager<UUID> guiManager,
-            @NotNull SellAllConfig sellAllConfig,
+            @NotNull SellAllGUIConfigV3 sellAllConfig,
             @NotNull SkyShopAPI skyShopAPI,
             @NotNull Player player) {
         super(skyShop, guiManager, player.getUniqueId(), player);
@@ -102,9 +102,9 @@ public class SellAllGUI extends ChestGUI<UUID> {
         // Clear the GUI of buttons
         clearButtons();
 
-        List<SellAllConfig.Button> buttonList = sellAllConfig.buttons();
+        List<SellAllGUIConfigV3.Button> buttonList = sellAllConfig.buttons();
         for(int buttonNum = 0; buttonNum < buttonList.size(); buttonNum++) {
-            SellAllConfig.Button buttonConfig = buttonList.get(buttonNum);
+            SellAllGUIConfigV3.Button buttonConfig = buttonList.get(buttonNum);
             ButtonType buttonType = buttonConfig.buttonType();
 
             // Check if the button type is null and send a warning if so, then skipping to the next button.

@@ -15,17 +15,17 @@
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-package com.github.lukesky19.skyshop.transaction;
+package com.github.lukesky19.skyshop.transaction.processor;
 
 import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
 import com.github.lukesky19.skyshop.api.configuration.TransactionConfiguration;
 import com.github.lukesky19.skyshop.api.processor.TransactionProcessor;
 import com.github.lukesky19.skyshop.api.result.TransactionResult;
 import com.github.lukesky19.skyshop.configuration.category.transaction.IslandSizeConfiguration;
-import com.github.lukesky19.skyshop.configuration.locale.Locale;
 import com.github.lukesky19.skyshop.configuration.locale.LocaleManager;
-import com.github.lukesky19.skyshop.configuration.settings.Settings;
+import com.github.lukesky19.skyshop.configuration.locale.data.LocaleV5;
 import com.github.lukesky19.skyshop.configuration.settings.SettingsManager;
+import com.github.lukesky19.skyshop.configuration.settings.data.SettingsV4;
 import com.github.lukesky19.skyshop.hook.HookManager;
 import com.github.lukesky19.skyshop.hook.impl.BentoBoxHook;
 import org.bukkit.entity.Player;
@@ -69,13 +69,13 @@ public class IslandSizeProcessor implements TransactionProcessor {
         if(!(configuration instanceof IslandSizeConfiguration islandSizeConfiguration)) return new TransactionResult("Wrong Type", true, true, false);
         if(islandSizeConfiguration.buyAmount() == null || islandSizeConfiguration.buyAmount() <= 0) return new TransactionResult("Not Configured", false, false, false);
 
-        @Nullable Settings settings = settingsManager.getConfiguration();
+        @Nullable SettingsV4 settings = settingsManager.getConfiguration();
         if(settings == null || settings.islandSizeLimit() == null) return new TransactionResult("Invalid SkyShop plugin settings", true, true, false);
 
         BentoBoxHook bentoBoxHook = hookManager.getHook(BentoBoxHook.class);
         if(!bentoBoxHook.isHooked()) return new TransactionResult("BentoBox is not hooked into", true, true, false);
 
-        Locale locale = localeManager.getConfiguration();
+        LocaleV5 locale = localeManager.getConfiguration();
 
         // Get and validate the island
         @Nullable Island island = bentoBoxHook.getIsland(player);
@@ -105,13 +105,13 @@ public class IslandSizeProcessor implements TransactionProcessor {
         if(!(configuration instanceof IslandSizeConfiguration islandSizeConfiguration)) return new TransactionResult("Wrong Type", true, true, false);
         if(islandSizeConfiguration.sellAmount() == null || islandSizeConfiguration.sellAmount() <= 0) return new TransactionResult("Not Configured", false, false, false);
 
-        @Nullable Settings settings = settingsManager.getConfiguration();
+        @Nullable SettingsV4 settings = settingsManager.getConfiguration();
         if(settings == null || settings.islandSizeLimit() == null) return new TransactionResult("Invalid SkyShop plugin settings", true, true, false);
 
         BentoBoxHook bentoBoxHook = hookManager.getHook(BentoBoxHook.class);
         if(!bentoBoxHook.isHooked()) return new TransactionResult("BentoBox is not hooked into", true, true, false);
 
-        Locale locale = localeManager.getConfiguration();
+        LocaleV5 locale = localeManager.getConfiguration();
 
         // Get and validate the island
         @Nullable Island island = bentoBoxHook.getIsland(player);
@@ -143,13 +143,13 @@ public class IslandSizeProcessor implements TransactionProcessor {
         if(!(configuration instanceof IslandSizeConfiguration islandSizeConfiguration)) return new TransactionResult("Wrong Type", true, true, false);
         if(islandSizeConfiguration.buyAmount() == null || islandSizeConfiguration.buyAmount() <= 0) return new TransactionResult("Not Configured", false, false, false);
 
-        @Nullable Settings settings = settingsManager.getConfiguration();
+        @Nullable SettingsV4 settings = settingsManager.getConfiguration();
         if(settings == null || settings.islandSizeLimit() == null) return new TransactionResult("Invalid SkyShop plugin settings", true, true, false);
 
         BentoBoxHook bentoBoxHook = hookManager.getHook(BentoBoxHook.class);
         if(!bentoBoxHook.isHooked()) return new TransactionResult("BentoBox is not hooked into", true, true, false);
 
-        Locale locale = localeManager.getConfiguration();
+        LocaleV5 locale = localeManager.getConfiguration();
 
         // Get and validate the island
         @Nullable Island island = bentoBoxHook.getIsland(player);
@@ -188,13 +188,13 @@ public class IslandSizeProcessor implements TransactionProcessor {
         if(!(configuration instanceof IslandSizeConfiguration islandSizeConfiguration)) return new TransactionResult("Wrong Type", true, true, false);
         if(islandSizeConfiguration.sellAmount() == null || islandSizeConfiguration.sellAmount() <= 0) return new TransactionResult("Not Configured", false, false, false);
 
-        @Nullable Settings settings = settingsManager.getConfiguration();
+        @Nullable SettingsV4 settings = settingsManager.getConfiguration();
         if(settings == null || settings.islandSizeLimit() == null) return new TransactionResult("Invalid SkyShop plugin settings", true, true, false);
 
         BentoBoxHook bentoBoxHook = hookManager.getHook(BentoBoxHook.class);
         if(!bentoBoxHook.isHooked()) return new TransactionResult("BentoBox is not hooked into", true, true, false);
 
-        Locale locale = localeManager.getConfiguration();
+        LocaleV5 locale = localeManager.getConfiguration();
 
         // Get and validate the island
         @Nullable Island island = bentoBoxHook.getIsland(player);

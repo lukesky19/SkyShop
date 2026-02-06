@@ -15,12 +15,11 @@
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-package com.github.lukesky19.skyshop.configuration.legacy.menu;
+package com.github.lukesky19.skyshop.configuration.sellall.data;
 
 import com.github.lukesky19.skylib.api.gui.GUIType;
 import com.github.lukesky19.skylib.api.itemstack.ItemStackConfig;
 import com.github.lukesky19.skylib.libs.configurate.objectmapping.ConfigSerializable;
-import com.github.lukesky19.skyshop.configuration.category.gui.CategoryConfig;
 import com.github.lukesky19.skyshop.util.ButtonType;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
@@ -29,41 +28,32 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 
 /**
- * This record contains the legacy configuration for the old menu gui.
+ * The version 1 format of the locale configuration for migration purposes only.
+ * Version 1 = 2.0.0.0 in the old version format.
  * @param configVersion The file's config version.
  * @param gui The {@link GuiData} configuration.
- * @deprecated The legacy configuration for the menu has been replaced by {@link CategoryConfig}. Only used for data migration.
  */
-@Deprecated(since = "2.1.0.0")
+@Deprecated(since = "3.0.0.0")
 @ConfigSerializable
-public record MenuConfig(@Nullable String configVersion, @NotNull GuiData gui) {
+public record SellAllGUIConfigV1(@Nullable String configVersion, @NotNull GuiData gui) {
     /**
      * This record contains the actual configuration for creating the initial GUI.
-     * @param guiType The {@link GUIType}.
+     * @param guiType The {@link GUIType} as a {@link String}.
      * @param name The name to display inside the GUI.
-     * @param pages The {@link List} of {@link PageConfig}s.
-     */
-    @ConfigSerializable
-    public record GuiData(@Nullable GUIType guiType, @Nullable String name, @NotNull List<@NotNull PageConfig> pages) {}
-
-    /**
-     * This record contains the configuration for individual pages.
      * @param buttons The {@link List} of {@link Button}s.
      */
     @ConfigSerializable
-    public record PageConfig(@NotNull List<@NotNull Button> buttons) {}
+    public record GuiData(@Nullable GUIType guiType, @Nullable String name, @NotNull List<@NotNull Button> buttons) {}
 
     /**
-     * This record contains the configuration for a single button.
+     * This record contains the configuration to create buttons to be displayed.
      * @param buttonType The {@link ButtonType}.
      * @param slot The slot to place the button at.
-     * @param shopName If the {@link ButtonType} is that of OPEN_SHOP, this is the shop name to open. This name corresponds to a file in {@code SkyShop/shops}.
-     * @param displayItem The {@link ItemStackConfig} used to create the {@link ItemStack} to display for the button.
+     * @param displayItem The {@link ItemStackConfig} used to create the {@link ItemStack} for the button.
      */
     @ConfigSerializable
     public record Button(
             @Nullable ButtonType buttonType,
             @Nullable Integer slot,
-            @Nullable String shopName,
             @NotNull ItemStackConfig displayItem) {}
 }

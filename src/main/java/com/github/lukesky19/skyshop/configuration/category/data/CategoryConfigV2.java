@@ -1,4 +1,21 @@
-package com.github.lukesky19.skyshop.configuration.category.gui;
+/*
+    SkyShop is a GUI shop plugin with sell commands, a sell GUI, nested categories, page support, and error checking.
+    Copyright (C) 2024 lukeskywlker19
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as published
+    by the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+package com.github.lukesky19.skyshop.configuration.category.data;
 
 import com.github.lukesky19.skylib.api.gui.GUIType;
 import com.github.lukesky19.skylib.api.itemstack.ItemStackConfig;
@@ -12,11 +29,15 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 
 /**
- * This record contains the configuration for version 2.0.0.0 and 2.1.0.0.
+ * This record contains the configuration for the version 1 format of category configurations.
+ * @apiNote This is version 1 and 2 of the configuration for migration purposes only. Version 2 just added optional permissions.
+ * Version 1 = 2.0.0.0 and Version 2 = 2.1.0.0 in the old version format.
+ * 2.0.0.0 is version 1 because for some reason I used 2.0.0.0 when converting shop files to category files.
  * @param configVersion The file's config version.
  * @param permission The permission required to access the category.
  * @param gui The {@link GuiData} configuration.
  */
+@Deprecated(since = "3.0.0.0")
 @ConfigSerializable
 public record CategoryConfigV2(@Nullable String configVersion, @Nullable String permission, @NotNull GuiData gui) {
     /**

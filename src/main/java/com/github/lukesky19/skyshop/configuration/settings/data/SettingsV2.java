@@ -15,24 +15,23 @@
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-package com.github.lukesky19.skyshop.configuration.settings;
+package com.github.lukesky19.skyshop.configuration.settings.data;
 
 import com.github.lukesky19.skylib.libs.configurate.objectmapping.ConfigSerializable;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * This record contains the plugin's settings.
+ * The version 2 format of the locale configuration for migration purposes only.
+ * Version 2 = 2.0.0.0 in the old version format.
  * @param configVersion The version of the configuration file.
  * @param locale The plugin's locale. Refers to a file in SkyShop/locale
  * @param firstRun Is this the first time the plugin has run?
  * @param statistics Should statistics be saved for how many items have been purchased and sold?
- * @param islandSizeLimit The maximum island size a player's island can be from island size purchases.
  */
+@Deprecated(since = "2.1.0.0")
 @ConfigSerializable
-public record Settings(
+public record SettingsV2(
         @Nullable String configVersion,
         @Nullable String locale,
         boolean firstRun,
-        boolean statistics,
-        @Nullable Integer islandSizeLimit) {
-}
+        boolean statistics) {}

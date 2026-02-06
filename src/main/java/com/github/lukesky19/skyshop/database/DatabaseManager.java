@@ -19,7 +19,9 @@ package com.github.lukesky19.skyshop.database;
 
 import com.github.lukesky19.skylib.api.database.AbstractDatabaseManager;
 import com.github.lukesky19.skyshop.SkyShop;
+import com.github.lukesky19.skyshop.database.table.PlayerDataTable;
 import com.github.lukesky19.skyshop.database.table.StatsTable;
+import com.github.lukesky19.skyshop.database.table.VersionsTable;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -27,6 +29,7 @@ import org.jetbrains.annotations.NotNull;
  */
 public class DatabaseManager extends AbstractDatabaseManager {
     private final @NotNull StatsTable statsTable;
+    private final @NotNull PlayerDataTable playerDataTable;
 
     /**
      * Get the {@link StatsTable} table.
@@ -34,6 +37,14 @@ public class DatabaseManager extends AbstractDatabaseManager {
      */
     public @NotNull StatsTable getStatsTable() {
         return statsTable;
+    }
+
+    /**
+     * Get the {@link PlayerDataTable} table.
+     * @return A {@link PlayerDataTable}
+     */
+    public @NotNull PlayerDataTable getPlayerDataTable() {
+        return playerDataTable;
     }
 
     /**
@@ -46,7 +57,13 @@ public class DatabaseManager extends AbstractDatabaseManager {
     public DatabaseManager(@NotNull SkyShop skyShop, @NotNull ConnectionManager connectionManager, @NotNull QueueManager queueManager) {
         super(connectionManager, queueManager);
 
-        statsTable = new StatsTable(skyShop, queueManager);
+        VersionsTable versionsTable = new VersionsTable(queueManager);
+        versionsTable.createTable();
+
+        statsTable = new StatsTable(skyShop, queueManager, versionsTable);
         statsTable.createTable();
+
+        playerDataTable = new PlayerDataTable(queueManager, versionsTable);
+        playerDataTable.createTable();
     }
 }

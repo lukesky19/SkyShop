@@ -15,48 +15,44 @@
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-package com.github.lukesky19.skyshop.configuration.locale;
+package com.github.lukesky19.skyshop.configuration.locale.data;
 
 import com.github.lukesky19.skylib.libs.configurate.objectmapping.ConfigSerializable;
 
 import java.util.List;
 
 /**
- * The 2.0.0.0 version format of the locale configuration.
- * @param configVersion The configuration's version.
- * @param prefix The plugin's prefix/
+ * The version 1 format of the locale configuration for migration purposes only.
+ * Note: The first version did not have a proper config version defined.
+ * @param prefix The plugin's prefix.
  * @param help The plugin's help message. A {@link List} of {@link String}s.
- * @param configReload The message sent when the plugin reloads.
+ * @param noPermission The message sent when a player lacks permission for a command.
+ * @param configReload The message sent when the plugin is reloaded.
  * @param notEnoughItems The message sent to the player when they lack the items to sell.
  * @param insufficientFunds The message sent to the player when they lack the funds to buy an item or command.
- * @param buyItemSuccess The message when the player successfully completes buying an item.
- * @param sellItemSuccess The message when the player successfully completes selling an item.
- * @param buyCommandSuccess The message when the player successfully completes buying a command.
- * @param sellCommandSuccess The message when the player successfully completes selling a command.
+ * @param buySuccess The message when the player successfully completes buy transaction.
+ * @param sellSuccess The message when the player successfully completes sell transaction.
  * @param sellallSuccess The message sent to the player when they successfully sell all items.
  * @param sellallUnsellable The message sent to the player when an item is unsellable.
  * @param unbuyable The message sent to the player when an item is unbuyable.
  * @param unsellable The message sent to the player when an item is unsellable.
  * @param inGameOnly The message sent in console when a command is in-game only.
- * @param guiOpenError The message sent to the player when a GUI fails to open.
- * @param statsDisabledGuiError The message sent to the player when stats tracking is disabled, and they try to open the stats GUI.
+ * @param unknownArgument The message sent when an unknown argument is sent for a command.
  */
+@Deprecated(since = "2.0.0.0")
 @ConfigSerializable
-public record Locale_2_0_0_0(
-        String configVersion,
+public record LocaleV1(
         String prefix,
         List<String> help,
+        String noPermission,
         String configReload,
         String notEnoughItems,
         String insufficientFunds,
-        String buyItemSuccess,
-        String sellItemSuccess,
-        String buyCommandSuccess,
-        String sellCommandSuccess,
+        String buySuccess,
+        String sellSuccess,
         String sellallSuccess,
         String sellallUnsellable,
         String unbuyable,
         String unsellable,
         String inGameOnly,
-        String guiOpenError,
-        String statsDisabledGuiError) {}
+        String unknownArgument) {}

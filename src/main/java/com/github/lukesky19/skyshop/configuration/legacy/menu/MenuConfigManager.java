@@ -19,18 +19,23 @@ package com.github.lukesky19.skyshop.configuration.legacy.menu;
 
 import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
 import com.github.lukesky19.skylib.api.configurate.ConfigurationUtility;
+import com.github.lukesky19.skylib.api.gui.GUIType;
+import com.github.lukesky19.skylib.api.itemstack.ItemStackConfig;
 import com.github.lukesky19.skylib.libs.configurate.CommentedConfigurationNode;
 import com.github.lukesky19.skylib.libs.configurate.ConfigurateException;
+import com.github.lukesky19.skylib.libs.configurate.ConfigurationNode;
 import com.github.lukesky19.skylib.libs.configurate.yaml.YamlConfigurationLoader;
 import com.github.lukesky19.skyshop.SkyShop;
-import com.github.lukesky19.skyshop.configuration.category.gui.CategoryConfig;
+import com.github.lukesky19.skyshop.configuration.category.data.CategoryConfigV4;
+import com.github.lukesky19.skyshop.util.ButtonType;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
+import org.bukkit.Material;
+import org.bukkit.inventory.ItemType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -66,61 +71,105 @@ public class MenuConfigManager {
         YamlConfigurationLoader legacyLoader = ConfigurationUtility.getYamlConfigurationLoader(legacyPath);
         YamlConfigurationLoader categoryLoader = ConfigurationUtility.getYamlConfigurationLoader(categoryPath);
         try {
-            @Nullable MenuConfig menuConfig = legacyLoader.load().get(MenuConfig.class);
-            if(menuConfig == null) return;
+            ConfigurationNode root = legacyLoader.load();
+            ConfigurationNode versionNode = root.node("config-version");
+            @Nullable String version = versionNode.virtual() ? null : versionNode.getString();
 
-            // Create the new config from the legacy config
-            CategoryConfig categoryConfig = createCategoryConfig(menuConfig);
+            CategoryConfigV4 categoryConfig;
+            if(version == null) {
+                @Nullable MenuConfigV1 menuConfigV1 = root.get(MenuConfigV1.class);
+                if(menuConfigV1 == null) {
+                    logger.warn(AdventureUtil.deserialize("Failed to migrate the legacy menu.yml configuration due failure to load."));
+                    return;
+                }
+
+                List<MenuConfigV1.MenuPage> pages = menuConfigV1.pages().values().stream().toList();
+                if(pages.isEmpty()) {
+                    logger.warn(AdventureUtil.deserialize("Failed to migrate the legacy menu.yml configuration due no pages configured."));
+                    return;
+                }
+                MenuConfigV1.MenuPage firstPage = pages.getFirst();
+                GUIType guiType = GUIType.getType("CHEST_" + (firstPage.size() != null ? firstPage.size() : 54));
+
+                categoryConfig = new CategoryConfigV4(
+                        4,
+                        null,
+                        guiType,
+                        firstPage.name(),
+                        pages.stream().map(pageConfig ->
+                                new CategoryConfigV4.PageConfig(pageConfig.entries().values().stream().map(button -> {
+                                    Material material = null;
+                                    if(button.item() != null) {
+                                        if(button.item().material() != null) {
+                                            material = Material.getMaterial(button.item().material());
+                                        }
+                                    }
+                                    ItemType itemType = material != null ? material.asItemType() : null;
+
+                                    return new CategoryConfigV4.ButtonConfig(
+                                            ButtonType.getType(button.type()),
+                                            button.slot(),
+                                            button.shop(),
+                                            null,
+                                            new ItemStackConfig(
+                                                    itemType != null ? itemType.getKey().toString() : null,
+                                                    null,
+                                                    null,
+                                                    button.item().name(),
+                                                    List.of(),
+                                                    null,
+                                                    null,
+                                                    List.of(),
+                                                    new ItemStackConfig.PotionConfig(null, List.of()),
+                                                    new ItemStackConfig.ColorConfig(false, null, null, null),
+                                                    null,
+                                                    List.of(),
+                                                    new ItemStackConfig.DecoratedPotConfig(null, null, null, null),
+                                                    new ItemStackConfig.ArmorTrimConfig(null, null),
+                                                    List.of(),
+                                                    new ItemStackConfig.OptionsConfig(null, null, null, null, null)),
+                                            null);
+                                }).toList())).toList());
+            } else {
+                if(!version.equals("2.0.0.0")) {
+                    logger.warn(AdventureUtil.deserialize("Failed to migrate the legacy menu.yml configuration due to an unsupported version. Version: " + version));
+                    return;
+                }
+
+                @Nullable MenuConfigV2 menuConfigV2 = root.get(MenuConfigV2.class);
+                if(menuConfigV2 == null) {
+                    logger.warn(AdventureUtil.deserialize("Failed to migrate the legacy menu.yml configuration due failure to load."));
+                    return;
+                }
+
+                categoryConfig = new CategoryConfigV4(
+                        4,
+                        null,
+                        menuConfigV2.gui().guiType(),
+                        menuConfigV2.gui().name(),
+                        menuConfigV2.gui().pages().stream().map(pageConfig ->
+                                new CategoryConfigV4.PageConfig(
+                                        pageConfig.buttons().stream().map(button ->
+                                                        new CategoryConfigV4.ButtonConfig(
+                                                                button.buttonType(),
+                                                                button.slot(),
+                                                                button.shopName(),
+                                                                null,
+                                                                button.displayItem(),
+                                                                null))
+                                                .toList()
+                                )).toList());
+            }
 
             // Save migrated config
             CommentedConfigurationNode node = categoryLoader.createNode();
-            node.set(CategoryConfig.class, categoryConfig);
+            node.set(CategoryConfigV4.class, categoryConfig);
             categoryLoader.save(node);
 
             // Delete the legacy file.
             legacyPath.toFile().delete();
         } catch (ConfigurateException e) {
-            logger.error(AdventureUtil.deserialize("Failed to migrate the legacy <yellow>menu.yml</yellow> configuration. " + e.getMessage()));
+            logger.warn(AdventureUtil.deserialize("Failed to migrate the legacy menu.yml configuration. " + e.getMessage()));
         }
-    }
-
-    /**
-     * Create the {@link CategoryConfig} from the {@link MenuConfig}.
-     * @param menuConfig The legacy {@link MenuConfig}.
-     * @return The created {@link CategoryConfig}.
-     */
-    private @NotNull CategoryConfig createCategoryConfig(@NotNull MenuConfig menuConfig) {
-        List<CategoryConfig.PageConfig> pageConfigList = new ArrayList<>();
-
-        for(MenuConfig.PageConfig legacyPageConfig : menuConfig.gui().pages()) {
-            CategoryConfig.PageConfig categoryPageConfig = getCategoryPageConfig(legacyPageConfig);
-
-            pageConfigList.add(categoryPageConfig);
-        }
-
-        return new CategoryConfig("3.0.0.0", null, menuConfig.gui().guiType(), menuConfig.gui().name(), pageConfigList);
-    }
-
-    /**
-     * Create the {@link CategoryConfig.PageConfig} from the {@link MenuConfig.PageConfig}.
-     * @param legacyPageConfig The legacy {@link MenuConfig.PageConfig}.
-     * @return The created {@link CategoryConfig.PageConfig}.
-     */
-    private @NotNull CategoryConfig.PageConfig getCategoryPageConfig(@NotNull MenuConfig.PageConfig legacyPageConfig) {
-        List<CategoryConfig.ButtonConfig> buttonConfigList = new ArrayList<>();
-
-        for(MenuConfig.Button legacyButtonConfig : legacyPageConfig.buttons()) {
-            CategoryConfig.ButtonConfig categoryButtonConfig = new CategoryConfig.ButtonConfig(
-                    legacyButtonConfig.buttonType(),
-                    legacyButtonConfig.slot(),
-                    legacyButtonConfig.shopName(),
-                    null,
-                    legacyButtonConfig.displayItem(),
-                    null);
-
-            buttonConfigList.add(categoryButtonConfig);
-        }
-
-        return new CategoryConfig.PageConfig(buttonConfigList);
     }
 }

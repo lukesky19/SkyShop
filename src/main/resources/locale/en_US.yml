@@ -1,4 +1,4 @@
-config-version: 2.1.0.0
+version: 5
 # Prefix is placed in-front of all other messages automatically.
 prefix: "<aqua><bold>SkyShop</bold></aqua><gray> ▪ </gray>"
 help:
@@ -20,35 +20,15 @@ not-enough-items: "<red>You do not have enough items to sell.</red>"
 insufficient-money: "<red>You lack the money to buy this item.</red>"
 insufficient-player-points: "<red>You lack the player points to buy this item.</red>"
 # Placeholders: <amount>, <transaction_name>, <money>, <player_points>, <money_balance>, and <player_points_balance>
-buy-item-success:
+buy-success:
     money-and-points: "<white>Purchased <yellow><amount> <transaction_name></yellow> for $<yellow><money></yellow> and <yellow><player_points></yellow> player points. Balance: <yellow><money_balance></yellow> Player Points: <yellow><player_points_balance></yellow></white>"
     money: "<white>Purchased <yellow><amount> <transaction_name></yellow> for <yellow><money></yellow>. Balance: <yellow><money_balance></yellow></white>"
     points: "<white>Purchased <yellow><amount> <transaction_name></yellow> for <yellow><player_points></yellow> player points. Player Points: <yellow><player_points_balance></yellow></white>"
 # Placeholders: <amount>, <transaction_name>, <money>, <player_points>, <money_balance>, and <player_points_balance>
-sell-item-success:
+sell-success:
     money-and-points: "<white>Sold <yellow><amount> <transaction_name></yellow> for $<yellow><money></yellow> and <yellow><player_points></yellow> player points. Balance: <yellow><money_balance></yellow> Player Points: <yellow><player_points_balance></yellow></white>"
     money: "<white>Sold <yellow><amount> <transaction_name></yellow> for <yellow><money></yellow>. Balance: <yellow><money_balance></yellow></white>"
     points: "<white>Sold <yellow><amount> <transaction_name></yellow> for <yellow><player_points></yellow> player points. Player Points: <yellow><player_points_balance></yellow></white>"
-# Placeholders: <transaction_name>, <money>, <player_points>, <money_balance>, and <player_points_balance>
-buy-command-success:
-    money-and-points: "<white>Purchased <yellow><transaction_name></yellow> for $<yellow><money></yellow> and <yellow><player_points></yellow> player points. Balance: <yellow><money_balance></yellow> Player Points: <yellow><player_points_balance></yellow></white>"
-    money: "<white>Purchased <yellow><transaction_name></yellow> for $<yellow><money></yellow>. Balance: <yellow><money_balance></yellow>"
-    points: "<white>Purchased <yellow><transaction_name></yellow> for <yellow><player_points></yellow> player points. Balance: <yellow><player_points_balance></yellow>"
-# Placeholders: <transaction_name>, <money>, <player_points>, <money_balance>, and <player_points_balance>
-sell-command-success:
-    money-and-points: "<white>Sold <yellow><transaction_name></yellow> for $<yellow><money></yellow> and <yellow><player_points></yellow> player points. Balance: <yellow><money_balance></yellow> Player Points: <yellow><player_points_balance></yellow></white>"
-    money: "<white>Sold <yellow><transaction_name></yellow> for $<yellow><money></yellow>. Balance: <yellow><money_balance></yellow>"
-    points: "<white>Sold <yellow><transaction_name></yellow> for <yellow><player_points></yellow> player points. Balance: <yellow><player_points_balance></yellow>"
-# Placeholders: <transaction_name>, <money>, <player_points>, <money_balance>, and <player_points_balance>
-other-buy-success:
-    money-and-points: "<white>Purchased <yellow><transaction_name></yellow> for $<yellow><money></yellow> and <yellow><player_points></yellow> player points. Balance: <yellow><money_balance></yellow> Player Points: <yellow><player_points_balance></yellow></white>"
-    money: "<white>Purchased <yellow><transaction_name></yellow> for $<yellow><money></yellow>. Balance: <yellow><money_balance></yellow>"
-    points: "<white>Purchased <yellow><transaction_name></yellow> for <yellow><player_points></yellow> player points. Balance: <yellow><player_points_balance></yellow>"
-# Placeholders: <transaction_name>, <money>, <player_points>, <money_balance>, and <player_points_balance>
-other-sell-success:
-    money-and-points: "<white>Sold <yellow><transaction_name></yellow> for $<yellow><money></yellow> and <yellow><player_points></yellow> player points. Balance: <yellow><money_balance></yellow> Player Points: <yellow><player_points_balance></yellow></white>"
-    money: "<white>Sold <yellow><transaction_name></yellow> for $<yellow><money></yellow>. Balance: <yellow><money_balance></yellow>"
-    points: "<white>Sold <yellow><transaction_name></yellow> for <yellow><player_points></yellow> player points. Balance: <yellow><player_points_balance></yellow>"
 # Placeholders: <money>, <player_points>, <money_balance>, and <player_points_balance>
 sellall-success:
     money-and-points: "<white>Successfully sold all items for $<yellow><money></yellow> and <yellow><player_points></yellow> player points. Balance: <yellow><money_balance></yellow> Player Points: <yellow><player_points_balance></yellow></white>"
@@ -65,10 +45,5 @@ island-size-messages:
     not-on-island: "<red>You must be on your island to buy or sell island size.</red>"
     island-too-small: "<red>Your island is too small to sell any island size.</red>"
     island-max-size: "<red>Your island is at the maximum size it can be expanded to.</red>"
-prestige-multiplier-messages:
-    not-on-island: "<red>You must be on your island to purchase an island multiplier.</red>"
-    multiplier-active: "<red>You cannot purchase this multiplier as one is already active.</red>"
-    higher-multiplier-active: "<red>You cannot purchase this multiplier as a higher one is already active.</red>"
-    multiplier-time-max: "<red>The multiplier time is already at or would exceed the maximum multiplier time.</red>"
 category-no-permission: "<red>You do not have permission to access this shop category.</red>"
 button-no-permission: "<red>You do not have permission to access this button.</red>"

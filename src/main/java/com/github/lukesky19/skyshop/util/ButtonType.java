@@ -23,6 +23,7 @@ import com.github.lukesky19.skyshop.gui.TransactionGUI;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * This enum is used for different actions a GUIButton can do.
@@ -75,5 +76,28 @@ public enum ButtonType {
     /**
      * This type is used to identify configuration for dummy buttons. This button type is similar to FILLER, but is only for a single slot.
      */
-    DUMMY
+    DUMMY,
+    /**
+     * This type is used for migration purposes only.
+     */
+    ITEM,
+    /**
+     * This type is used for migration purposes only.
+     */
+    COMMAND;
+
+    /**
+     * Gets the {@link ButtonType} based on the string provided.
+     * @param type The name of the {@link ButtonType} to get.
+     * @return the {@link ButtonType} for the string provided or null if invalid.
+     */
+    public static @Nullable ButtonType getType(@Nullable String type) {
+        if(type == null) return null;
+
+        try {
+            return ButtonType.valueOf(type.toUpperCase());
+        } catch(IllegalArgumentException ignored) {
+            return null;
+        }
+    }
 }

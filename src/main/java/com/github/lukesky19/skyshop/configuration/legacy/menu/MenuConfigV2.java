@@ -15,12 +15,12 @@
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-package com.github.lukesky19.skyshop.configuration.sellall;
+package com.github.lukesky19.skyshop.configuration.legacy.menu;
 
 import com.github.lukesky19.skylib.api.gui.GUIType;
 import com.github.lukesky19.skylib.api.itemstack.ItemStackConfig;
 import com.github.lukesky19.skylib.libs.configurate.objectmapping.ConfigSerializable;
-import com.github.lukesky19.skyshop.gui.SellAllGUI;
+import com.github.lukesky19.skyshop.configuration.category.data.CategoryConfigV4;
 import com.github.lukesky19.skyshop.util.ButtonType;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
@@ -29,27 +29,42 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 
 /**
- * This record contains the configuration to create the {@link SellAllGUI}.
+ * The version 2 format of the menu configuration for migration purposes only.
+ * Version 2 = 2.0.0.0 in the old format.
  * @param configVersion The file's config version.
- * @param guiType The {@link GUIType}.
- * @param guiName The name to display inside the GUI.
- * @param buttons The {@link List} of {@link SellAllConfig.Button}s.
+ * @param gui The {@link GuiData} configuration.
+ * @deprecated The legacy configuration for the menu has been replaced by {@link CategoryConfigV4}. Only used for data migration.
  */
+@Deprecated(since = "2.1.0.0")
 @ConfigSerializable
-public record SellAllConfig(
-        @Nullable String configVersion,
-        @Nullable GUIType guiType,
-        @Nullable String guiName,
-        @NotNull List<@NotNull Button> buttons) {
+public record MenuConfigV2(@Nullable String configVersion, @NotNull GuiData gui) {
     /**
-     * This record contains the configuration to create buttons to be displayed.
+     * This record contains the actual configuration for creating the initial GUI.
+     * @param guiType The {@link GUIType}.
+     * @param name The name to display inside the GUI.
+     * @param pages The {@link List} of {@link PageConfig}s.
+     */
+    @ConfigSerializable
+    public record GuiData(@Nullable GUIType guiType, @Nullable String name, @NotNull List<@NotNull PageConfig> pages) {}
+
+    /**
+     * This record contains the configuration for individual pages.
+     * @param buttons The {@link List} of {@link Button}s.
+     */
+    @ConfigSerializable
+    public record PageConfig(@NotNull List<@NotNull Button> buttons) {}
+
+    /**
+     * This record contains the configuration for a single button.
      * @param buttonType The {@link ButtonType}.
      * @param slot The slot to place the button at.
-     * @param displayItem The {@link ItemStackConfig} used to create the {@link ItemStack} for the button.
+     * @param shopName If the {@link ButtonType} is that of OPEN_SHOP, this is the shop name to open. This name corresponds to a file in {@code SkyShop/shops}.
+     * @param displayItem The {@link ItemStackConfig} used to create the {@link ItemStack} to display for the button.
      */
     @ConfigSerializable
     public record Button(
             @Nullable ButtonType buttonType,
             @Nullable Integer slot,
+            @Nullable String shopName,
             @NotNull ItemStackConfig displayItem) {}
 }

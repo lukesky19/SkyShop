@@ -20,7 +20,7 @@ package com.github.lukesky19.skyshop.configuration.legacy.shop;
 import com.github.lukesky19.skylib.api.gui.GUIType;
 import com.github.lukesky19.skylib.api.itemstack.ItemStackConfig;
 import com.github.lukesky19.skylib.libs.configurate.objectmapping.ConfigSerializable;
-import com.github.lukesky19.skyshop.configuration.category.gui.CategoryConfig;
+import com.github.lukesky19.skyshop.configuration.category.data.CategoryConfigV4;
 import com.github.lukesky19.skyshop.util.ButtonType;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
@@ -32,11 +32,11 @@ import java.util.List;
  * This record contains the legacy configuration for the old shop guis.
  * @param configVersion The file's config version.
  * @param gui The {@link GuiData} configuration.
- * @deprecated The legacy configuration for shops has been replaced by {@link CategoryConfig}. Only used for data migration.
+ * @deprecated The legacy configuration for shops has been replaced by {@link CategoryConfigV4}. Only used for data migration.
  */
 @Deprecated(since = "2.1.0.0")
 @ConfigSerializable
-public record ShopConfig(@Nullable String configVersion, @NotNull GuiData gui) {
+public record ShopConfigV2(@Nullable String configVersion, @NotNull GuiData gui) {
     /**
      * This record contains the actual configuration for creating the initial GUI.
      * @param guiType The {@link GUIType}.
