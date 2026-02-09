@@ -29,13 +29,35 @@ pages:
                 - "Buy for: <buy_price>"
                 - "Sell for: <sell_price>"
         transaction-data:
+            transaction-id: "example:0:5"
             transaction-type: ITEM
             transaction-style: items
-            buy-price: 100.0
-            sell-price: 10.0
             transaction-name: "Crafting Table"
-            transaction-item:
+            prices:
+                buy-modifier:
+                    cooldown-seconds: -1
+                    update-interval-seconds: -1
+                    count-before-modifier: -1
+                    money-modifier: -1.0
+                    points-modifier: -1
+                sell-modifier:
+                    cooldown-seconds: -1
+                    update-interval-seconds: -1
+                    count-before-modifier: -1
+                    money-modifier: -1.0
+                    points-modifier: -1
+                buy-money: 100.0
+                buy-points: -1
+                sell-money: 10.0
+                sell-points: -1
+            display-item:
                 item-type: crafting_table
+            transaction-list:
+                -   version: 1
+                    id: skyshop:item
+                    transaction-item:
+                        item-type: crafting_table
+                    cache-sell-price: true
 -   buttons:
     -   button-type: FILLER
         display-item:
@@ -62,13 +84,31 @@ pages:
             lore:
                 - "Buy for: <buy_price>"
         transaction-data:
-            transaction-type: COMMAND
+            transaction-id: "example:1:5"
             transaction-style: single_command
-            buy-price: 500.0
-            sell-price: -1.0
             transaction-name: "1 Diamond"
+            prices:
+                buy-modifier:
+                    cooldown-seconds: -1
+                    update-interval-seconds: -1
+                    count-before-modifier: -1
+                    money-modifier: -1.0
+                    points-modifier: -1
+                sell-modifier:
+                    cooldown-seconds: -1
+                    update-interval-seconds: -1
+                    count-before-modifier: -1
+                    money-modifier: -1.0
+                    points-modifier: -1
+                buy-money: 500.0
+                buy-points: -1
+                sell-money: -1.0
+                sell-points: -1
             display-item:
-                item-type: DIAMOND
-            buy-commands:
-                - "give %player_name% diamond 1"
-            sell-commands: []
+                item-type: diamond
+            transaction-list:
+                -   version: 1
+                    id: skyshop:commands
+                    buy-commands:
+                        - "give %player_name% diamond 1"
+                    sell-commands: []
