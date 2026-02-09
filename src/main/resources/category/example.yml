@@ -1,4 +1,4 @@
-version: 5
+version: 4
 gui-type: CHEST_27
 gui-name: "<aqua><bold>Example Shop</bold></aqua>"
 pages:
