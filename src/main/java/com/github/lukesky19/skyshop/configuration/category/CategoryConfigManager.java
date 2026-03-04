@@ -18,10 +18,11 @@
 package com.github.lukesky19.skyshop.configuration.category;
 
 import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
+import com.github.lukesky19.skylib.api.configurate.ConfigurationUtility;
 import com.github.lukesky19.skylib.libs.configurate.ConfigurateException;
 import com.github.lukesky19.skylib.libs.configurate.ConfigurationNode;
 import com.github.lukesky19.skylib.libs.configurate.serialize.SerializationException;
-import com.github.lukesky19.skylib.libs.configurate.yaml.NodeStyle;
+import com.github.lukesky19.skylib.libs.configurate.serialize.TypeSerializerCollection;
 import com.github.lukesky19.skylib.libs.configurate.yaml.YamlConfigurationLoader;
 import com.github.lukesky19.skyshop.SkyShop;
 import com.github.lukesky19.skyshop.api.configuration.TransactionConfiguration;
@@ -129,14 +130,9 @@ public class CategoryConfigManager {
      * @param configurationPath The configuration path.
      */
     public void loadConfiguration(@NotNull String identifier, @NotNull Path configurationPath) {
-        YamlConfigurationLoader loader = YamlConfigurationLoader.builder()
-                .nodeStyle(NodeStyle.BLOCK)
-                .path(configurationPath)
-                .indent(4)
-                .defaultOptions(opts ->
-                        opts.serializers(build ->
-                                build.registerExact(TransactionConfiguration.class, serializer)))
-                .build();
+        TypeSerializerCollection typeSerializerCollection = TypeSerializerCollection.builder()
+                .registerExact(TransactionConfiguration.class, serializer).build();
+        YamlConfigurationLoader loader = ConfigurationUtility.getYamlConfigurationLoader(configurationPath, typeSerializerCollection);
 
         try {
             ConfigurationNode root = loader.load();
@@ -229,14 +225,9 @@ public class CategoryConfigManager {
      */
     public void saveConfiguration(@NotNull Path configurationPath, @NonNull CategoryConfigV4 configuration) {
         try {
-            YamlConfigurationLoader yamlConfigurationLoader = YamlConfigurationLoader.builder()
-                    .nodeStyle(NodeStyle.BLOCK)
-                    .path(configurationPath)
-                    .indent(4)
-                    .defaultOptions(opts ->
-                            opts.serializers(build ->
-                                    build.registerExact(TransactionConfiguration.class, serializer)))
-                    .build();
+            TypeSerializerCollection typeSerializerCollection = TypeSerializerCollection.builder()
+                    .registerExact(TransactionConfiguration.class, serializer).build();
+            YamlConfigurationLoader yamlConfigurationLoader = ConfigurationUtility.getYamlConfigurationLoader(configurationPath, typeSerializerCollection);
 
             ConfigurationNode node = yamlConfigurationLoader.createNode();
 

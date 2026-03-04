@@ -126,7 +126,7 @@ public class SellAllGUI extends ChestGUI<UUID> {
 
                     // Create the ItemStackBuilder and pass the ItemStackConfig.
                     ItemStackBuilder itemStackBuilder = new ItemStackBuilder(logger);
-                    itemStackBuilder.fromItemStackConfig(itemConfig, player, null, List.of());
+                    itemStackBuilder.fromItemStackConfig(itemConfig, player, List.of());
 
                     // If an ItemStack was created, create the GUIButton and add it to the GUI.
                     Optional<ItemStack> optionalItemStack = itemStackBuilder.buildItemStack();
@@ -145,7 +145,7 @@ public class SellAllGUI extends ChestGUI<UUID> {
 
                     // Create the ItemStackBuilder and pass the ItemStackConfig.
                     ItemStackBuilder itemStackBuilder = new ItemStackBuilder(logger);
-                    itemStackBuilder.fromItemStackConfig(itemConfig, player, null, List.of());
+                    itemStackBuilder.fromItemStackConfig(itemConfig, player, List.of());
 
                     // If an ItemStack was created, create the GUIButton and add it to the GUI.
                     Optional<ItemStack> optionalItemStack = itemStackBuilder.buildItemStack();

@@ -81,7 +81,7 @@ public class ItemStackProcessor implements TransactionProcessor {
         if(itemStackConfig.itemType() == null) return new TransactionResult("Not Configured", false, false, false);
 
         ItemStackBuilder itemStackBuilder = new ItemStackBuilder(logger);
-        itemStackBuilder.fromItemStackConfig(itemStackConfig, player, null, List.of());
+        itemStackBuilder.fromItemStackConfig(itemStackConfig, player, List.of());
         itemStackBuilder.setAmount(amount);
 
         Optional<ItemStack> optionalItemStack = itemStackBuilder.buildItemStack();
@@ -115,7 +115,7 @@ public class ItemStackProcessor implements TransactionProcessor {
 
         // Create the ItemStack that will be taken from the player if they have enough of said ItemStack.
         ItemStackBuilder itemStackBuilder = new ItemStackBuilder(logger);
-        itemStackBuilder.fromItemStackConfig(itemStackConfig, player, null, List.of());
+        itemStackBuilder.fromItemStackConfig(itemStackConfig, player, List.of());
 
         Optional<ItemStack> optionalItemStack = itemStackBuilder.buildItemStack();
         if(optionalItemStack.isEmpty()) return new TransactionResult("Invalid Configuration", true, true, false);
@@ -154,7 +154,7 @@ public class ItemStackProcessor implements TransactionProcessor {
 
         // Build the ItemStack that will be given to the player on successful purchase.
         ItemStackBuilder itemStackBuilder = new ItemStackBuilder(logger);
-        itemStackBuilder.fromItemStackConfig(itemStackConfig, player, null, List.of());
+        itemStackBuilder.fromItemStackConfig(itemStackConfig, player, List.of());
 
         Optional<ItemStack> optionalItemStack = itemStackBuilder.buildItemStack();
         if(optionalItemStack.isEmpty()) return new TransactionResult("Invalid Configuration", true, true, false);
@@ -190,7 +190,7 @@ public class ItemStackProcessor implements TransactionProcessor {
 
         // Create the ItemStack that will be taken from the player if they have enough of said ItemStack.
         ItemStackBuilder itemStackBuilder = new ItemStackBuilder(logger);
-        itemStackBuilder.fromItemStackConfig(itemStackConfig, player, null, List.of());
+        itemStackBuilder.fromItemStackConfig(itemStackConfig, player, List.of());
 
         Optional<ItemStack> optionalItemStack = itemStackBuilder.buildItemStack();
         if(optionalItemStack.isEmpty()) return new TransactionResult("Invalid Configuration", true, true, false);

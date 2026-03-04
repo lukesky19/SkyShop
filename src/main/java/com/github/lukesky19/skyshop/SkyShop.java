@@ -190,7 +190,7 @@ public final class SkyShop extends SkyPlugin {
             playerDataFuture.join();
 
             playerDataFuture.thenAccept(v -> {
-                logger.info("Player Data saved.");
+                logger.info(AdventureUtil.deserialize("Player Data saved."));
             }).exceptionally(ex -> {
                 logger.warn(AdventureUtil.deserialize("Failed to save player data on plugin disable. Data loss will occur."));
                 return null;
@@ -247,12 +247,12 @@ public final class SkyShop extends SkyPlugin {
             String[] splitVersion = version.split("\\.");
             int second = Integer.parseInt(splitVersion[1]);
 
-            if(second >= 4) {
+            if(second >= 5) {
                 return true;
             }
         }
 
-        this.getComponentLogger().error(AdventureUtil.deserialize("SkyLib Version 1.4.0.0 or newer is required to run this plugin."));
+        this.getComponentLogger().error(AdventureUtil.deserialize("SkyLib Version 1.5.0.0 or newer is required to run this plugin."));
         this.getServer().getPluginManager().disablePlugin(this);
         return false;
     }

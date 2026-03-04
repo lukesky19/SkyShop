@@ -112,10 +112,10 @@ public class MenuConfigManager {
                                             button.shop(),
                                             null,
                                             new ItemStackConfig(
-                                                    itemType != null ? itemType.getKey().toString() : null,
+                                                    itemType,
                                                     null,
                                                     null,
-                                                    button.item().name(),
+                                                    button.item() != null ? button.item().name() : null,
                                                     List.of(),
                                                     null,
                                                     null,

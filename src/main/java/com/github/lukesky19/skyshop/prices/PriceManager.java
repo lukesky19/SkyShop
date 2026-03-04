@@ -17,7 +17,6 @@
 */
 package com.github.lukesky19.skyshop.prices;
 
-import com.github.lukesky19.skylib.api.registry.RegistryUtil;
 import com.github.lukesky19.skyshop.SkyShop;
 import com.github.lukesky19.skyshop.configuration.category.data.CategoryConfigV4;
 import com.github.lukesky19.skyshop.configuration.category.transaction.ItemConfiguration;
@@ -29,7 +28,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -98,8 +96,7 @@ public class PriceManager {
                                 .map(data -> (ItemConfiguration) data)
                                 .filter(data -> data.transactionItem().itemType() != null)
                                 .filter(ItemConfiguration::cacheSellPrice)
-                                .map(data -> RegistryUtil.getItemType(logger, data.transactionItem().itemType()).orElse(null))
-                                .filter(Objects::nonNull)
+                                .map(data -> data.transactionItem().itemType())
                                 .findFirst();
 
                         optionalItemType.ifPresent(itemType -> {

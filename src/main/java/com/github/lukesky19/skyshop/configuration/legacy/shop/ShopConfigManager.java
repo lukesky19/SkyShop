@@ -151,7 +151,7 @@ public class ShopConfigManager {
                                         null,
                                         null,
                                         new ItemStackConfig(
-                                                itemType != null ? itemType.getKey().toString() : null,
+                                                itemType,
                                                 null,
                                                 null,
                                                 button.item().name(),
@@ -180,7 +180,7 @@ public class ShopConfigManager {
                                                         -1
                                                 ),
                                                 new ItemStackConfig(
-                                                        itemType != null ? itemType.getKey().toString() : null,
+                                                        itemType,
                                                         null,
                                                         null,
                                                         button.item().name(),
@@ -199,7 +199,7 @@ public class ShopConfigManager {
                                                 List.of(
                                                         new ItemConfiguration(1, "skyshop:item",
                                                                 new ItemStackConfig(
-                                                                        itemType != null ? itemType.getKey().toString() : null,
+                                                                        itemType,
                                                                         null,
                                                                         null,
                                                                         null,

@@ -311,7 +311,7 @@ public class TransactionGUI extends ChestGUI<UUID> {
 
         // Create the ItemStackBuilder and pass the ItemStackConfig.
         ItemStackBuilder itemStackBuilder = new ItemStackBuilder(logger);
-        itemStackBuilder.fromItemStackConfig(itemConfig, player, null, List.of());
+        itemStackBuilder.fromItemStackConfig(itemConfig, player, List.of());
 
         // If an ItemStack was created, create the GUIButton and add it to the GUI.
         Optional<ItemStack> optionalItemStack = itemStackBuilder.buildItemStack();
@@ -419,7 +419,7 @@ public class TransactionGUI extends ChestGUI<UUID> {
                 if(!(data instanceof ItemConfiguration itemConfiguration)) continue;
 
                 ItemStackBuilder transactionItemBuilder = new ItemStackBuilder(logger);
-                transactionItemBuilder.fromItemStackConfig(itemConfiguration.transactionItem(), player, null, List.of());
+                transactionItemBuilder.fromItemStackConfig(itemConfiguration.transactionItem(), player, List.of());
                 Optional<ItemStack> optionalTransactionItemStack = transactionItemBuilder.buildItemStack();
                 if(optionalTransactionItemStack.isEmpty()) continue;
                 ItemStack transactionItemStack = optionalTransactionItemStack.get();
@@ -591,7 +591,7 @@ public class TransactionGUI extends ChestGUI<UUID> {
         }
 
         ItemStackBuilder itemStackBuilder = new ItemStackBuilder(logger);
-        itemStackBuilder.fromItemStackConfig(buttonConfig.displayItem(), player, null, placeholders);
+        itemStackBuilder.fromItemStackConfig(buttonConfig.displayItem(), player, placeholders);
         Optional<ItemStack> optionalItemStack = itemStackBuilder.buildItemStack();
         optionalItemStack.ifPresent(itemStack -> {
             GUIButton.Builder guiButtonBuilder = new GUIButton.Builder();

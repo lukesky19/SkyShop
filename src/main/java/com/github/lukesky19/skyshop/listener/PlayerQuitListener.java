@@ -53,11 +53,11 @@ public class PlayerQuitListener implements Listener {
     public void onPlayerQuit(PlayerQuitEvent playerQuitEvent) {
         Player player = playerQuitEvent.getPlayer();
 
-        playerDataManager.unloadPlayerData(player.getUniqueId()).thenAccept(v -> {
-            logger.info(AdventureUtil.deserialize("Saved player data for player " + player.getName()));
-        }).exceptionally(ex -> {
-            logger.warn(AdventureUtil.deserialize("Failed to save player data for player " + player.getName() + ". Error: " + ex.getMessage()));
-            return null;
-        });
+        playerDataManager.unloadPlayerData(player.getUniqueId()).thenAccept(v ->
+                logger.info(AdventureUtil.deserialize("Saved player data for player " + player.getName())))
+                .exceptionally(ex -> {
+                    logger.warn(AdventureUtil.deserialize("Failed to save player data for player " + player.getName() + ". Error: " + ex.getMessage()));
+                    return null;
+                });
     }
 }
