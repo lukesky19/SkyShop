@@ -457,6 +457,14 @@ public class TransactionManager {
                         updateAmount = true;
                     }
                 }
+            } else {
+                if(priceConfig.buyMoney() > 0) {
+                    buyMoney = priceConfig.buyMoney() * purchaseAmount;
+                }
+
+                if(priceConfig.buyPoints() > 0) {
+                    buyPoints = priceConfig.buyPoints() * purchaseAmount;
+                }
             }
         } else {
             if(priceConfig.buyMoney() > 0) {
@@ -527,6 +535,14 @@ public class TransactionManager {
 
                         updateAmount = true;
                     }
+                }
+            } else {
+                if(priceConfig.sellMoney() > 0) {
+                    sellMoney = priceConfig.sellMoney() * sellAmount;
+                }
+
+                if(priceConfig.sellPoints() > 0) {
+                    sellPoints = priceConfig.sellPoints() * sellAmount;
                 }
             }
         } else {
