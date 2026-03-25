@@ -142,6 +142,7 @@ public class SkyShopAPI {
         if(playerData == null) return false;
 
         @Nullable PriceCache priceCache = priceManager.getPriceCache(itemType);
+
         if(priceCache == null
                 || (priceCache.priceConfig().sellMoney() <= 0 && priceCache.priceConfig().sellPoints() <= 0)
                 || (priceCache.categoryPermission() != null && !player.hasPermission(priceCache.categoryPermission()))

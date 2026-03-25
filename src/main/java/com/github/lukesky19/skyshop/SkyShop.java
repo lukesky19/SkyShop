@@ -112,7 +112,7 @@ public final class SkyShop extends SkyPlugin {
         // Set up configuration manager classes
         settingsManager = new SettingsManager(this);
         localeManager = new LocaleManager(this, this.settingsManager);
-        PriceManager priceManager = new PriceManager(this);
+        PriceManager priceManager = new PriceManager();
         menuConfigManager = new MenuConfigManager(this);
         shopConfigManager = new ShopConfigManager(this, registryManager);
         categoryConfigManager = new CategoryConfigManager(this, settingsManager, priceManager, registryManager);

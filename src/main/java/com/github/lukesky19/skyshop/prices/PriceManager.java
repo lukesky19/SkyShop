@@ -17,11 +17,9 @@
 */
 package com.github.lukesky19.skyshop.prices;
 
-import com.github.lukesky19.skyshop.SkyShop;
 import com.github.lukesky19.skyshop.configuration.category.data.CategoryConfigV4;
 import com.github.lukesky19.skyshop.configuration.category.transaction.ItemConfiguration;
 import com.github.lukesky19.skyshop.util.ButtonType;
-import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import org.bukkit.inventory.ItemType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -34,27 +32,12 @@ import java.util.Optional;
  * This class keeps track of the appropriate sell prices for each {@link ItemType} as configured in {@link CategoryConfigV4}s.
  */
 public class PriceManager {
-    private final @NotNull ComponentLogger logger;
     private final @NotNull Map<ItemType, PriceCache> priceCacheByItemType = new HashMap<>();
 
     /**
-     * Default Constructor.
-     * You should use {@link PriceManager#PriceManager(SkyShop)} instead.
-     * @throws RuntimeException if used.
-     * @deprecated Use {@link PriceManager#PriceManager(SkyShop)} instead.
-     */
-    @Deprecated
-    public PriceManager() {
-        throw new RuntimeException("The use of the default constructor is not allowed");
-    }
-
-    /**
      * Constructor
-     * @param skyShop A {@link SkyShop} instance.
      */
-    public PriceManager(@NotNull SkyShop skyShop) {
-        this.logger = skyShop.getComponentLogger();
-    }
+    public PriceManager() {}
 
     /**
      * Get the {@link PriceCache} for the {@link ItemType}.
@@ -86,7 +69,7 @@ public class PriceManager {
                     })
                     .filter(buttonConfig -> {
                         CategoryConfigV4.PriceConfig priceConfig = buttonConfig.transactionData().prices();
-                        return priceConfig.sellMoney() > 0 && priceConfig.sellPoints() > 0;
+                        return priceConfig.sellMoney() > 0 || priceConfig.sellPoints() > 0;
                     })
                     .forEach(buttonConfig -> {
                         CategoryConfigV4.TransactionData transactionData = buttonConfig.transactionData();
