@@ -17,9 +17,9 @@
 */
 package com.github.lukesky19.skyshop.api;
 
-import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
-import com.github.lukesky19.skylib.api.format.FormatUtil;
-import com.github.lukesky19.skylib.api.player.PlayerUtil;
+import com.github.lukesky19.skylib.paper.api.adventure.PaperAdventureUtility;
+import com.github.lukesky19.skylib.paper.api.format.FormatUtil;
+import com.github.lukesky19.skylib.paper.api.player.PlayerUtil;
 import com.github.lukesky19.skyshop.SkyShop;
 import com.github.lukesky19.skyshop.api.event.ItemPreSellEvent;
 import com.github.lukesky19.skyshop.api.processor.TransactionProcessor;
@@ -43,8 +43,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.ItemType;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -56,14 +56,14 @@ import java.util.List;
  * This class provides methods to sell items using the priceConfig configured in SkyShop.
  */
 public class SkyShopAPI {
-    private final @NotNull SkyShop skyShop;
-    private final @NotNull LocaleManager localeManager;
-    private final @NotNull PriceManager priceManager;
+    private final @NonNull SkyShop skyShop;
+    private final @NonNull LocaleManager localeManager;
+    private final @NonNull PriceManager priceManager;
     private final @Nullable StatsManager statsManager;
-    private final @NotNull HookManager hookManager;
-    private final @NotNull RegistryManager registryManager;
-    private final @NotNull PlayerDataManager playerDataManager;
-    private final @NotNull TransactionManager transactionManager;
+    private final @NonNull HookManager hookManager;
+    private final @NonNull RegistryManager registryManager;
+    private final @NonNull PlayerDataManager playerDataManager;
+    private final @NonNull TransactionManager transactionManager;
 
     /**
      * Constructor
@@ -77,14 +77,14 @@ public class SkyShopAPI {
      * @param transactionManager A {@link TransactionManager} instance.
      */
     public SkyShopAPI(
-            @NotNull SkyShop skyShop,
-            @NotNull LocaleManager localeManager,
-            @NotNull PriceManager priceManager,
+            @NonNull SkyShop skyShop,
+            @NonNull LocaleManager localeManager,
+            @NonNull PriceManager priceManager,
             @Nullable StatsManager statsManager,
-            @NotNull HookManager hookManager,
-            @NotNull RegistryManager registryManager,
-            @NotNull PlayerDataManager playerDataManager,
-            @NotNull TransactionManager transactionManager) {
+            @NonNull HookManager hookManager,
+            @NonNull RegistryManager registryManager,
+            @NonNull PlayerDataManager playerDataManager,
+            @NonNull TransactionManager transactionManager) {
         this.skyShop = skyShop;
         this.localeManager = localeManager;
         this.priceManager = priceManager;
@@ -102,9 +102,9 @@ public class SkyShopAPI {
      * @param processor The {@link TransactionProcessor} that processes the data.
      */
     public void register(
-            @NotNull String id,
-            @NotNull Serializer serializer,
-            @NotNull TransactionProcessor processor) {
+            @NonNull String id,
+            @NonNull Serializer serializer,
+            @NonNull TransactionProcessor processor) {
         registryManager.register(id, serializer, processor);
     }
 
@@ -112,7 +112,7 @@ public class SkyShopAPI {
      * Unregister the serializer and processor for the id.
      * @param id The id.
      */
-    public void unregisterProcessor(@NotNull String id) {
+    public void unregisterProcessor(@NonNull String id) {
         registryManager.unregister(id);
     }
 
@@ -124,13 +124,13 @@ public class SkyShopAPI {
      * @param message Whether the player should be messaged on successful selling.
      * @return true if sold successfully, otherwise false.
      */
-    public boolean sellItemStack(@NotNull Player player, @NotNull ItemStack itemStack, int slot, boolean message) {
+    public boolean sellItemStack(@NonNull Player player, @NonNull ItemStack itemStack, int slot, boolean message) {
         LocaleV5 locale = localeManager.getConfiguration();
         // Get the player's inventory
         Inventory inventory = player.getInventory();
 
         // Get the ItemStack's ItemType
-        @Nullable ItemType itemType = itemStack.getType().asItemType();
+        ItemType itemType = itemStack.getType().asItemType();
         // If the ItemStack is empty (air or stack size of 0), return
         if(itemStack.isEmpty()) return false;
         // If the ItemType is null, return
@@ -138,17 +138,17 @@ public class SkyShopAPI {
         String transactionName = FormatUtil.formatItemTypeName(itemType);
         int stackSize = itemStack.getAmount();
 
-        @Nullable PlayerData playerData = playerDataManager.getPlayerData(player.getUniqueId());
+        PlayerData playerData = playerDataManager.getPlayerData(player.getUniqueId());
         if(playerData == null) return false;
 
-        @Nullable PriceCache priceCache = priceManager.getPriceCache(itemType);
+        PriceCache priceCache = priceManager.getPriceCache(itemType);
 
         if(priceCache == null
                 || (priceCache.priceConfig().sellMoney() <= 0 && priceCache.priceConfig().sellPoints() <= 0)
                 || (priceCache.categoryPermission() != null && !player.hasPermission(priceCache.categoryPermission()))
                 || (priceCache.transactionPermission() != null && !player.hasPermission(priceCache.transactionPermission()))) {
             if(message) {
-                player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.unsellable()));
+                player.sendMessage(PaperAdventureUtility.deserialize(player, locale.prefix() + locale.unsellable()));
             }
 
             return false;
@@ -203,7 +203,7 @@ public class SkyShopAPI {
             return true;
         } else {
             if(message) {
-                player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.unsellable()));
+                player.sendMessage(PaperAdventureUtility.deserialize(player, locale.prefix() + locale.unsellable()));
             }
 
             return false;
@@ -219,7 +219,7 @@ public class SkyShopAPI {
      * @param message Whether the player should be messaged on successful selling.
      * @return true if sold successfully, otherwise false.
      */
-    public boolean sellInventory(@NotNull Player player, @NotNull Inventory sellInventory, boolean ignoreArmorSlots, boolean returnUnsoldToPlayer, boolean message) {
+    public boolean sellInventory(@NonNull Player player, @NonNull Inventory sellInventory, boolean ignoreArmorSlots, boolean returnUnsoldToPlayer, boolean message) {
         LocaleV5 locale = localeManager.getConfiguration();
 
         double[] totalPrices = getTotalPrices(locale, player, sellInventory, null, ignoreArmorSlots, returnUnsoldToPlayer, message);
@@ -246,9 +246,9 @@ public class SkyShopAPI {
      * @return true if sold successfully, otherwise false.
      */
     public boolean sellAllMatchingItemStack(
-            @NotNull Player player,
-            @NotNull Inventory sellInventory,
-            @NotNull ItemStack matchingStack,
+            @NonNull Player player,
+            @NonNull Inventory sellInventory,
+            @NonNull ItemStack matchingStack,
             boolean ignoreArmorSlots,
             boolean returnUnsoldToPlayer,
             boolean message) {
@@ -283,20 +283,20 @@ public class SkyShopAPI {
      * @return A double array where the first number is the money as a double and the 2nd number is the player points as an integer (cast to int).
      */
     private double[] getTotalPrices(
-            @NotNull LocaleV5 locale,
-            @NotNull Player player,
-            @NotNull Inventory sellInventory,
+            @NonNull LocaleV5 locale,
+            @NonNull Player player,
+            @NonNull Inventory sellInventory,
             @Nullable ItemType matchingType,
             boolean ignoreArmorSlots,
             boolean returnUnsoldToPlayer,
             boolean message) {
-        @NotNull Inventory playerInventory = player.getInventory();
-        @NotNull Location playerLocation = player.getLocation();
+        Inventory playerInventory = player.getInventory();
+        Location playerLocation = player.getLocation();
 
         double money = 0.0;
         int points = 0;
 
-        @Nullable PlayerData playerData = playerDataManager.getPlayerData(player.getUniqueId());
+        PlayerData playerData = playerDataManager.getPlayerData(player.getUniqueId());
         if(playerData == null) {
             return new double[]{money, points};
         }
@@ -313,7 +313,7 @@ public class SkyShopAPI {
             // Check if matchingType is provided and if it matches the invType
             if(matchingType != null && !invType.equals(matchingType)) {
                 if(!sent && message) {
-                    player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.sellallUnsellable()));
+                    player.sendMessage(PaperAdventureUtility.deserialize(player, locale.prefix() + locale.sellallUnsellable()));
                     sent = true;
                 }
 
@@ -330,13 +330,13 @@ public class SkyShopAPI {
 
             int stackSize = invStack.getAmount();
 
-            @Nullable PriceCache priceCache = priceManager.getPriceCache(invType);
+            PriceCache priceCache = priceManager.getPriceCache(invType);
             if(priceCache == null
                     || (priceCache.priceConfig().sellMoney() <= 0 && priceCache.priceConfig().sellPoints() <= 0)
                     || (priceCache.categoryPermission() != null && !player.hasPermission(priceCache.categoryPermission()))
                     || (priceCache.transactionPermission() != null && !player.hasPermission(priceCache.transactionPermission()))) {
                 if(!sent && message) {
-                    player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.sellallUnsellable()));
+                    player.sendMessage(PaperAdventureUtility.deserialize(player, locale.prefix() + locale.sellallUnsellable()));
                     sent = true;
                 }
 
@@ -386,7 +386,7 @@ public class SkyShopAPI {
                 transactionManager.updatePlayerPrices(false, playerData, priceCache.transactionId(), priceCache.priceConfig(), priceData, stackSize);
             } else {
                 if(!sent && message) {
-                    player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.sellallUnsellable()));
+                    player.sendMessage(PaperAdventureUtility.deserialize(player, locale.prefix() + locale.sellallUnsellable()));
                     sent = true;
                 }
 
@@ -414,11 +414,11 @@ public class SkyShopAPI {
      * @param message Whether the player should be messaged on successful selling.
      */
     private void processSinglePaymentAndMessage(
-            @NotNull LocaleV5 locale,
-            @NotNull EconomyHook economyHook,
-            @NotNull PlayerPointsHook playerPointsHook,
-            @NotNull Player player,
-            @NotNull String transactionName,
+            @NonNull LocaleV5 locale,
+            @NonNull EconomyHook economyHook,
+            @NonNull PlayerPointsHook playerPointsHook,
+            @NonNull Player player,
+            @NonNull String transactionName,
             int amount,
             double money,
             int points,
@@ -441,10 +441,10 @@ public class SkyShopAPI {
      * @param message Whether the player should be messaged on successful selling.
      */
     private void processBulkPaymentAndMessage(
-            @NotNull LocaleV5 locale,
-            @NotNull EconomyHook economyHook,
-            @NotNull PlayerPointsHook playerPointsHook,
-            @NotNull Player player,
+            @NonNull LocaleV5 locale,
+            @NonNull EconomyHook economyHook,
+            @NonNull PlayerPointsHook playerPointsHook,
+            @NonNull Player player,
             double money,
             int points,
             boolean message) {
@@ -462,9 +462,9 @@ public class SkyShopAPI {
      * @param points The player points to give. Use anything less than or equal to 0 to give nothing.
      */
     private void givePayment(
-            @NotNull EconomyHook economyHook,
-            @NotNull PlayerPointsHook playerPointsHook,
-            @NotNull Player player,
+            @NonNull EconomyHook economyHook,
+            @NonNull PlayerPointsHook playerPointsHook,
+            @NonNull Player player,
             double money,
             int points) {
         if(economyHook.isHooked() && money > 0.0) {
@@ -488,22 +488,22 @@ public class SkyShopAPI {
      * @param points The player points given.
      */
     private void sendSingleItemSoldPlayerMessage(
-            @NotNull LocaleV5 locale,
-            @NotNull EconomyHook economyHook,
-            @NotNull PlayerPointsHook playerPointsHook,
-            @NotNull Player player,
-            @NotNull String transactionName,
+            @NonNull LocaleV5 locale,
+            @NonNull EconomyHook economyHook,
+            @NonNull PlayerPointsHook playerPointsHook,
+            @NonNull Player player,
+            @NonNull String transactionName,
             int amount,
             double money,
             int points) {
         List<TagResolver.Single> placeholders = buildPlaceholders(economyHook, playerPointsHook, player, transactionName, amount, money, points);
 
         if(money > 0.0 && points > 0) {
-            player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.sellSuccess().moneyAndPoints(), placeholders));
+            player.sendMessage(PaperAdventureUtility.deserialize(player, locale.prefix() + locale.sellSuccess().moneyAndPoints(), placeholders));
         } else if(money > 0.0) {
-            player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.sellSuccess().money(), placeholders));
+            player.sendMessage(PaperAdventureUtility.deserialize(player, locale.prefix() + locale.sellSuccess().money(), placeholders));
         } else if(points > 0) {
-            player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.sellSuccess().points(), placeholders));
+            player.sendMessage(PaperAdventureUtility.deserialize(player, locale.prefix() + locale.sellSuccess().points(), placeholders));
         }
     }
 
@@ -517,20 +517,20 @@ public class SkyShopAPI {
      * @param points The player points given.
      */
     private void sendSellAllPlayerMessage(
-            @NotNull LocaleV5 locale,
-            @NotNull EconomyHook economyHook,
-            @NotNull PlayerPointsHook playerPointsHook,
-            @NotNull Player player,
+            @NonNull LocaleV5 locale,
+            @NonNull EconomyHook economyHook,
+            @NonNull PlayerPointsHook playerPointsHook,
+            @NonNull Player player,
             double money,
             int points) {
         List<TagResolver.Single> placeholders = buildPlaceholders(economyHook, playerPointsHook, player, money, points);
 
         if(money > 0 && points > 0) {
-            player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.sellallSuccess().moneyAndPoints(), placeholders));
+            player.sendMessage(PaperAdventureUtility.deserialize(player, locale.prefix() + locale.sellallSuccess().moneyAndPoints(), placeholders));
         } else if(money > 0) {
-            player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.sellallSuccess().money(), placeholders));
+            player.sendMessage(PaperAdventureUtility.deserialize(player, locale.prefix() + locale.sellallSuccess().money(), placeholders));
         } else if(points > 0) {
-            player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.sellallSuccess().points(), placeholders));
+            player.sendMessage(PaperAdventureUtility.deserialize(player, locale.prefix() + locale.sellallSuccess().points(), placeholders));
         }
     }
 
@@ -544,9 +544,9 @@ public class SkyShopAPI {
      * @return A {@link List} of {@link TagResolver.Single}.
      */
     private List<TagResolver.Single> buildPlaceholders(
-            @NotNull EconomyHook economyHook,
-            @NotNull PlayerPointsHook playerPointsHook,
-            @NotNull Player player,
+            @NonNull EconomyHook economyHook,
+            @NonNull PlayerPointsHook playerPointsHook,
+            @NonNull Player player,
             double money,
             int points) {
         List<TagResolver.Single> placeholders = new ArrayList<>();
@@ -598,10 +598,10 @@ public class SkyShopAPI {
      * @return A {@link List} of {@link TagResolver.Single}.
      */
     private List<TagResolver.Single> buildPlaceholders(
-            @NotNull EconomyHook economyHook,
-            @NotNull PlayerPointsHook playerPointsHook,
-            @NotNull Player player,
-            @NotNull String transactionName,
+            @NonNull EconomyHook economyHook,
+            @NonNull PlayerPointsHook playerPointsHook,
+            @NonNull Player player,
+            @NonNull String transactionName,
             int amount,
             double money,
             int points) {
@@ -661,7 +661,7 @@ public class SkyShopAPI {
      * @deprecated You should use {@link #sellInventory(Player, Inventory, boolean, boolean, boolean)} instead. This method just runs that method.
      */
     @Deprecated(since = "2.1.0.0")
-    public boolean sellInventoryGUI(@NotNull Inventory inventory, Player player, boolean message) {
+    public boolean sellInventoryGUI(@NonNull Inventory inventory, Player player, boolean message) {
         return sellInventory(player, inventory, false, true, message);
     }
 
@@ -676,7 +676,7 @@ public class SkyShopAPI {
      * @deprecated You should use {@link #sellInventory(Player, Inventory, boolean, boolean, boolean)} instead. This method just runs that method.
      */
     @Deprecated(since = "2.1.0.0")
-    public boolean sellInventory(@NotNull Player player, @NotNull Inventory inventory, boolean message) {
+    public boolean sellInventory(@NonNull Player player, @NonNull Inventory inventory, boolean message) {
         return sellInventory(player, inventory, false, false, message);
     }
 
@@ -707,7 +707,7 @@ public class SkyShopAPI {
      * @deprecated You should use {@link #sellAllMatchingItemStack(Player, Inventory, ItemStack, boolean, boolean, boolean)} instead. This method just runs that method.
      */
     @Deprecated(since = "2.1.0.0")
-    public boolean sellAllMatchingItemStack(@NotNull Player player, @NotNull ItemStack itemStack, boolean message) {
+    public boolean sellAllMatchingItemStack(@NonNull Player player, @NonNull ItemStack itemStack, boolean message) {
         return sellAllMatchingItemStack(player, player.getInventory(), itemStack, true, false, message);
     }
 }

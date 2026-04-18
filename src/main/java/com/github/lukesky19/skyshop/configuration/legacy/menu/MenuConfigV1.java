@@ -20,8 +20,8 @@ package com.github.lukesky19.skyshop.configuration.legacy.menu;
 import com.github.lukesky19.skylib.libs.configurate.objectmapping.ConfigSerializable;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.util.List;
 import java.util.Map;
@@ -33,7 +33,7 @@ import java.util.Map;
  */
 @Deprecated(since = "2.0.0.0")
 @ConfigSerializable
-public record MenuConfigV1(@NotNull Map<String, MenuPage> pages) {
+public record MenuConfigV1(@NonNull Map<String, MenuPage> pages) {
     /**
      * This record contains the configuration for a page.
      * @param size The GUI size.
@@ -44,7 +44,7 @@ public record MenuConfigV1(@NotNull Map<String, MenuPage> pages) {
     public record MenuPage(
             @Nullable Integer size,
             @Nullable String name,
-            @NotNull Map<String, MenuEntry> entries) {
+            @NonNull Map<String, MenuEntry> entries) {
     }
     /**
      * This record contains the configuration for a button.

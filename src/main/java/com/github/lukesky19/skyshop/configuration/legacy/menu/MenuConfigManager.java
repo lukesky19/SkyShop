@@ -17,22 +17,22 @@
 */
 package com.github.lukesky19.skyshop.configuration.legacy.menu;
 
-import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
-import com.github.lukesky19.skylib.api.configurate.ConfigurationUtility;
-import com.github.lukesky19.skylib.api.gui.GUIType;
-import com.github.lukesky19.skylib.api.itemstack.ItemStackConfig;
+import com.github.lukesky19.skylib.common.api.adventure.AdventureUtility;
+import com.github.lukesky19.skylib.common.platform.PlatformUtils;
 import com.github.lukesky19.skylib.libs.configurate.CommentedConfigurationNode;
 import com.github.lukesky19.skylib.libs.configurate.ConfigurateException;
 import com.github.lukesky19.skylib.libs.configurate.ConfigurationNode;
+import com.github.lukesky19.skylib.libs.configurate.yaml.NodeStyle;
 import com.github.lukesky19.skylib.libs.configurate.yaml.YamlConfigurationLoader;
+import com.github.lukesky19.skylib.paper.api.gui.GUIType;
+import com.github.lukesky19.skylib.paper.api.itemstack.ItemStackConfig;
 import com.github.lukesky19.skyshop.SkyShop;
 import com.github.lukesky19.skyshop.configuration.category.data.CategoryConfigV4;
 import com.github.lukesky19.skyshop.util.ButtonType;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemType;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -42,13 +42,13 @@ import java.util.List;
  * This class manages the migration of the legacy menu config file.
  */
 public class MenuConfigManager {
-    private final @NotNull SkyShop skyShop;
+    private final @NonNull SkyShop skyShop;
 
     /**
      * Constructor
      * @param skyShop A {@link SkyShop} instance.
     */
-    public MenuConfigManager(@NotNull SkyShop skyShop) {
+    public MenuConfigManager(@NonNull SkyShop skyShop) {
         this.skyShop = skyShop;
     }
 
@@ -68,24 +68,24 @@ public class MenuConfigManager {
         if(categoryPath.toFile().exists()) return;
 
         // Attempt to load and migrate the config.
-        YamlConfigurationLoader legacyLoader = ConfigurationUtility.getYamlConfigurationLoader(legacyPath);
-        YamlConfigurationLoader categoryLoader = ConfigurationUtility.getYamlConfigurationLoader(categoryPath);
+        YamlConfigurationLoader legacyLoader = createLoader(legacyPath);
+        YamlConfigurationLoader categoryLoader = createLoader(categoryPath);
         try {
             ConfigurationNode root = legacyLoader.load();
             ConfigurationNode versionNode = root.node("config-version");
-            @Nullable String version = versionNode.virtual() ? null : versionNode.getString();
+            String version = versionNode.virtual() ? null : versionNode.getString();
 
             CategoryConfigV4 categoryConfig;
             if(version == null) {
-                @Nullable MenuConfigV1 menuConfigV1 = root.get(MenuConfigV1.class);
+                MenuConfigV1 menuConfigV1 = root.get(MenuConfigV1.class);
                 if(menuConfigV1 == null) {
-                    logger.warn(AdventureUtil.deserialize("Failed to migrate the legacy menu.yml configuration due failure to load."));
+                    logger.warn(AdventureUtility.plain("Failed to migrate the legacy menu.yml configuration due failure to load."));
                     return;
                 }
 
                 List<MenuConfigV1.MenuPage> pages = menuConfigV1.pages().values().stream().toList();
                 if(pages.isEmpty()) {
-                    logger.warn(AdventureUtil.deserialize("Failed to migrate the legacy menu.yml configuration due no pages configured."));
+                    logger.warn(AdventureUtility.plain("Failed to migrate the legacy menu.yml configuration due no pages configured."));
                     return;
                 }
                 MenuConfigV1.MenuPage firstPage = pages.getFirst();
@@ -132,13 +132,13 @@ public class MenuConfigManager {
                                 }).toList())).toList());
             } else {
                 if(!version.equals("2.0.0.0")) {
-                    logger.warn(AdventureUtil.deserialize("Failed to migrate the legacy menu.yml configuration due to an unsupported version. Version: " + version));
+                    logger.warn(AdventureUtility.plain("Failed to migrate the legacy menu.yml configuration due to an unsupported version. Version: " + version));
                     return;
                 }
 
-                @Nullable MenuConfigV2 menuConfigV2 = root.get(MenuConfigV2.class);
+                MenuConfigV2 menuConfigV2 = root.get(MenuConfigV2.class);
                 if(menuConfigV2 == null) {
-                    logger.warn(AdventureUtil.deserialize("Failed to migrate the legacy menu.yml configuration due failure to load."));
+                    logger.warn(AdventureUtility.plain("Failed to migrate the legacy menu.yml configuration due failure to load."));
                     return;
                 }
 
@@ -169,7 +169,24 @@ public class MenuConfigManager {
             // Delete the legacy file.
             legacyPath.toFile().delete();
         } catch (ConfigurateException e) {
-            logger.warn(AdventureUtil.deserialize("Failed to migrate the legacy menu.yml configuration. " + e.getMessage()));
+            logger.warn(AdventureUtility.plain("Failed to migrate the legacy menu.yml configuration. " + e.getMessage()));
         }
+    }
+
+    /**
+     * Create the {@link YamlConfigurationLoader} for the path provided.
+     * @apiNote {@link PlatformUtils#getSerializers()} are included by default.
+     * @param path The {@link Path}.
+     * @return The {@link YamlConfigurationLoader}.
+     */
+    protected @NonNull YamlConfigurationLoader createLoader(@NonNull Path path) {
+        return YamlConfigurationLoader.builder()
+                .path(path)
+                .nodeStyle(NodeStyle.BLOCK)
+                .indent(4)
+                .defaultOptions(configurationOptions ->
+                        configurationOptions.serializers(builder ->
+                                builder.registerAll(PlatformUtils.getSerializers())))
+                .build();
     }
 }

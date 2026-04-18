@@ -23,8 +23,8 @@ import com.github.lukesky19.skylib.libs.configurate.serialize.TypeSerializer;
 import com.github.lukesky19.skyshop.api.configuration.TransactionConfiguration;
 import com.github.lukesky19.skyshop.api.serializer.Serializer;
 import com.github.lukesky19.skyshop.registry.RegistryManager;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.lang.reflect.Type;
 
@@ -32,13 +32,13 @@ import java.lang.reflect.Type;
  * This class serializes/deserializes {@link TransactionConfiguration}. Relies on registered serializers based on ids.
  */
 public class TransactionConfigurationSerializer implements TypeSerializer<TransactionConfiguration> {
-    private final @NotNull RegistryManager registryManager;
+    private final @NonNull RegistryManager registryManager;
 
     /**
      * Constructor
      * @param registryManager A {@link RegistryManager} instance.
      */
-    public TransactionConfigurationSerializer(@NotNull RegistryManager registryManager) {
+    public TransactionConfigurationSerializer(@NonNull RegistryManager registryManager) {
         this.registryManager = registryManager;
     }
 
@@ -50,7 +50,7 @@ public class TransactionConfigurationSerializer implements TypeSerializer<Transa
      * @throws SerializationException If the configuration lacks an id, there is no serializer for the id, or the serialization fails.
      */
     @Override
-    public @Nullable TransactionConfiguration deserialize(@NotNull Type type, @NotNull ConfigurationNode node) throws SerializationException {
+    public @Nullable TransactionConfiguration deserialize(@NonNull Type type, @NonNull ConfigurationNode node) throws SerializationException {
         ConfigurationNode idNode = node.node("id");
         if(idNode.virtual()) {
             throw new SerializationException("The configuration node lacks an id.");
@@ -75,13 +75,13 @@ public class TransactionConfigurationSerializer implements TypeSerializer<Transa
      * @throws SerializationException If the configuration lacks an id, there is no serializer for the id, or the serialization fails.
      */
     @Override
-    public void serialize(@NotNull Type type, @Nullable TransactionConfiguration transactionConfiguration, @NotNull ConfigurationNode node) throws SerializationException {
+    public void serialize(@NonNull Type type, @Nullable TransactionConfiguration transactionConfiguration, @NonNull ConfigurationNode node) throws SerializationException {
         if(transactionConfiguration == null) {
             node.raw(null);
             return;
         }
 
-        @Nullable String id = transactionConfiguration.getId();
+        String id = transactionConfiguration.getId();
         if(id == null) throw new SerializationException("Unable to serialize when the id is null.");
 
         // Obtain the serializer

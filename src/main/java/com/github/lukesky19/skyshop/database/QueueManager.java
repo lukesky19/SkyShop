@@ -17,9 +17,9 @@
 */
 package com.github.lukesky19.skyshop.database;
 
-import com.github.lukesky19.skylib.api.database.connection.AbstractConnectionManager;
-import com.github.lukesky19.skylib.api.database.queue.MultiThreadQueueManager;
-import org.jetbrains.annotations.NotNull;
+import com.github.lukesky19.skylib.common.api.database.connection.AbstractConnectionManager;
+import com.github.lukesky19.skylib.common.api.database.queue.MultiThreadQueueManager;
+import org.jspecify.annotations.NonNull;
 
 /**
  * This class manages the queue for reading from and writing to the database.
@@ -29,7 +29,7 @@ public class QueueManager extends MultiThreadQueueManager {
      * Constructor that takes a class that extends {@link AbstractConnectionManager}.
      * @param connectionManager A class that extends {@link AbstractConnectionManager} to use.
      */
-    public QueueManager(@NotNull AbstractConnectionManager connectionManager) {
+    public QueueManager(@NonNull AbstractConnectionManager connectionManager) {
         super(connectionManager);
     }
 }

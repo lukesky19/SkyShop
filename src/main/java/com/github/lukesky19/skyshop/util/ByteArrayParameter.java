@@ -17,7 +17,7 @@
 */
 package com.github.lukesky19.skyshop.util;
 
-import com.github.lukesky19.skylib.api.database.parameter.Parameter;
+import com.github.lukesky19.skylib.common.api.database.parameter.Parameter;
 
 /**
  * Takes a byte array and stores it as-is for use in a database.

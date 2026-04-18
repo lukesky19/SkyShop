@@ -17,7 +17,8 @@
 */
 package com.github.lukesky19.skyshop.commands.arguments;
 
-import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
+import com.github.lukesky19.skylib.common.api.adventure.AdventureUtility;
+import com.github.lukesky19.skylib.paper.api.adventure.PaperAdventureUtility;
 import com.github.lukesky19.skyshop.SkyShop;
 import com.github.lukesky19.skyshop.configuration.locale.LocaleManager;
 import com.github.lukesky19.skyshop.configuration.locale.data.LocaleV5;
@@ -25,21 +26,21 @@ import com.mojang.brigadier.tree.LiteralCommandNode;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import org.bukkit.entity.Player;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 /**
  * This class is used to create the reload command used to reload the plugin.
  */
 public class ReloadCommand {
-    private final @NotNull SkyShop skyShop;
-    private final @NotNull LocaleManager localeManager;
+    private final @NonNull SkyShop skyShop;
+    private final @NonNull LocaleManager localeManager;
 
     /**
      * Constructor
      * @param skyShop A {@link SkyShop} instance.
      * @param localeManager A {@link LocaleManager} instance.
      */
-    public ReloadCommand(@NotNull SkyShop skyShop, @NotNull LocaleManager localeManager) {
+    public ReloadCommand(@NonNull SkyShop skyShop, @NonNull LocaleManager localeManager) {
         this.skyShop = skyShop;
         this.localeManager = localeManager;
     }
@@ -57,9 +58,9 @@ public class ReloadCommand {
                     LocaleV5 locale = localeManager.getConfiguration();
 
                     if(ctx.getSource().getSender() instanceof Player player) {
-                        player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.configReload()));
+                        player.sendMessage(PaperAdventureUtility.deserialize(player, locale.prefix() + locale.configReload()));
                     } else {
-                        skyShop.getComponentLogger().info(AdventureUtil.deserialize(locale.configReload()));
+                        skyShop.getComponentLogger().info(AdventureUtility.deserialize(locale.configReload()));
                     }
 
                     return 1;

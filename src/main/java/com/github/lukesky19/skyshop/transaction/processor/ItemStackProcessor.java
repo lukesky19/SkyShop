@@ -17,10 +17,10 @@
 */
 package com.github.lukesky19.skyshop.transaction.processor;
 
-import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
-import com.github.lukesky19.skylib.api.itemstack.ItemStackBuilder;
-import com.github.lukesky19.skylib.api.itemstack.ItemStackConfig;
-import com.github.lukesky19.skylib.api.player.PlayerUtil;
+import com.github.lukesky19.skylib.paper.api.adventure.PaperAdventureUtility;
+import com.github.lukesky19.skylib.paper.api.itemstack.ItemStackBuilder;
+import com.github.lukesky19.skylib.paper.api.itemstack.ItemStackConfig;
+import com.github.lukesky19.skylib.paper.api.player.PlayerUtil;
 import com.github.lukesky19.skyshop.SkyShop;
 import com.github.lukesky19.skyshop.api.configuration.TransactionConfiguration;
 import com.github.lukesky19.skyshop.api.event.ItemPrePurchaseEvent;
@@ -35,8 +35,8 @@ import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.ItemType;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.util.List;
 import java.util.Optional;
@@ -45,9 +45,9 @@ import java.util.Optional;
  * This class processes {@link ItemConfiguration} for buying/selling items.
  */
 public class ItemStackProcessor implements TransactionProcessor {
-    private final @NotNull SkyShop skyShop;
-    private final @NotNull ComponentLogger logger;
-    private final @NotNull LocaleManager localeManager;
+    private final @NonNull SkyShop skyShop;
+    private final @NonNull ComponentLogger logger;
+    private final @NonNull LocaleManager localeManager;
     private final @Nullable StatsManager statsManager;
 
     /**
@@ -57,8 +57,8 @@ public class ItemStackProcessor implements TransactionProcessor {
      * @param statsManager A {@link StatsManager} instance.
      */
     public ItemStackProcessor(
-            @NotNull SkyShop skyShop,
-            @NotNull LocaleManager localeManager,
+            @NonNull SkyShop skyShop,
+            @NonNull LocaleManager localeManager,
             @Nullable StatsManager statsManager) {
         this.skyShop = skyShop;
         this.logger = skyShop.getComponentLogger();
@@ -75,7 +75,7 @@ public class ItemStackProcessor implements TransactionProcessor {
      * @return A {@link TransactionResult}.
      */
     @Override
-    public @NotNull TransactionResult canBuy(@NotNull Player player, @NotNull TransactionConfiguration configuration, int amount) {
+    public @NonNull TransactionResult canBuy(@NonNull Player player, @NonNull TransactionConfiguration configuration, int amount) {
         if(!(configuration instanceof ItemConfiguration itemConfiguration)) return new TransactionResult("Wrong Type", true, true, false);
         ItemStackConfig itemStackConfig = itemConfiguration.transactionItem();
         if(itemStackConfig.itemType() == null) return new TransactionResult("Not Configured", false, false, false);
@@ -107,9 +107,9 @@ public class ItemStackProcessor implements TransactionProcessor {
      * @return A {@link TransactionResult}.
      */
     @Override
-    public @NotNull TransactionResult canSell(@NotNull Player player, @NotNull TransactionConfiguration configuration, int amount) {
+    public @NonNull TransactionResult canSell(@NonNull Player player, @NonNull TransactionConfiguration configuration, int amount) {
         if(!(configuration instanceof ItemConfiguration itemConfiguration)) return new TransactionResult("Wrong Type", true, true, false);
-        @Nullable ItemStackConfig itemStackConfig = itemConfiguration.transactionItem();
+        ItemStackConfig itemStackConfig = itemConfiguration.transactionItem();
         if(itemStackConfig.itemType() == null) return new TransactionResult("Not Configured", false, false, false);
         LocaleV5 locale = localeManager.getConfiguration();
 
@@ -124,7 +124,7 @@ public class ItemStackProcessor implements TransactionProcessor {
 
         // Check if the player has the required amount to sell
         if(!player.getInventory().containsAtLeast(sellItem, amount)) {
-            player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.notEnoughItems()));
+            player.sendMessage(PaperAdventureUtility.deserialize(player, locale.prefix() + locale.notEnoughItems()));
             return new TransactionResult("Insufficient Resources", true, false, false);
         }
 
@@ -147,7 +147,7 @@ public class ItemStackProcessor implements TransactionProcessor {
      * @return A {@link TransactionResult}.
      */
     @Override
-    public @NotNull TransactionResult buy(@NotNull Player player, @NotNull TransactionConfiguration configuration, int amount) {
+    public @NonNull TransactionResult buy(@NonNull Player player, @NonNull TransactionConfiguration configuration, int amount) {
         if(!(configuration instanceof ItemConfiguration itemConfiguration)) return new TransactionResult("Wrong Type", true, true, false);
         ItemStackConfig itemStackConfig = itemConfiguration.transactionItem();
         if(itemStackConfig.itemType() == null) return new TransactionResult("Not Configured", false, false, false);
@@ -183,9 +183,9 @@ public class ItemStackProcessor implements TransactionProcessor {
      * @return A {@link TransactionResult}.
      */
     @Override
-    public @NotNull TransactionResult sell(@NotNull Player player, @NotNull TransactionConfiguration configuration, int amount) {
+    public @NonNull TransactionResult sell(@NonNull Player player, @NonNull TransactionConfiguration configuration, int amount) {
         if(!(configuration instanceof ItemConfiguration itemConfiguration)) return new TransactionResult("Wrong Type", true, true, false);
-        @Nullable ItemStackConfig itemStackConfig = itemConfiguration.transactionItem();
+        ItemStackConfig itemStackConfig = itemConfiguration.transactionItem();
         if(itemStackConfig.itemType() == null) return new TransactionResult("Not Configured", false, false, false);
 
         // Create the ItemStack that will be taken from the player if they have enough of said ItemStack.

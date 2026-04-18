@@ -17,14 +17,14 @@
 */
 package com.github.lukesky19.skyshop.configuration.legacy.menu;
 
-import com.github.lukesky19.skylib.api.gui.GUIType;
-import com.github.lukesky19.skylib.api.itemstack.ItemStackConfig;
 import com.github.lukesky19.skylib.libs.configurate.objectmapping.ConfigSerializable;
+import com.github.lukesky19.skylib.paper.api.gui.GUIType;
+import com.github.lukesky19.skylib.paper.api.itemstack.ItemStackConfig;
 import com.github.lukesky19.skyshop.configuration.category.data.CategoryConfigV4;
 import com.github.lukesky19.skyshop.util.ButtonType;
 import org.bukkit.inventory.ItemStack;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.util.List;
 
@@ -37,7 +37,7 @@ import java.util.List;
  */
 @Deprecated(since = "2.1.0.0")
 @ConfigSerializable
-public record MenuConfigV2(@Nullable String configVersion, @NotNull GuiData gui) {
+public record MenuConfigV2(@Nullable String configVersion, @NonNull GuiData gui) {
     /**
      * This record contains the actual configuration for creating the initial GUI.
      * @param guiType The {@link GUIType}.
@@ -45,14 +45,14 @@ public record MenuConfigV2(@Nullable String configVersion, @NotNull GuiData gui)
      * @param pages The {@link List} of {@link PageConfig}s.
      */
     @ConfigSerializable
-    public record GuiData(@Nullable GUIType guiType, @Nullable String name, @NotNull List<@NotNull PageConfig> pages) {}
+    public record GuiData(@Nullable GUIType guiType, @Nullable String name, @NonNull List<@NonNull PageConfig> pages) {}
 
     /**
      * This record contains the configuration for individual pages.
      * @param buttons The {@link List} of {@link Button}s.
      */
     @ConfigSerializable
-    public record PageConfig(@NotNull List<@NotNull Button> buttons) {}
+    public record PageConfig(@NonNull List<@NonNull Button> buttons) {}
 
     /**
      * This record contains the configuration for a single button.
@@ -66,5 +66,5 @@ public record MenuConfigV2(@Nullable String configVersion, @NotNull GuiData gui)
             @Nullable ButtonType buttonType,
             @Nullable Integer slot,
             @Nullable String shopName,
-            @NotNull ItemStackConfig displayItem) {}
+            @NonNull ItemStackConfig displayItem) {}
 }

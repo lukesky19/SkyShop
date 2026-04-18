@@ -17,26 +17,26 @@
 */
 package com.github.lukesky19.skyshop.hook.impl;
 
+import com.github.lukesky19.skylib.common.api.integration.Hook;
 import com.github.lukesky19.skyshop.SkyShop;
-import com.github.lukesky19.skyshop.hook.Hook;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.RegisteredServiceProvider;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 /**
  * This class manages interfacing with Vault.
  */
 public class EconomyHook implements Hook {
-    private final @NotNull SkyShop skyShop;
+    private final @NonNull SkyShop skyShop;
     private @Nullable Economy economy;
 
     /**
      * Constructor
      * @param skyShop A {@link SkyShop} instance.
      */
-    public EconomyHook(@NotNull SkyShop skyShop) {
+    public EconomyHook(@NonNull SkyShop skyShop) {
         this.skyShop = skyShop;
     }
 
@@ -68,7 +68,7 @@ public class EconomyHook implements Hook {
      * @param player The {@link Player}.
      * @param amount The amount to add.
      */
-    public void addToBalance(@NotNull Player player, double amount) {
+    public void addToBalance(@NonNull Player player, double amount) {
         if(economy == null) return;
 
         economy.depositPlayer(player, amount);
@@ -82,7 +82,7 @@ public class EconomyHook implements Hook {
      * @param amount The amount to remove.
      * @return The amount removed.
      */
-    public double removeFromBalance(@NotNull Player player, double amount) {
+    public double removeFromBalance(@NonNull Player player, double amount) {
         if(economy == null) return 0;
 
         double balance = economy.getBalance(player);
@@ -101,7 +101,7 @@ public class EconomyHook implements Hook {
      * @param player The {@link Player} to get the economy for.
      * @return The player's balance or 0 if not hooked.
      */
-    public double getBalance(@NotNull Player player) {
+    public double getBalance(@NonNull Player player) {
         if(economy == null) return 0;
 
         return economy.getBalance(player);

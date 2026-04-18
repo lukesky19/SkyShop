@@ -17,7 +17,7 @@
 */
 package com.github.lukesky19.skyshop.transaction.processor;
 
-import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
+import com.github.lukesky19.skylib.common.api.adventure.AdventureUtility;
 import com.github.lukesky19.skyshop.api.configuration.TransactionConfiguration;
 import com.github.lukesky19.skyshop.api.processor.TransactionProcessor;
 import com.github.lukesky19.skyshop.api.result.TransactionResult;
@@ -29,17 +29,16 @@ import com.github.lukesky19.skyshop.configuration.settings.data.SettingsV4;
 import com.github.lukesky19.skyshop.hook.HookManager;
 import com.github.lukesky19.skyshop.hook.impl.BentoBoxHook;
 import org.bukkit.entity.Player;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
 import world.bentobox.bentobox.database.objects.Island;
 
 /**
  * This class processes {@link IslandSizeConfiguration} for buying/selling island size.
  */
 public class IslandSizeProcessor implements TransactionProcessor {
-    private final @NotNull SettingsManager settingsManager;
-    private final @NotNull LocaleManager localeManager;
-    private final @NotNull HookManager hookManager;
+    private final @NonNull SettingsManager settingsManager;
+    private final @NonNull LocaleManager localeManager;
+    private final @NonNull HookManager hookManager;
 
     /**
      * Constructor
@@ -48,9 +47,9 @@ public class IslandSizeProcessor implements TransactionProcessor {
      * @param hookManager A {@link HookManager} instance.
      */
     public IslandSizeProcessor(
-            @NotNull SettingsManager settingsManager,
-            @NotNull LocaleManager localeManager,
-            @NotNull HookManager hookManager) {
+            @NonNull SettingsManager settingsManager,
+            @NonNull LocaleManager localeManager,
+            @NonNull HookManager hookManager) {
         this.settingsManager = settingsManager;
         this.localeManager = localeManager;
         this.hookManager = hookManager;
@@ -65,11 +64,11 @@ public class IslandSizeProcessor implements TransactionProcessor {
      * @return A {@link TransactionResult}.
      */
     @Override
-    public @NotNull TransactionResult canBuy(@NotNull Player player, @NotNull TransactionConfiguration configuration, int amount) {
+    public @NonNull TransactionResult canBuy(@NonNull Player player, @NonNull TransactionConfiguration configuration, int amount) {
         if(!(configuration instanceof IslandSizeConfiguration islandSizeConfiguration)) return new TransactionResult("Wrong Type", true, true, false);
         if(islandSizeConfiguration.buyAmount() == null || islandSizeConfiguration.buyAmount() <= 0) return new TransactionResult("Not Configured", false, false, false);
 
-        @Nullable SettingsV4 settings = settingsManager.getConfiguration();
+        SettingsV4 settings = settingsManager.getConfiguration();
         if(settings == null || settings.islandSizeLimit() == null) return new TransactionResult("Invalid SkyShop plugin settings", true, true, false);
 
         BentoBoxHook bentoBoxHook = hookManager.getHook(BentoBoxHook.class);
@@ -78,15 +77,15 @@ public class IslandSizeProcessor implements TransactionProcessor {
         LocaleV5 locale = localeManager.getConfiguration();
 
         // Get and validate the island
-        @Nullable Island island = bentoBoxHook.getIsland(player);
+        Island island = bentoBoxHook.getIsland(player);
         if(island == null) {
-            player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.islandSizeMessages().notOnIsland()));
+            player.sendMessage(AdventureUtility.deserialize(locale.prefix() + locale.islandSizeMessages().notOnIsland()));
             return new TransactionResult("Player not on island", true, false, false);
         }
 
         // Check if the island is at the max configured size
         if(island.getProtectionRange() >= settings.islandSizeLimit()) {
-            player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.islandSizeMessages().islandMaxSize()));
+            player.sendMessage(AdventureUtility.deserialize(locale.prefix() + locale.islandSizeMessages().islandMaxSize()));
             return new TransactionResult("Island at max size", true, false, false);
         }
 
@@ -101,11 +100,11 @@ public class IslandSizeProcessor implements TransactionProcessor {
      * @return A {@link TransactionResult}.
      */
     @Override
-    public @NotNull TransactionResult canSell(@NotNull Player player, @NotNull TransactionConfiguration configuration, int amount) {
+    public @NonNull TransactionResult canSell(@NonNull Player player, @NonNull TransactionConfiguration configuration, int amount) {
         if(!(configuration instanceof IslandSizeConfiguration islandSizeConfiguration)) return new TransactionResult("Wrong Type", true, true, false);
         if(islandSizeConfiguration.sellAmount() == null || islandSizeConfiguration.sellAmount() <= 0) return new TransactionResult("Not Configured", false, false, false);
 
-        @Nullable SettingsV4 settings = settingsManager.getConfiguration();
+        SettingsV4 settings = settingsManager.getConfiguration();
         if(settings == null || settings.islandSizeLimit() == null) return new TransactionResult("Invalid SkyShop plugin settings", true, true, false);
 
         BentoBoxHook bentoBoxHook = hookManager.getHook(BentoBoxHook.class);
@@ -114,15 +113,15 @@ public class IslandSizeProcessor implements TransactionProcessor {
         LocaleV5 locale = localeManager.getConfiguration();
 
         // Get and validate the island
-        @Nullable Island island = bentoBoxHook.getIsland(player);
+        Island island = bentoBoxHook.getIsland(player);
         if(island == null) {
-            player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.islandSizeMessages().notOnIsland()));
+            player.sendMessage(AdventureUtility.deserialize(locale.prefix() + locale.islandSizeMessages().notOnIsland()));
             return new TransactionResult("Player not on island", true, false, false);
         }
 
         // Validate that the player's island is large enough
         if(island.getProtectionRange() <= islandSizeConfiguration.sellAmount()) {
-            player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.islandSizeMessages().islandTooSmall()));
+            player.sendMessage(AdventureUtility.deserialize(locale.prefix() + locale.islandSizeMessages().islandTooSmall()));
             return new TransactionResult("Island too small", true, false, false);
         }
 
@@ -139,11 +138,11 @@ public class IslandSizeProcessor implements TransactionProcessor {
      * @return A {@link TransactionResult}.
      */
     @Override
-    public @NotNull TransactionResult buy(@NotNull Player player, @NotNull TransactionConfiguration configuration, int amount) {
+    public @NonNull TransactionResult buy(@NonNull Player player, @NonNull TransactionConfiguration configuration, int amount) {
         if(!(configuration instanceof IslandSizeConfiguration islandSizeConfiguration)) return new TransactionResult("Wrong Type", true, true, false);
         if(islandSizeConfiguration.buyAmount() == null || islandSizeConfiguration.buyAmount() <= 0) return new TransactionResult("Not Configured", false, false, false);
 
-        @Nullable SettingsV4 settings = settingsManager.getConfiguration();
+        SettingsV4 settings = settingsManager.getConfiguration();
         if(settings == null || settings.islandSizeLimit() == null) return new TransactionResult("Invalid SkyShop plugin settings", true, true, false);
 
         BentoBoxHook bentoBoxHook = hookManager.getHook(BentoBoxHook.class);
@@ -152,15 +151,15 @@ public class IslandSizeProcessor implements TransactionProcessor {
         LocaleV5 locale = localeManager.getConfiguration();
 
         // Get and validate the island
-        @Nullable Island island = bentoBoxHook.getIsland(player);
+        Island island = bentoBoxHook.getIsland(player);
         if(island == null) {
-            player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.islandSizeMessages().notOnIsland()));
+            player.sendMessage(AdventureUtility.deserialize(locale.prefix() + locale.islandSizeMessages().notOnIsland()));
             return new TransactionResult("Player not on island", true, false, false);
         }
 
         // Check if the island is at the max configured size
         if(island.getProtectionRange() >= settings.islandSizeLimit()) {
-            player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.islandSizeMessages().islandMaxSize()));
+            player.sendMessage(AdventureUtility.deserialize(locale.prefix() + locale.islandSizeMessages().islandMaxSize()));
             return new TransactionResult("Island at max size", true, false, false);
         }
 
@@ -184,11 +183,11 @@ public class IslandSizeProcessor implements TransactionProcessor {
      * @return A {@link TransactionResult}.
      */
     @Override
-    public @NotNull TransactionResult sell(@NotNull Player player, @NotNull TransactionConfiguration configuration, int amount) {
+    public @NonNull TransactionResult sell(@NonNull Player player, @NonNull TransactionConfiguration configuration, int amount) {
         if(!(configuration instanceof IslandSizeConfiguration islandSizeConfiguration)) return new TransactionResult("Wrong Type", true, true, false);
         if(islandSizeConfiguration.sellAmount() == null || islandSizeConfiguration.sellAmount() <= 0) return new TransactionResult("Not Configured", false, false, false);
 
-        @Nullable SettingsV4 settings = settingsManager.getConfiguration();
+        SettingsV4 settings = settingsManager.getConfiguration();
         if(settings == null || settings.islandSizeLimit() == null) return new TransactionResult("Invalid SkyShop plugin settings", true, true, false);
 
         BentoBoxHook bentoBoxHook = hookManager.getHook(BentoBoxHook.class);
@@ -197,15 +196,15 @@ public class IslandSizeProcessor implements TransactionProcessor {
         LocaleV5 locale = localeManager.getConfiguration();
 
         // Get and validate the island
-        @Nullable Island island = bentoBoxHook.getIsland(player);
+        Island island = bentoBoxHook.getIsland(player);
         if(island == null) {
-            player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.islandSizeMessages().notOnIsland()));
+            player.sendMessage(AdventureUtility.deserialize(locale.prefix() + locale.islandSizeMessages().notOnIsland()));
             return new TransactionResult("Player not on island", true, false, false);
         }
 
         // Validate that the player's island is large enough
         if(island.getProtectionRange() <= islandSizeConfiguration.sellAmount()) {
-            player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.islandSizeMessages().islandTooSmall()));
+            player.sendMessage(AdventureUtility.deserialize(locale.prefix() + locale.islandSizeMessages().islandTooSmall()));
             return new TransactionResult("Island too small", true, false, false);
         }
 

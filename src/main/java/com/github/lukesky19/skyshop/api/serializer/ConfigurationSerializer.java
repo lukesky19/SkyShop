@@ -22,25 +22,26 @@ import com.github.lukesky19.skylib.libs.configurate.ConfigurationNode;
 import com.github.lukesky19.skylib.libs.configurate.objectmapping.ConfigSerializable;
 import com.github.lukesky19.skylib.libs.configurate.serialize.SerializationException;
 import com.github.lukesky19.skyshop.api.configuration.TransactionConfiguration;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 /**
  * This abstract class can be used to create a {@link Serializer} for {@link TransactionConfiguration} that is annotated with {@link ConfigSerializable}.
  * @param <T> The class that extends {@link TransactionConfiguration}.
  */
 public abstract class ConfigurationSerializer<T extends TransactionConfiguration> implements Serializer {
-    private final @NotNull Class<T> clazz;
+    private final @NonNull Class<T> clazz;
 
     /**
      * Constructor
      * @param clazz The class being serialized.
      */
-    protected ConfigurationSerializer(@NotNull Class<T> clazz) {
+    protected ConfigurationSerializer(@NonNull Class<T> clazz) {
         this.clazz = clazz;
     }
+
     @Override
-    public void serialize(@Nullable TransactionConfiguration data, @NotNull ConfigurationNode root) throws SerializationException {
+    public void serialize(@Nullable TransactionConfiguration data, @NonNull ConfigurationNode root) throws SerializationException {
         if(data == null) {
             root.raw(null);
             return;
@@ -50,7 +51,7 @@ public abstract class ConfigurationSerializer<T extends TransactionConfiguration
     }
 
     @Override
-    public TransactionConfiguration deserialize(@NotNull ConfigurationNode root) {
+    public TransactionConfiguration deserialize(@NonNull ConfigurationNode root) {
         try {
             // Apply migration
             migrate(root);

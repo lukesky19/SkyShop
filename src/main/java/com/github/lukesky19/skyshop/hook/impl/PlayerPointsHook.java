@@ -17,13 +17,13 @@
 */
 package com.github.lukesky19.skyshop.hook.impl;
 
+import com.github.lukesky19.skylib.common.api.integration.Hook;
 import com.github.lukesky19.skyshop.SkyShop;
-import com.github.lukesky19.skyshop.hook.Hook;
 import org.black_ixx.playerpoints.PlayerPoints;
 import org.black_ixx.playerpoints.PlayerPointsAPI;
 import org.bukkit.entity.Player;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.util.UUID;
 
@@ -31,14 +31,14 @@ import java.util.UUID;
  * This class manages interfacing with PlayerPoints.
  */
 public class PlayerPointsHook implements Hook {
-    private final @NotNull SkyShop skyShop;
+    private final @NonNull SkyShop skyShop;
     private @Nullable PlayerPointsAPI playerPointsAPI;
 
     /**
      * Constructor
      * @param skyShop A {@link SkyShop} instance.
      */
-    public PlayerPointsHook(@NotNull SkyShop skyShop) {
+    public PlayerPointsHook(@NonNull SkyShop skyShop) {
         this.skyShop = skyShop;
     }
 
@@ -67,7 +67,7 @@ public class PlayerPointsHook implements Hook {
      * @param player The {@link Player}.
      * @param amount The amount to add.
      */
-    public void addToBalance(@NotNull Player player, int amount) {
+    public void addToBalance(@NonNull Player player, int amount) {
         if(playerPointsAPI == null) return;
 
         playerPointsAPI.give(player.getUniqueId(), amount);
@@ -81,7 +81,7 @@ public class PlayerPointsHook implements Hook {
      * @param amount The amount to remove.
      * @return The amount removed.
      */
-    public double removeFromBalance(@NotNull Player player, int amount) {
+    public double removeFromBalance(@NonNull Player player, int amount) {
         if(playerPointsAPI == null) return 0;
         UUID uuid = player.getUniqueId();
 
@@ -101,7 +101,7 @@ public class PlayerPointsHook implements Hook {
      * @param player The {@link Player} to get the points balance for.
      * @return The player's balance or 0 if not hooked.
      */
-    public double getBalance(@NotNull Player player) {
+    public double getBalance(@NonNull Player player) {
         if(playerPointsAPI == null) return 0;
 
         return playerPointsAPI.look(player.getUniqueId());

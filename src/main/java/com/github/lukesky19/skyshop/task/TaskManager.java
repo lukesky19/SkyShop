@@ -17,22 +17,22 @@
 */
 package com.github.lukesky19.skyshop.task;
 
-import com.github.lukesky19.skylib.api.gui.impl.UUIDGUIManager;
+import com.github.lukesky19.skylib.paper.api.gui.impl.UUIDGUIManager;
 import com.github.lukesky19.skyshop.SkyShop;
 import com.github.lukesky19.skyshop.player.PlayerDataManager;
 import com.github.lukesky19.skyshop.stats.StatsManager;
 import com.github.lukesky19.skyshop.task.tasks.CooldownTask;
 import org.bukkit.scheduler.BukkitTask;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 /**
  * This class manages the scheduled task that saves stats to the database.
  */
 public class TaskManager {
-    private final @NotNull SkyShop skyShop;
-    private final @NotNull PlayerDataManager playerDataManager;
-    private final @NotNull UUIDGUIManager guiManager;
+    private final @NonNull SkyShop skyShop;
+    private final @NonNull PlayerDataManager playerDataManager;
+    private final @NonNull UUIDGUIManager guiManager;
     private final @Nullable StatsManager statsManager;
     private @Nullable BukkitTask saveStatsTask;
     private @Nullable BukkitTask cooldownTask;
@@ -45,9 +45,9 @@ public class TaskManager {
      * @param statsManager A {@link StatsManager} instance.
      */
     public TaskManager(
-            @NotNull SkyShop skyShop,
-            @NotNull PlayerDataManager playerDataManager,
-            @NotNull UUIDGUIManager guiManager,
+            @NonNull SkyShop skyShop,
+            @NonNull PlayerDataManager playerDataManager,
+            @NonNull UUIDGUIManager guiManager,
             @Nullable StatsManager statsManager) {
         this.skyShop = skyShop;
         this.playerDataManager = playerDataManager;

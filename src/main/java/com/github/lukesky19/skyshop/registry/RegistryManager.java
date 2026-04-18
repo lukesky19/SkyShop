@@ -19,8 +19,8 @@ package com.github.lukesky19.skyshop.registry;
 
 import com.github.lukesky19.skyshop.api.processor.TransactionProcessor;
 import com.github.lukesky19.skyshop.api.serializer.Serializer;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -29,8 +29,8 @@ import java.util.Map;
  * This class manages the serializers and processors for custom configuration files.
  */
 public class RegistryManager {
-    private final @NotNull Map<String, Serializer> registeredSerializers = new HashMap<>();
-    private final @NotNull Map<String, TransactionProcessor> registeredProcessors = new HashMap<>();
+    private final @NonNull Map<String, Serializer> registeredSerializers = new HashMap<>();
+    private final @NonNull Map<String, TransactionProcessor> registeredProcessors = new HashMap<>();
 
     /**
      * Constructor
@@ -44,9 +44,9 @@ public class RegistryManager {
      * @param processor The {@link TransactionProcessor} that processes the data.
      */
     public void register(
-            @NotNull String id,
-            @NotNull Serializer serializer,
-            @NotNull TransactionProcessor processor) {
+            @NonNull String id,
+            @NonNull Serializer serializer,
+            @NonNull TransactionProcessor processor) {
         id = id.toLowerCase();
         registeredSerializers.putIfAbsent(id, serializer);
         registeredProcessors.putIfAbsent(id, processor);
@@ -56,7 +56,7 @@ public class RegistryManager {
      * Unregister the data class and processor for the id provided.
      * @param id The id as a {@link String}.
      */
-    public void unregister(@NotNull String id) {
+    public void unregister(@NonNull String id) {
         id = id.toLowerCase();
         registeredSerializers.remove(id);
         registeredProcessors.remove(id);
@@ -88,7 +88,7 @@ public class RegistryManager {
      * @param id The id.
      * @param serializer The serializer.
      */
-    public void registerSerializer(@NotNull String id, @NotNull Serializer serializer) {
+    public void registerSerializer(@NonNull String id, @NonNull Serializer serializer) {
         id = id.toLowerCase();
         registeredSerializers.put(id, serializer);
     }
@@ -97,7 +97,7 @@ public class RegistryManager {
      * Unregisters only a serializer. Used internally only and should not be used elsewhere.
      * @param id The id.
      */
-    public void unregisterSerializer(@NotNull String id) {
+    public void unregisterSerializer(@NonNull String id) {
         id = id.toLowerCase();
         registeredSerializers.remove(id);
     }

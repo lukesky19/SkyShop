@@ -17,14 +17,14 @@
 */
 package com.github.lukesky19.skyshop.configuration.transaction.data;
 
-import com.github.lukesky19.skylib.api.gui.GUIType;
-import com.github.lukesky19.skylib.api.itemstack.ItemStackConfig;
 import com.github.lukesky19.skylib.libs.configurate.objectmapping.ConfigSerializable;
+import com.github.lukesky19.skylib.paper.api.gui.GUIType;
+import com.github.lukesky19.skylib.paper.api.itemstack.ItemStackConfig;
 import com.github.lukesky19.skyshop.gui.TransactionGUI;
 import com.github.lukesky19.skyshop.util.ButtonType;
 import org.bukkit.inventory.ItemStack;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.util.List;
 
@@ -41,13 +41,13 @@ public record TransactionGUIConfigV2(
         @Nullable String configVersion,
         @Nullable GUIType guiType,
         @Nullable String guiName,
-        @NotNull List<@NotNull PageConfig> pages) {
+        @NonNull List<@NonNull PageConfig> pages) {
     /**
      * This record contains the configuration for individual pages.
      * @param buttons The {@link List} of {@link Button}s.
      */
     @ConfigSerializable
-    public record PageConfig(@NotNull List<@NotNull Button> buttons) {}
+    public record PageConfig(@NonNull List<@NonNull Button> buttons) {}
 
     /**
      * This record contains the configuration to create buttons to be displayed.
@@ -61,5 +61,5 @@ public record TransactionGUIConfigV2(
             @Nullable ButtonType buttonType,
             @Nullable Integer slot,
             @Nullable Integer transactionAmount,
-            @NotNull ItemStackConfig displayItem) {}
+            @NonNull ItemStackConfig displayItem) {}
 }

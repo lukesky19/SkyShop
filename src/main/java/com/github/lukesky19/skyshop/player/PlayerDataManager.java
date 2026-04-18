@@ -21,8 +21,8 @@ import com.github.lukesky19.skyshop.SkyShop;
 import com.github.lukesky19.skyshop.database.DatabaseManager;
 import com.github.lukesky19.skyshop.database.table.PlayerDataTable;
 import com.github.lukesky19.skyshop.player.data.PlayerData;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -33,9 +33,9 @@ import java.util.concurrent.CompletableFuture;
  * This class manages {@link PlayerData}.
  */
 public class PlayerDataManager {
-    private final @NotNull SkyShop skyShop;
-    private final @NotNull PlayerDataTable playerDataTable;
-    private final @NotNull Map<UUID, PlayerData> playerDataMap = new HashMap<>();
+    private final @NonNull SkyShop skyShop;
+    private final @NonNull PlayerDataTable playerDataTable;
+    private final @NonNull Map<UUID, PlayerData> playerDataMap = new HashMap<>();
 
     /**
      * Constructor
@@ -43,8 +43,8 @@ public class PlayerDataManager {
      * @param databaseManager A {@link DatabaseManager} instance.
      */
     public PlayerDataManager(
-            @NotNull SkyShop skyShop,
-            @NotNull DatabaseManager databaseManager) {
+            @NonNull SkyShop skyShop,
+            @NonNull DatabaseManager databaseManager) {
         this.skyShop = skyShop;
         this.playerDataTable = databaseManager.getPlayerDataTable();
     }
@@ -54,7 +54,7 @@ public class PlayerDataManager {
      * @param playerId The player's {@link UUID}.
      * @return The {@link PlayerData} or null.
      */
-    public @Nullable PlayerData getPlayerData(@NotNull UUID playerId) {
+    public @Nullable PlayerData getPlayerData(@NonNull UUID playerId) {
         return playerDataMap.get(playerId);
     }
 
@@ -62,7 +62,7 @@ public class PlayerDataManager {
      * Get the {@link Map} mapping {@link UUID}s to {@link PlayerData}.
      * @return The {@link Map} mapping {@link UUID}s to {@link PlayerData}.
      */
-    public @NotNull Map<UUID, PlayerData> getPlayerData() {
+    public @NonNull Map<UUID, PlayerData> getPlayerData() {
         return playerDataMap;
     }
 
@@ -70,8 +70,8 @@ public class PlayerDataManager {
      * Load the player data for the player id.
      * @param playerId The player's {@link UUID}.
      */
-    public void loadPlayerData(@NotNull UUID playerId) {
-        @NotNull CompletableFuture<PlayerData> future = playerDataTable.loadPlayerData(playerId, new PlayerData());
+    public void loadPlayerData(@NonNull UUID playerId) {
+        CompletableFuture<PlayerData> future = playerDataTable.loadPlayerData(playerId, new PlayerData());
         future.thenAccept(playerData -> playerDataMap.put(playerId, playerData));
     }
 
@@ -87,18 +87,18 @@ public class PlayerDataManager {
      * @param playerId The player's {@link UUID}.
      * @return A {@link CompletableFuture} of type {@link Void} when complete.
      */
-    public @NotNull CompletableFuture<Void> unloadPlayerData(@NotNull UUID playerId) {
-        @Nullable PlayerData playerData = playerDataMap.get(playerId);
+    public @NonNull CompletableFuture<Void> unloadPlayerData(@NonNull UUID playerId) {
+        PlayerData playerData = playerDataMap.get(playerId);
         if(playerData == null) return CompletableFuture.completedFuture(null);
 
-        return playerDataTable.savePlayerData(playerId, playerData).thenAccept(v -> playerDataMap.remove(playerId));
+        return playerDataTable.savePlayerData(playerId, playerData).thenAccept(_ -> playerDataMap.remove(playerId));
     }
 
     /**
      * Save and unload all player data.
      * @return A {@link CompletableFuture} of type {@link Void} when complete.
      */
-    public @NotNull CompletableFuture<Void> unloadPlayerData() {
-        return playerDataTable.savePlayerData(playerDataMap).thenAccept(results -> playerDataMap.clear());
+    public @NonNull CompletableFuture<Void> unloadPlayerData() {
+        return playerDataTable.savePlayerData(playerDataMap).thenAccept(_ -> playerDataMap.clear());
     }
 }

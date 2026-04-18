@@ -17,16 +17,16 @@
 */
 package com.github.lukesky19.skyshop.configuration.legacy.shop;
 
-import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
-import com.github.lukesky19.skylib.api.configurate.ConfigurationUtility;
-import com.github.lukesky19.skylib.api.format.FormatUtil;
-import com.github.lukesky19.skylib.api.gui.GUIType;
-import com.github.lukesky19.skylib.api.itemstack.ItemStackConfig;
+import com.github.lukesky19.skylib.common.api.adventure.AdventureUtility;
+import com.github.lukesky19.skylib.common.platform.PlatformUtils;
 import com.github.lukesky19.skylib.libs.configurate.CommentedConfigurationNode;
 import com.github.lukesky19.skylib.libs.configurate.ConfigurateException;
 import com.github.lukesky19.skylib.libs.configurate.ConfigurationNode;
 import com.github.lukesky19.skylib.libs.configurate.yaml.NodeStyle;
 import com.github.lukesky19.skylib.libs.configurate.yaml.YamlConfigurationLoader;
+import com.github.lukesky19.skylib.paper.api.format.FormatUtil;
+import com.github.lukesky19.skylib.paper.api.gui.GUIType;
+import com.github.lukesky19.skylib.paper.api.itemstack.ItemStackConfig;
 import com.github.lukesky19.skyshop.SkyShop;
 import com.github.lukesky19.skyshop.api.configuration.TransactionConfiguration;
 import com.github.lukesky19.skyshop.configuration.category.data.CategoryConfigV4;
@@ -38,8 +38,8 @@ import com.github.lukesky19.skyshop.util.ButtonType;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemType;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.io.File;
 import java.io.IOException;
@@ -54,15 +54,15 @@ import java.util.stream.Stream;
  * This class manages the migration of legacy shop config files.
 */
 public class ShopConfigManager {
-    private final @NotNull SkyShop skyShop;
-    private final @NotNull TransactionConfigurationSerializer serializer;
+    private final @NonNull SkyShop skyShop;
+    private final @NonNull TransactionConfigurationSerializer serializer;
 
     /**
      * Constructor
      * @param skyShop A {@link SkyShop} instance.
      * @param registryManager A {@link RegistryManager} instance.
     */
-    public ShopConfigManager(@NotNull SkyShop skyShop, @NotNull RegistryManager registryManager) {
+    public ShopConfigManager(@NonNull SkyShop skyShop, @NonNull RegistryManager registryManager) {
         this.skyShop = skyShop;
         this.serializer = new TransactionConfigurationSerializer(registryManager);
     }
@@ -92,7 +92,7 @@ public class ShopConfigManager {
                 // Don't overwrite existing files
                 if(categoryPath.toFile().exists()) continue;
 
-                YamlConfigurationLoader legacyLoader = ConfigurationUtility.getYamlConfigurationLoader(legacyPath);
+                YamlConfigurationLoader legacyLoader = createLoader(legacyPath);
                 YamlConfigurationLoader categoryLoader = YamlConfigurationLoader.builder()
                         .nodeStyle(NodeStyle.BLOCK)
                         .path(categoryPath)
@@ -104,20 +104,20 @@ public class ShopConfigManager {
 
                 ConfigurationNode root = legacyLoader.load();
                 ConfigurationNode versionNode = root.node("config-version");
-                @Nullable String version = versionNode.virtual() ? null : versionNode.getString();
+                String version = versionNode.virtual() ? null : versionNode.getString();
 
                 CategoryConfigV4 categoryConfig;
                 try {
                     if(version == null) {
-                        @Nullable ShopConfigV1 shopConfigV1 = root.get(ShopConfigV1.class);
+                        ShopConfigV1 shopConfigV1 = root.get(ShopConfigV1.class);
                         if(shopConfigV1 == null) {
-                            logger.warn(AdventureUtil.deserialize("Failed to migrate " + fileNameWithExtension + " due due failure to load."));
+                            logger.warn(AdventureUtility.plain("Failed to migrate " + fileNameWithExtension + " due due failure to load."));
                             continue;
                         }
 
                         List<ShopConfigV1.ShopPage> pages = shopConfigV1.pages().values().stream().toList();
                         if(pages.isEmpty()) {
-                            logger.warn(AdventureUtil.deserialize("Failed to migrate the legacy " + fileNameWithExtension + " configuration due no pages configured."));
+                            logger.warn(AdventureUtility.plain("Failed to migrate the legacy " + fileNameWithExtension + " configuration due no pages configured."));
                             return;
                         }
                         ShopConfigV1.ShopPage firstPage = pages.getFirst();
@@ -136,7 +136,7 @@ public class ShopConfigManager {
                                 }
                                 ItemType itemType = material != null ? material.asItemType() : null;
 
-                                @Nullable ButtonType buttonType = ButtonType.getType(button.type());
+                                ButtonType buttonType = ButtonType.getType(button.type());
                                 if(buttonType != null) {
                                     if(buttonType.equals(ButtonType.COMMAND)) {
                                         buttonType = ButtonType.TRANSACTION;
@@ -235,14 +235,14 @@ public class ShopConfigManager {
                                 pageConfigList);
                     } else {
                         if(!version.equals("2.0.0.0")) {
-                            logger.warn(AdventureUtil.deserialize("Failed to migrate " + fileNameWithExtension + " due to an unsupported version. Version: " + version));
+                            logger.warn(AdventureUtility.plain("Failed to migrate " + fileNameWithExtension + " due to an unsupported version. Version: " + version));
                             continue;
                         }
 
-                        @Nullable ShopConfigV2 shopConfigV2 = root.get(ShopConfigV2.class);
+                        ShopConfigV2 shopConfigV2 = root.get(ShopConfigV2.class);
                         // If the shop config is null, move to the next file
                         if(shopConfigV2 == null) {
-                            logger.warn(AdventureUtil.deserialize("Failed to migrate " + fileNameWithExtension + " due due failure to load."));
+                            logger.warn(AdventureUtility.plain("Failed to migrate " + fileNameWithExtension + " due due failure to load."));
                             continue;
                         }
 
@@ -310,7 +310,7 @@ public class ShopConfigManager {
                     // Delete the legacy file.
                     legacyPath.toFile().delete();
                 } catch (ConfigurateException e) {
-                    logger.error(AdventureUtil.deserialize("Failed to migrate the legacy shop configuration for file " + fileNameWithExtension + ". " + e.getMessage()));
+                    logger.error(AdventureUtility.plain("Failed to migrate the legacy shop configuration for file " + fileNameWithExtension + ". " + e.getMessage()));
                 }
             }
 
@@ -322,7 +322,7 @@ public class ShopConfigManager {
                 shopsPath.toFile().delete();
             }
         } catch (IOException e) {
-            logger.error(AdventureUtil.deserialize("Failed to migrate legacy shop configuration files. Error: " + e.getMessage()));
+            logger.error(AdventureUtility.plain("Failed to migrate legacy shop configuration files. Error: " + e.getMessage()));
         }
     }
 
@@ -332,7 +332,7 @@ public class ShopConfigManager {
      * @return A {@link String} containing the file name.
      * @throws RuntimeException if the {@link Path} is not a file.
      */
-    private @NotNull String getFileNameWithoutExtension(@NotNull Path path) {
+    private @NonNull String getFileNameWithoutExtension(@NonNull Path path) {
         if(!path.toFile().isFile()) throw new RuntimeException("Path does not point to a file.");
 
         String fileName = path.getFileName().toString();
@@ -342,5 +342,22 @@ public class ShopConfigManager {
         if(lastDotIndex == -1) return fileName;
 
         return fileName.substring(0, lastDotIndex);
+    }
+
+    /**
+     * Create the {@link YamlConfigurationLoader} for the path provided.
+     * @apiNote {@link PlatformUtils#getSerializers()} are included by default.
+     * @param path The {@link Path}.
+     * @return The {@link YamlConfigurationLoader}.
+     */
+    protected @NonNull YamlConfigurationLoader createLoader(@NonNull Path path) {
+        return YamlConfigurationLoader.builder()
+                .path(path)
+                .nodeStyle(NodeStyle.BLOCK)
+                .indent(4)
+                .defaultOptions(configurationOptions ->
+                        configurationOptions.serializers(builder ->
+                                builder.registerAll(PlatformUtils.getSerializers())))
+                .build();
     }
 }

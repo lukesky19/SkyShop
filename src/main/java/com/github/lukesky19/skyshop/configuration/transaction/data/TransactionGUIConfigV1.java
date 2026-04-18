@@ -17,14 +17,14 @@
 */
 package com.github.lukesky19.skyshop.configuration.transaction.data;
 
-import com.github.lukesky19.skylib.api.gui.GUIType;
-import com.github.lukesky19.skylib.api.itemstack.ItemStackConfig;
 import com.github.lukesky19.skylib.libs.configurate.objectmapping.ConfigSerializable;
+import com.github.lukesky19.skylib.paper.api.gui.GUIType;
+import com.github.lukesky19.skylib.paper.api.itemstack.ItemStackConfig;
 import com.github.lukesky19.skyshop.gui.TransactionGUI;
 import com.github.lukesky19.skyshop.util.ButtonType;
 import org.bukkit.inventory.ItemStack;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.util.List;
 
@@ -35,7 +35,7 @@ import java.util.List;
  */
 @Deprecated(since = "3.0.0.0")
 @ConfigSerializable
-public record TransactionGUIConfigV1(@Nullable String configVersion, @NotNull GuiData gui) {
+public record TransactionGUIConfigV1(@Nullable String configVersion, @NonNull GuiData gui) {
     /**
      * This record contains the actual configuration for creating the initial GUI.
      * @param guiType The {@link GUIType}.
@@ -43,14 +43,14 @@ public record TransactionGUIConfigV1(@Nullable String configVersion, @NotNull Gu
      * @param pages The {@link List} of {@link PageConfig}s.
      */
     @ConfigSerializable
-    public record GuiData(@Nullable GUIType guiType, @Nullable String name, @NotNull List<@NotNull PageConfig> pages) {}
+    public record GuiData(@Nullable GUIType guiType, @Nullable String name, @NonNull List<@NonNull PageConfig> pages) {}
 
     /**
      * This record contains the configuration for individual pages.
      * @param buttons The {@link List} of {@link Button}s.
      */
     @ConfigSerializable
-    public record PageConfig(@NotNull List<@NotNull Button> buttons) {}
+    public record PageConfig(@NonNull List<@NonNull Button> buttons) {}
 
     /**
      * This record contains the configuration to create buttons to be displayed.
@@ -64,5 +64,5 @@ public record TransactionGUIConfigV1(@Nullable String configVersion, @NotNull Gu
             @Nullable ButtonType buttonType,
             @Nullable Integer slot,
             @Nullable Integer transactionAmount,
-            @NotNull ItemStackConfig displayItem) {}
+            @NonNull ItemStackConfig displayItem) {}
 }

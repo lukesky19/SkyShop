@@ -17,7 +17,7 @@
 */
 package com.github.lukesky19.skyshop.player.data;
 
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -29,7 +29,7 @@ import java.util.Set;
  */
 public class PlayerData {
     private int version = 1;
-    private @NotNull Map<String, PlayerModifiers> playerPricesMap = new HashMap<>();
+    private @NonNull Map<String, PlayerModifiers> playerPricesMap = new HashMap<>();
 
     /**
      * Constructor
@@ -57,7 +57,7 @@ public class PlayerData {
      * @param transactionId The id.
      * @return The {@link PlayerModifiers}.
      */
-    public @NotNull PlayerModifiers getPlayerPrices(@NotNull String transactionId) {
+    public @NonNull PlayerModifiers getPlayerPrices(@NonNull String transactionId) {
         return playerPricesMap.computeIfAbsent(transactionId.toLowerCase(), PlayerModifiers::new);
     }
 
@@ -65,7 +65,7 @@ public class PlayerData {
      * Set the {@link Map} mapping transaction ids as {@link String} to {@link PlayerModifiers}.
      * @param map A {@link Map} mapping transaction ids as {@link String} to {@link PlayerModifiers}.
      */
-    public void setPlayerPricesMap(@NotNull Map<String, PlayerModifiers> map) {
+    public void setPlayerPricesMap(@NonNull Map<String, PlayerModifiers> map) {
         playerPricesMap = map;
     }
 
@@ -73,7 +73,7 @@ public class PlayerData {
      * Get the {@link Map} mapping transaction ids as {@link String} to {@link PlayerModifiers}.
      * @return The {@link Map} mapping transaction ids as {@link String} to {@link PlayerModifiers}.
      */
-    public @NotNull Map<String, PlayerModifiers> getPlayerPricesMap() {
+    public @NonNull Map<String, PlayerModifiers> getPlayerPricesMap() {
         return playerPricesMap;
     }
 
@@ -81,7 +81,7 @@ public class PlayerData {
      * Get a {@link Set} of all {@link PlayerModifiers} the player has.
      * @return A {@link Set} of {@link PlayerModifiers}.
      */
-    public @NotNull Set<PlayerModifiers> getPlayerPrices() {
+    public @NonNull Set<PlayerModifiers> getPlayerPrices() {
         return new HashSet<>(playerPricesMap.values());
     }
 }

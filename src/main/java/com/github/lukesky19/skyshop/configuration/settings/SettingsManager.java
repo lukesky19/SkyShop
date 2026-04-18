@@ -17,8 +17,8 @@
 */
 package com.github.lukesky19.skyshop.configuration.settings;
 
-import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
-import com.github.lukesky19.skylib.api.configurate.ConfigurationUtility;
+import com.github.lukesky19.skylib.common.api.adventure.AdventureUtility;
+import com.github.lukesky19.skylib.common.api.configuration.abstracts.SimpleConfigManager;
 import com.github.lukesky19.skylib.libs.configurate.ConfigurateException;
 import com.github.lukesky19.skylib.libs.configurate.ConfigurationNode;
 import com.github.lukesky19.skylib.libs.configurate.serialize.SerializationException;
@@ -28,10 +28,8 @@ import com.github.lukesky19.skyshop.configuration.settings.data.SettingsV1;
 import com.github.lukesky19.skyshop.configuration.settings.data.SettingsV2;
 import com.github.lukesky19.skyshop.configuration.settings.data.SettingsV3;
 import com.github.lukesky19.skyshop.configuration.settings.data.SettingsV4;
-import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -39,21 +37,13 @@ import java.nio.file.Path;
 /**
  * This class manages everything related to handling the plugin's settings.
 */
-public class SettingsManager {
-    private final @NotNull SkyShop skyShop;
-    private final @NotNull ComponentLogger logger;
-    private final @NotNull Path configurationPath;
-
-    private @Nullable SettingsV4 configuration;
-
+public class SettingsManager extends SimpleConfigManager<SettingsV4> {
     /**
      * Constructor
      * @param skyShop A {@link SkyShop} instance.
     */
-    public SettingsManager(@NotNull SkyShop skyShop) {
-        this.skyShop = skyShop;
-        this.logger = skyShop.getComponentLogger();
-        configurationPath = Path.of(skyShop.getDataFolder() + File.separator + "settings.yml");
+    public SettingsManager(@NonNull SkyShop skyShop) {
+        super(skyShop, Path.of(skyShop.getDataFolder() + File.separator + "settings.yml"), SettingsV4.class);
     }
 
     /**
@@ -69,20 +59,21 @@ public class SettingsManager {
      */
     public void loadConfiguration() {
         configuration = null;
+        if(configurationPath == null) return;
 
-        saveBundledConfig();
+        saveDefaultConfiguration();
 
-        YamlConfigurationLoader loader = ConfigurationUtility.getYamlConfigurationLoader(configurationPath);
+        YamlConfigurationLoader loader = createLoader(configurationPath);
         try {
             ConfigurationNode root = loader.load();
             int version = getVersion(root);
 
-            @Nullable SettingsV4 settings;
+            SettingsV4 settings;
             switch(version) {
                 case 4 -> {
                     settings = root.get(SettingsV4.class);
                     if(settings == null) {
-                        logger.warn(AdventureUtil.deserialize("Failed to load version 4 configuration file settings.yml. Class name: " + this.getClass().getName()));
+                        logger.warn(AdventureUtility.plain("Failed to load version 4 configuration file settings.yml. Class name: " + this.getClass().getName()));
                         return;
                     }
                 }
@@ -90,7 +81,7 @@ public class SettingsManager {
                 case 3 -> {
                     SettingsV3 settingsV3 = root.get(SettingsV3.class);
                     if(settingsV3 == null) {
-                        logger.warn(AdventureUtil.deserialize("Failed to load version 3 configuration file settings.yml. Class name: " + this.getClass().getName()));
+                        logger.warn(AdventureUtility.plain("Failed to load version 3 configuration file settings.yml. Class name: " + this.getClass().getName()));
                         return;
                     }
 
@@ -107,7 +98,7 @@ public class SettingsManager {
                 case 2 -> {
                     SettingsV2 settingsV2 = root.get(SettingsV2.class);
                     if(settingsV2 == null) {
-                        logger.warn(AdventureUtil.deserialize("Failed to load version 2 configuration file settings.yml. Class name: " + this.getClass().getName()));
+                        logger.warn(AdventureUtility.plain("Failed to load version 2 configuration file settings.yml. Class name: " + this.getClass().getName()));
                         return;
                     }
 
@@ -122,9 +113,9 @@ public class SettingsManager {
                 }
 
                 case 1 -> {
-                    @Nullable SettingsV1 settingsV1 = root.get(SettingsV1.class);
+                    SettingsV1 settingsV1 = root.get(SettingsV1.class);
                     if(settingsV1 == null) {
-                        logger.warn(AdventureUtil.deserialize("Failed to load version 1 configuration file settings.yml. Class name: " + this.getClass().getName()));
+                        logger.warn(AdventureUtility.plain("Failed to load version 1 configuration file settings.yml. Class name: " + this.getClass().getName()));
                         return;
                     }
 
@@ -139,28 +130,40 @@ public class SettingsManager {
                 }
 
                 default -> {
-                    logger.warn(AdventureUtil.deserialize("Failed to load configuration file sellall.yml due to an unsupported config version. Version: " + version + " Class name: " + this.getClass().getName()));
+                    logger.warn(AdventureUtility.plain("Failed to load configuration file sellall.yml due to an unsupported config version. Version: " + version + " Class name: " + this.getClass().getName()));
                     return;
                 }
             }
 
             // Check if the configuration is invalid
             if(!validateConfiguration(settings)) {
-                logger.warn(AdventureUtil.deserialize("Settings configuration validation failed. Class name: " + this.getClass().getName()));
+                logger.warn(AdventureUtility.plain("Settings configuration validation failed. Class name: " + this.getClass().getName()));
                 return;
             }
 
             this.configuration = settings;
         } catch (ConfigurateException configurateException) {
-            logger.error(AdventureUtil.deserialize("Failed to load configuration. Error: " + configurateException.getMessage()));
+            logger.error(AdventureUtility.plain("Failed to load configuration. Error: " + configurateException.getMessage()));
         }
     }
 
     /**
      * Save the default settings configuration if it doesn't exist on the disk.
      */
-    public void saveBundledConfig() {
-        if(!configurationPath.toFile().exists()) skyShop.saveResource("settings.yml", false);
+    @Override
+    public void saveDefaultConfiguration() {
+        if(configurationPath == null) return;
+        if(!configurationPath.toFile().exists()) plugin.saveResource("settings.yml", false);
+    }
+
+    /**
+     * No migration because version 4 is the latest version. Returns the passed settings.
+     * @param settingsV4 The {@link SettingsV4} to migrate.
+     * @return The passed settings.
+     */
+    @Override
+    public @Nullable SettingsV4 migrateConfiguration(@NonNull SettingsV4 settingsV4) {
+        return settingsV4;
     }
 
     /**
@@ -168,8 +171,9 @@ public class SettingsManager {
      * @param configuration The configuration.
      */
     public void saveConfiguration(@NonNull SettingsV4 configuration) {
+        if(configurationPath == null) return;
         try {
-            YamlConfigurationLoader loader = ConfigurationUtility.getYamlConfigurationLoader(configurationPath);
+            YamlConfigurationLoader loader = createLoader(configurationPath);
 
             ConfigurationNode node = loader.createNode();
 
@@ -177,7 +181,7 @@ public class SettingsManager {
 
             loader.save(node);
         } catch (ConfigurateException configurateException) {
-            logger.error(AdventureUtil.deserialize("Failed to save settings configuration. Error: " + configurateException.getMessage()));
+            logger.error(AdventureUtility.plain("Failed to save settings configuration. Error: " + configurateException.getMessage()));
         }
     }
 
@@ -206,13 +210,13 @@ public class SettingsManager {
      * @param root The root {@link ConfigurationNode}.
      * @return The config version.
      */
-    private int getVersion(@NotNull ConfigurationNode root) {
+    private int getVersion(@NonNull ConfigurationNode root) {
         ConfigurationNode versionNode = root.node("version");
         int version = versionNode.getInt();
 
         if(version == 0) {
             ConfigurationNode legacyVersionNode = root.node("config-version");
-            @Nullable String legacyVersion = legacyVersionNode.virtual() ? null : legacyVersionNode.getString();
+            String legacyVersion = legacyVersionNode.virtual() ? null : legacyVersionNode.getString();
             try {
                 switch (legacyVersion) {
                     case "2.1.0.0" -> {
@@ -231,10 +235,10 @@ public class SettingsManager {
                         version = 1;
                     }
 
-                    default -> logger.warn(AdventureUtil.deserialize("Failed to convert String-based version to numeric version"));
+                    default -> logger.warn(AdventureUtility.plain("Failed to convert String-based version to numeric version"));
                 }
             } catch (SerializationException e) {
-                logger.warn(AdventureUtil.deserialize("Failed to convert String-based version to numeric version"));
+                logger.warn(AdventureUtility.plain("Failed to convert String-based version to numeric version"));
             }
         }
 

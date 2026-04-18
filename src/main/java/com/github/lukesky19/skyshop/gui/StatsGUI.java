@@ -17,12 +17,12 @@
 */
 package com.github.lukesky19.skyshop.gui;
 
-import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
-import com.github.lukesky19.skylib.api.format.FormatUtil;
-import com.github.lukesky19.skylib.api.gui.GUIButton;
-import com.github.lukesky19.skylib.api.gui.impl.UUIDGUIManager;
-import com.github.lukesky19.skylib.api.gui.templates.ChestGUI;
-import com.github.lukesky19.skylib.api.itemstack.ItemStackBuilder;
+import com.github.lukesky19.skylib.common.api.adventure.AdventureUtility;
+import com.github.lukesky19.skylib.paper.api.format.FormatUtil;
+import com.github.lukesky19.skylib.paper.api.gui.GUIButton;
+import com.github.lukesky19.skylib.paper.api.gui.impl.UUIDGUIManager;
+import com.github.lukesky19.skylib.paper.api.gui.templates.ChestGUI;
+import com.github.lukesky19.skylib.paper.api.itemstack.ItemStackBuilder;
 import com.github.lukesky19.skyshop.SkyShop;
 import com.github.lukesky19.skyshop.stats.StatsManager;
 import com.github.lukesky19.skyshop.stats.TransactionStats;
@@ -33,7 +33,7 @@ import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.ItemType;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import java.util.*;
 
@@ -41,9 +41,9 @@ import java.util.*;
  * This class is used to view the stats for how often an item has been purchased or sold.
  */
 public class StatsGUI extends ChestGUI<UUID> {
-    private final @NotNull SkyShop skyShop;
-    private final @NotNull UUIDGUIManager guiManager;
-    private final @NotNull StatsManager statsManager;
+    private final @NonNull SkyShop skyShop;
+    private final @NonNull UUIDGUIManager guiManager;
+    private final @NonNull StatsManager statsManager;
     private int pageNum = 0;
 
     /**
@@ -53,7 +53,7 @@ public class StatsGUI extends ChestGUI<UUID> {
      * @param statsManager A {@link StatsManager} instance.
      * @param player A {@link Player} the GUI is for.
      */
-    public StatsGUI(@NotNull SkyShop skyShop, @NotNull UUIDGUIManager guiManager, @NotNull StatsManager statsManager, @NotNull Player player) {
+    public StatsGUI(@NonNull SkyShop skyShop, @NonNull UUIDGUIManager guiManager, @NonNull StatsManager statsManager, @NonNull Player player) {
         super(skyShop, guiManager, player.getUniqueId(), player);
 
         this.skyShop = skyShop;
@@ -83,7 +83,7 @@ public class StatsGUI extends ChestGUI<UUID> {
      * @param inventoryCloseEvent An {@link InventoryCloseEvent}
      */
     @Override
-    public void handleClose(@NotNull InventoryCloseEvent inventoryCloseEvent) {
+    public void handleClose(@NonNull InventoryCloseEvent inventoryCloseEvent) {
         if(inventoryCloseEvent.getReason().equals(InventoryCloseEvent.Reason.UNLOADED) || inventoryCloseEvent.getReason().equals(InventoryCloseEvent.Reason.OPEN_NEW)) return;
 
         guiManager.removeOpenGUI(uuid);
@@ -94,7 +94,7 @@ public class StatsGUI extends ChestGUI<UUID> {
      * @param inventoryDragEvent An {@link InventoryDragEvent}
      */
     @Override
-    public void handleBottomDrag(@NotNull InventoryDragEvent inventoryDragEvent) {
+    public void handleBottomDrag(@NonNull InventoryDragEvent inventoryDragEvent) {
         inventoryDragEvent.setCancelled(true);
     }
 
@@ -103,14 +103,14 @@ public class StatsGUI extends ChestGUI<UUID> {
      * @param inventoryDragEvent An {@link InventoryDragEvent}
      */
     @Override
-    public void handleGlobalDrag(@NotNull InventoryDragEvent inventoryDragEvent) {}
+    public void handleGlobalDrag(@NonNull InventoryDragEvent inventoryDragEvent) {}
 
     /**
      * Handles when the player's inventory is clicked.
      * @param inventoryClickEvent An {@link InventoryClickEvent}
      */
     @Override
-    public void handleBottomClick(@NotNull InventoryClickEvent inventoryClickEvent) {
+    public void handleBottomClick(@NonNull InventoryClickEvent inventoryClickEvent) {
         inventoryClickEvent.setCancelled(true);
     }
 
@@ -119,7 +119,7 @@ public class StatsGUI extends ChestGUI<UUID> {
      * @param inventoryClickEvent An {@link InventoryClickEvent}
      */
     @Override
-    public void handleGlobalClick(@NotNull InventoryClickEvent inventoryClickEvent) {}
+    public void handleGlobalClick(@NonNull InventoryClickEvent inventoryClickEvent) {}
 
     /**
      * Create the {@link GUIButton}s for filler buttons.
@@ -128,8 +128,8 @@ public class StatsGUI extends ChestGUI<UUID> {
         ItemStackBuilder fillerBuilder = new ItemStackBuilder(skyShop.getComponentLogger());
         fillerBuilder.setItemType(ItemType.GRAY_STAINED_GLASS_PANE);
         fillerBuilder.setAmount(1);
-        fillerBuilder.setName(AdventureUtil.deserialize(" "));
-        Optional<@NotNull ItemStack> optionalFillerStack = fillerBuilder.buildItemStack();
+        fillerBuilder.setName(AdventureUtility.plain(" "));
+        Optional<@NonNull ItemStack> optionalFillerStack = fillerBuilder.buildItemStack();
         optionalFillerStack.ifPresent(itemStack -> {
             if(inventoryView == null) return;
             int guiSize = inventoryView.getTopInventory().getSize();
@@ -151,8 +151,8 @@ public class StatsGUI extends ChestGUI<UUID> {
         ItemStackBuilder itemStackBuilder = new ItemStackBuilder(skyShop.getComponentLogger());
         itemStackBuilder.setItemType(ItemType.BARRIER);
         itemStackBuilder.setAmount(1);
-        itemStackBuilder.setName(AdventureUtil.deserialize("<red>Click to exit the menu.</red>"));
-        Optional<@NotNull ItemStack> optionalFillerStack = itemStackBuilder.buildItemStack();
+        itemStackBuilder.setName(AdventureUtility.deserialize("<red>Click to exit the menu.</red>"));
+        Optional<@NonNull ItemStack> optionalFillerStack = itemStackBuilder.buildItemStack();
         optionalFillerStack.ifPresent(itemStack -> {
             if(inventoryView == null) return;
 
@@ -168,7 +168,7 @@ public class StatsGUI extends ChestGUI<UUID> {
      * Create the next page button if there is a next page.
      * @param statsMap A {@link Map} mapping {@link ItemType}s to {@link TransactionStats}.
      */
-    private void createNextPageButton(@NotNull Map<ItemType, TransactionStats> statsMap) {
+    private void createNextPageButton(@NonNull Map<ItemType, TransactionStats> statsMap) {
         int statsCount = statsMap.size();
         int statsPerPage = 27;
         int maxPages = statsCount / statsPerPage;
@@ -177,14 +177,14 @@ public class StatsGUI extends ChestGUI<UUID> {
         ItemStackBuilder itemStackBuilder = new ItemStackBuilder(skyShop.getComponentLogger());
         itemStackBuilder.setItemType(ItemType.ARROW);
         itemStackBuilder.setAmount(1);
-        itemStackBuilder.setName(AdventureUtil.deserialize("<red>Click to go to the next page.</red>"));
-        Optional<@NotNull ItemStack> optionalFillerStack = itemStackBuilder.buildItemStack();
+        itemStackBuilder.setName(AdventureUtility.deserialize("<red>Click to go to the next page.</red>"));
+        Optional<@NonNull ItemStack> optionalFillerStack = itemStackBuilder.buildItemStack();
         optionalFillerStack.ifPresent(itemStack -> {
             if(inventoryView == null) return;
 
             GUIButton.Builder guiButtonBuilder = new GUIButton.Builder();
             guiButtonBuilder.setItemStack(itemStack);
-            guiButtonBuilder.setAction(inventoryClickEvent -> {
+            guiButtonBuilder.setAction(_ -> {
                 pageNum++;
                 this.update();
             });
@@ -203,14 +203,14 @@ public class StatsGUI extends ChestGUI<UUID> {
         ItemStackBuilder itemStackBuilder = new ItemStackBuilder(skyShop.getComponentLogger());
         itemStackBuilder.setItemType(ItemType.ARROW);
         itemStackBuilder.setAmount(1);
-        itemStackBuilder.setName(AdventureUtil.deserialize("<red>Click to go to the previous page.</red>"));
-        Optional<@NotNull ItemStack> optionalFillerStack = itemStackBuilder.buildItemStack();
+        itemStackBuilder.setName(AdventureUtility.deserialize("<red>Click to go to the previous page.</red>"));
+        Optional<@NonNull ItemStack> optionalFillerStack = itemStackBuilder.buildItemStack();
         optionalFillerStack.ifPresent(itemStack -> {
             if(inventoryView == null) return;
 
             GUIButton.Builder guiButtonBuilder = new GUIButton.Builder();
             guiButtonBuilder.setItemStack(itemStack);
-            guiButtonBuilder.setAction(inventoryClickEvent -> {
+            guiButtonBuilder.setAction(_ -> {
                 pageNum--;
                 this.update();
             });
@@ -224,7 +224,7 @@ public class StatsGUI extends ChestGUI<UUID> {
      * Create the buttons that display the actual stats.
      * @param statsMap A {@link Map} mapping {@link ItemType}s to {@link TransactionStats}.
      */
-    private void createStatsButtons(@NotNull Map<ItemType, TransactionStats> statsMap) {
+    private void createStatsButtons(@NonNull Map<ItemType, TransactionStats> statsMap) {
         int index = pageNum * 27 + (pageNum >= 1 ? 1 : 0);
         List<Map.Entry<ItemType, TransactionStats>> list = new ArrayList<>(statsMap.entrySet());
 
@@ -236,17 +236,17 @@ public class StatsGUI extends ChestGUI<UUID> {
             TransactionStats transactionStats = entry.getValue();
 
             List<Component> loreList = List.of(
-                    AdventureUtil.deserialize("<yellow>Total Amount Purchased:</yellow> " + transactionStats.getAmountPurchased()),
-                    AdventureUtil.deserialize("<yellow>Total Amount Sold:</yellow> " + transactionStats.getAmountSold())
+                    AdventureUtility.deserialize("<yellow>Total Amount Purchased:</yellow> " + transactionStats.getAmountPurchased()),
+                    AdventureUtility.deserialize("<yellow>Total Amount Sold:</yellow> " + transactionStats.getAmountSold())
             );
 
             ItemStackBuilder itemStackBuilder = new ItemStackBuilder(skyShop.getComponentLogger());
             itemStackBuilder.setItemType(ItemType.ARROW);
             itemStackBuilder.setAmount(1);
-            itemStackBuilder.setName(AdventureUtil.deserialize("<yellow>Transaction Stats For </yellow>" + FormatUtil.formatItemTypeName(itemType)));
+            itemStackBuilder.setName(AdventureUtility.deserialize("<yellow>Transaction Stats For </yellow>" + FormatUtil.formatItemTypeName(itemType)));
             itemStackBuilder.setLore(loreList);
 
-            Optional<@NotNull ItemStack> optionalItemStack = itemStackBuilder.buildItemStack();
+            Optional<@NonNull ItemStack> optionalItemStack = itemStackBuilder.buildItemStack();
             if(optionalItemStack.isPresent()) {
                 ItemStack itemStack = optionalItemStack.get();
 

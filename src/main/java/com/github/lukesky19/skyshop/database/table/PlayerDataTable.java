@@ -17,15 +17,15 @@
 */
 package com.github.lukesky19.skyshop.database.table;
 
-import com.github.lukesky19.skylib.api.database.parameter.Parameter;
-import com.github.lukesky19.skylib.api.database.parameter.impl.IntegerParameter;
-import com.github.lukesky19.skylib.api.database.parameter.impl.LongParameter;
-import com.github.lukesky19.skylib.api.database.parameter.impl.UUIDParameter;
+import com.github.lukesky19.skylib.common.api.database.parameter.Parameter;
+import com.github.lukesky19.skylib.common.api.database.parameter.impl.IntegerParameter;
+import com.github.lukesky19.skylib.common.api.database.parameter.impl.LongParameter;
+import com.github.lukesky19.skylib.common.api.database.parameter.impl.UUIDParameter;
 import com.github.lukesky19.skyshop.database.QueueManager;
 import com.github.lukesky19.skyshop.player.data.PlayerData;
 import com.github.lukesky19.skyshop.player.data.PlayerModifiers;
 import com.github.lukesky19.skyshop.util.ByteArrayParameter;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import java.io.*;
 import java.sql.SQLException;
@@ -39,9 +39,9 @@ import java.util.concurrent.CompletableFuture;
  * This class handles the players table that stores player data.
  */
 public class PlayerDataTable {
-    private final @NotNull QueueManager queueManager;
-    private final @NotNull VersionsTable versionsTable;
-    private final @NotNull String tableName = "skyshop_player_data";
+    private final @NonNull QueueManager queueManager;
+    private final @NonNull VersionsTable versionsTable;
+    private final @NonNull String tableName = "skyshop_player_data";
 
     /**
      * Constructor
@@ -49,8 +49,8 @@ public class PlayerDataTable {
      * @param versionsTable A {@link VersionsTable} instance.
      */
     public PlayerDataTable(
-            @NotNull QueueManager queueManager,
-            @NotNull VersionsTable versionsTable) {
+            @NonNull QueueManager queueManager,
+            @NonNull VersionsTable versionsTable) {
         this.queueManager = queueManager;
         this.versionsTable = versionsTable;
     }
@@ -60,7 +60,7 @@ public class PlayerDataTable {
      * Queues the table creation and index creation sql.
      * @return A {@link CompletableFuture} of type {@link Void}.
      */
-    public @NotNull CompletableFuture<Void> createTable() {
+    public @NonNull CompletableFuture<Void> createTable() {
         String tableCreationSql = "CREATE TABLE IF NOT EXISTS " + tableName + " (" +
                 "player_id TEXT PRIMARY KEY NOT NULL UNIQUE, " +
                 "version INTEGER NOT NULL, " +
@@ -69,7 +69,7 @@ public class PlayerDataTable {
         String indexCreationSql = "CREATE INDEX IF NOT EXISTS idx_skyshop_player_data_player_ids ON " + tableName + "(player_id);";
 
         return queueManager.queueBulkWriteTransaction(List.of(tableCreationSql, indexCreationSql))
-                .thenCompose(v1 -> versionsTable.updateVersion(tableName, 1));
+                .thenCompose(_ -> versionsTable.updateVersion(tableName, 1));
     }
 
     /**
@@ -78,7 +78,7 @@ public class PlayerDataTable {
      * @param playerData The {@link PlayerData} to put data into.
      * @return A {@link CompletableFuture} with {@link PlayerData} when complete. The {@link PlayerData} passed to the method will be updated as well.
      */
-    public @NotNull CompletableFuture<@NotNull PlayerData> loadPlayerData(@NotNull UUID playerId, @NotNull PlayerData playerData) {
+    public @NonNull CompletableFuture<@NonNull PlayerData> loadPlayerData(@NonNull UUID playerId, @NonNull PlayerData playerData) {
         String selectSql = "SELECT version, prices FROM " + tableName + " WHERE player_id = ?";
         UUIDParameter uuidParameter = new UUIDParameter(playerId);
 
@@ -107,7 +107,7 @@ public class PlayerDataTable {
      * @param playerData The {@link PlayerData} for the player.
      * @return A {@link CompletableFuture} of type {@link Void} when complete.
      */
-    public @NotNull CompletableFuture<Void> savePlayerData(@NotNull UUID uuid, @NotNull PlayerData playerData) {
+    public @NonNull CompletableFuture<Void> savePlayerData(@NonNull UUID uuid, @NonNull PlayerData playerData) {
         String updateSql = "INSERT INTO " + tableName + " (" +
                 "player_id, " +
                 "version, " +
@@ -144,7 +144,7 @@ public class PlayerDataTable {
      * @param playerDataMap A {@link Map} mapping {@link UUID}s to {@link PlayerData}.
      * @return A {@link CompletableFuture} of type {@link List} containing {@link Boolean}s when complete. true if successful, and false if not.
      */
-    public @NotNull CompletableFuture<@NotNull List<@NotNull Boolean>> savePlayerData(@NotNull Map<@NotNull UUID, @NotNull PlayerData> playerDataMap) {
+    public @NonNull CompletableFuture<@NonNull List<@NonNull Boolean>> savePlayerData(@NonNull Map<@NonNull UUID, @NonNull PlayerData> playerDataMap) {
         if(playerDataMap.isEmpty()) return CompletableFuture.completedFuture(new ArrayList<>());
 
         List<List<Parameter<?>>> listOfParametersList = new ArrayList<>();
@@ -202,7 +202,7 @@ public class PlayerDataTable {
      * @param playerPricesMap The {@link Map} mapping {@link String}s to {@link PlayerModifiers}.
      * @return A byte array.
      */
-    private byte[] serialize(@NotNull Map<String, PlayerModifiers> playerPricesMap) {
+    private byte[] serialize(@NonNull Map<String, PlayerModifiers> playerPricesMap) {
         try(ByteArrayOutputStream byteOut = new ByteArrayOutputStream(); ObjectOutputStream out = new ObjectOutputStream(byteOut)) {
             out.writeObject(playerPricesMap);
             return byteOut.toByteArray();
@@ -216,7 +216,7 @@ public class PlayerDataTable {
      * @param data The bytes to deserialize.
      * @return A {@link Map} mapping {@link String}s to {@link PlayerModifiers}.
      */
-    private @NotNull Map<String, PlayerModifiers> deserialize(byte[] data) {
+    private @NonNull Map<String, PlayerModifiers> deserialize(byte[] data) {
         try (ByteArrayInputStream byteIn = new ByteArrayInputStream(data);
              ObjectInputStream in = new ObjectInputStream(byteIn)) {
             return (Map<String, PlayerModifiers>) in.readObject();

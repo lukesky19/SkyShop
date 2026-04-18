@@ -17,14 +17,14 @@
 */
 package com.github.lukesky19.skyshop.configuration.category.data;
 
-import com.github.lukesky19.skylib.api.gui.GUIType;
-import com.github.lukesky19.skylib.api.itemstack.ItemStackConfig;
 import com.github.lukesky19.skylib.libs.configurate.objectmapping.ConfigSerializable;
+import com.github.lukesky19.skylib.paper.api.gui.GUIType;
+import com.github.lukesky19.skylib.paper.api.itemstack.ItemStackConfig;
 import com.github.lukesky19.skyshop.api.configuration.TransactionConfiguration;
 import com.github.lukesky19.skyshop.util.ButtonType;
 import org.bukkit.inventory.ItemStack;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.util.List;
 
@@ -45,13 +45,13 @@ public record CategoryConfigV3(
         @Nullable String permission,
         @Nullable GUIType guiType,
         @Nullable String guiName,
-        @NotNull List<@NotNull PageConfig> pages) {
+        @NonNull List<@NonNull PageConfig> pages) {
     /**
      * This record contains the configuration for individual pages.
      * @param buttons The {@link List} of {@link ButtonConfig}s.
      */
     @ConfigSerializable
-    public record PageConfig(@NotNull List<@NotNull ButtonConfig> buttons) {}
+    public record PageConfig(@NonNull List<@NonNull ButtonConfig> buttons) {}
 
     /**
      * This record contains the configuration to create buttons to be displayed.
@@ -68,7 +68,7 @@ public record CategoryConfigV3(
             @Nullable Integer slot,
             @Nullable String shopName,
             @Nullable String permission,
-            @NotNull ItemStackConfig displayItem,
+            @NonNull ItemStackConfig displayItem,
             @Nullable TransactionData transactionData) {}
     /**
      * This record contains the configuration required to complete a transaction.
@@ -82,9 +82,9 @@ public record CategoryConfigV3(
     public record TransactionData(
             @Nullable String transactionStyle,
             @Nullable String transactionName,
-            @NotNull PriceConfig prices,
-            @NotNull ItemStackConfig displayItem,
-            @NotNull List<TransactionConfiguration> transactionList) {}
+            @NonNull PriceConfig prices,
+            @NonNull ItemStackConfig displayItem,
+            @NonNull List<TransactionConfiguration> transactionList) {}
     /**
      * The price configuration for a transaction.
      * @param buyPrice The buy price of the item.

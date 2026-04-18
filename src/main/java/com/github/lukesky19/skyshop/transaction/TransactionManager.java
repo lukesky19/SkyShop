@@ -17,7 +17,8 @@
 */
 package com.github.lukesky19.skyshop.transaction;
 
-import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
+import com.github.lukesky19.skylib.common.api.adventure.AdventureUtility;
+import com.github.lukesky19.skylib.paper.api.adventure.PaperAdventureUtility;
 import com.github.lukesky19.skyshop.SkyShop;
 import com.github.lukesky19.skyshop.api.configuration.TransactionConfiguration;
 import com.github.lukesky19.skyshop.api.processor.TransactionProcessor;
@@ -36,8 +37,8 @@ import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.entity.Player;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -49,10 +50,10 @@ import java.util.Objects;
  * This class manages the facilitation of transactions.
  */
 public class TransactionManager {
-    private final @NotNull ComponentLogger logger;
-    private final @NotNull LocaleManager localeManager;
-    private final @NotNull RegistryManager registryManager;
-    private final @NotNull HookManager hookManager;
+    private final @NonNull ComponentLogger logger;
+    private final @NonNull LocaleManager localeManager;
+    private final @NonNull RegistryManager registryManager;
+    private final @NonNull HookManager hookManager;
 
     /**
      * Constructor
@@ -62,10 +63,10 @@ public class TransactionManager {
      * @param hookManager A {@link HookManager} instance.
      */
     public TransactionManager(
-            @NotNull SkyShop skyShop,
-            @NotNull LocaleManager localeManager,
-            @NotNull RegistryManager registryManager,
-            @NotNull HookManager hookManager) {
+            @NonNull SkyShop skyShop,
+            @NonNull LocaleManager localeManager,
+            @NonNull RegistryManager registryManager,
+            @NonNull HookManager hookManager) {
         this.logger = skyShop.getComponentLogger();
         this.localeManager = localeManager;
         this.registryManager = registryManager;
@@ -84,12 +85,12 @@ public class TransactionManager {
      * @return true if successful, false if not.
      */
     public boolean buy(
-            @NotNull Player player,
-            @NotNull PlayerData playerData,
-            @NotNull TransactionGUI gui,
-            @NotNull CategoryConfigV4.TransactionData transactionData,
-            @NotNull CategoryConfigV4.PriceConfig priceConfig,
-            @NotNull PriceData priceData,
+            @NonNull Player player,
+            @NonNull PlayerData playerData,
+            @NonNull TransactionGUI gui,
+            CategoryConfigV4.@NonNull TransactionData transactionData,
+            CategoryConfigV4.@NonNull PriceConfig priceConfig,
+            @NonNull PriceData priceData,
             int amount) {
         LocaleV5 locale = localeManager.getConfiguration();
         EconomyHook economyHook = hookManager.getHook(EconomyHook.class);
@@ -110,11 +111,11 @@ public class TransactionManager {
 
         // Send the message that the transaction was a success
         if(priceData.money() > 0 && priceData.points() > 0) {
-            player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.buySuccess().moneyAndPoints(), messagePlaceholders));
+            player.sendMessage(PaperAdventureUtility.deserialize(player, locale.prefix() + locale.buySuccess().moneyAndPoints(), messagePlaceholders));
         } else if(priceData.money() > 0) {
-            player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.buySuccess().money(), messagePlaceholders));
+            player.sendMessage(PaperAdventureUtility.deserialize(player, locale.prefix() + locale.buySuccess().money(), messagePlaceholders));
         } else if(priceData.points() > 0) {
-            player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.buySuccess().points(), messagePlaceholders));
+            player.sendMessage(PaperAdventureUtility.deserialize(player, locale.prefix() + locale.buySuccess().points(), messagePlaceholders));
         }
 
         // Update player price modifiers
@@ -138,12 +139,12 @@ public class TransactionManager {
      * @return true if successful, false if not.
      */
     public boolean sell(
-            @NotNull Player player,
-            @NotNull PlayerData playerData,
-            @NotNull TransactionGUI gui,
-            @NotNull CategoryConfigV4.TransactionData transactionData,
-            @NotNull CategoryConfigV4.PriceConfig priceConfig,
-            @NotNull PriceData priceData,
+            @NonNull Player player,
+            @NonNull PlayerData playerData,
+            @NonNull TransactionGUI gui,
+            CategoryConfigV4.@NonNull TransactionData transactionData,
+            CategoryConfigV4.@NonNull PriceConfig priceConfig,
+            @NonNull PriceData priceData,
             int amount) {
         LocaleV5 locale = localeManager.getConfiguration();
         EconomyHook economyHook = hookManager.getHook(EconomyHook.class);
@@ -166,11 +167,11 @@ public class TransactionManager {
 
         // Send the message that the transaction was a success
         if(priceData.money > 0 && priceData.points > 0) {
-            player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.sellSuccess().moneyAndPoints(), messagePlaceholders));
+            player.sendMessage(PaperAdventureUtility.deserialize(player, locale.prefix() + locale.sellSuccess().moneyAndPoints(), messagePlaceholders));
         } else if(priceData.money > 0) {
-            player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.sellSuccess().money(), messagePlaceholders));
+            player.sendMessage(PaperAdventureUtility.deserialize(player, locale.prefix() + locale.sellSuccess().money(), messagePlaceholders));
         } else if(priceData.points > 0) {
-            player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.sellSuccess().points(), messagePlaceholders));
+            player.sendMessage(PaperAdventureUtility.deserialize(player, locale.prefix() + locale.sellSuccess().points(), messagePlaceholders));
         }
 
         // Update player price modifiers
@@ -194,40 +195,40 @@ public class TransactionManager {
      * @return true if money and points are valid along with the necessary hooks or false.
      */
     private boolean validateMoneyAndPoints(
-            @NotNull LocaleV5 locale,
-            @NotNull EconomyHook economyHook,
-            @NotNull PlayerPointsHook playerPointsHook,
-            @NotNull Player player,
+            @NonNull LocaleV5 locale,
+            @NonNull EconomyHook economyHook,
+            @NonNull PlayerPointsHook playerPointsHook,
+            @NonNull Player player,
             double money,
             int points) {
         if(money <= 0 && points <= 0) {
-            logger.error(AdventureUtil.deserialize("Unable to complete the transaction because money and points are less than or equal to 0."));
-            player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.transactionError()));
+            logger.error(AdventureUtility.plain("Unable to complete the transaction because money and points are less than or equal to 0."));
+            player.sendMessage(AdventureUtility.deserialize(locale.prefix() + locale.transactionError()));
             return false;
         }
 
         if(money > 0) {
             if(!economyHook.isHooked()) {
-                logger.error(AdventureUtil.deserialize("Unable to complete the transaction due to no economy found."));
-                player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.transactionError()));
+                logger.error(AdventureUtility.plain("Unable to complete the transaction due to no economy found."));
+                player.sendMessage(AdventureUtility.deserialize(locale.prefix() + locale.transactionError()));
                 return false;
             }
 
             if(economyHook.getBalance(player) < money) {
-                player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.insufficientMoney()));
+                player.sendMessage(PaperAdventureUtility.deserialize(player, locale.prefix() + locale.insufficientMoney()));
                 return false;
             }
         }
 
         if(points > 0) {
             if(!playerPointsHook.isHooked()) {
-                logger.error(AdventureUtil.deserialize("Unable to complete the transaction due to no player points dependency found."));
-                player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.transactionError()));
+                logger.error(AdventureUtility.plain("Unable to complete the transaction due to no player points dependency found."));
+                player.sendMessage(AdventureUtility.deserialize(locale.prefix() + locale.transactionError()));
                 return false;
             }
 
             if(playerPointsHook.getBalance(player) < points) {
-                player.sendMessage(AdventureUtil.deserialize(player, locale.prefix() + locale.insufficientPlayerPoints()));
+                player.sendMessage(PaperAdventureUtility.deserialize(player, locale.prefix() + locale.insufficientPlayerPoints()));
                 return false;
             }
         }
@@ -246,15 +247,15 @@ public class TransactionManager {
      */
     private boolean isTransactionDisallowed(
             boolean purchase,
-            @NotNull LocaleV5 locale,
-            @NotNull Player player,
-            @NotNull List<TransactionConfiguration> transactionList,
+            @NonNull LocaleV5 locale,
+            @NonNull Player player,
+            @NonNull List<TransactionConfiguration> transactionList,
             int amount) {
         for(TransactionConfiguration configuration : transactionList) {
-            @Nullable TransactionProcessor processor = registryManager.getProcessor(configuration.getId());
+            TransactionProcessor processor = registryManager.getProcessor(configuration.getId());
             if(processor == null) {
-                logger.warn(AdventureUtil.deserialize("No processor for id " + configuration.getId()));
-                player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.transactionError()));
+                logger.warn(AdventureUtility.plain("No processor for id " + configuration.getId()));
+                player.sendMessage(AdventureUtility.deserialize(locale.prefix() + locale.transactionError()));
                 return true;
             }
 
@@ -268,8 +269,8 @@ public class TransactionManager {
 
             if(result.errored()) {
                 if(result.sendErrorMessage()) {
-                    logger.warn(AdventureUtil.deserialize("Early checks failed for a " + (purchase ? "buy" : "sell") + " transaction with id: " + configuration.getId() + ". Error: " + result.message()));
-                    player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.transactionError()));
+                    logger.warn(AdventureUtility.plain("Early checks failed for a " + (purchase ? "buy" : "sell") + " transaction with id: " + configuration.getId() + ". Error: " + result.message()));
+                    player.sendMessage(AdventureUtility.deserialize(locale.prefix() + locale.transactionError()));
                 }
 
                 return true;
@@ -289,12 +290,12 @@ public class TransactionManager {
      */
     private void applyTransaction(
             boolean purchase,
-            @NotNull LocaleV5 locale,
-            @NotNull Player player,
-            @NotNull List<TransactionConfiguration> transactionList,
+            @NonNull LocaleV5 locale,
+            @NonNull Player player,
+            @NonNull List<TransactionConfiguration> transactionList,
             int amount) {
         for(TransactionConfiguration configuration : transactionList) {
-            @Nullable TransactionProcessor processor = registryManager.getProcessor(configuration.getId());
+            TransactionProcessor processor = registryManager.getProcessor(configuration.getId());
             if(processor != null) {
                 TransactionResult result;
                 if(purchase) {
@@ -305,13 +306,13 @@ public class TransactionManager {
 
                 if(result.errored()) {
                     if(result.sendErrorMessage()) {
-                        logger.warn(AdventureUtil.deserialize("Failed to process a portion of a " + (purchase ? "buy" : "sell") + " transaction with id: " + configuration.getId() + ". Error: " + result.message()));
-                        player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.transactionError()));
+                        logger.warn(AdventureUtility.plain("Failed to process a portion of a " + (purchase ? "buy" : "sell") + " transaction with id: " + configuration.getId() + ". Error: " + result.message()));
+                        player.sendMessage(AdventureUtility.deserialize(locale.prefix() + locale.transactionError()));
                     }
                 }
             } else {
-                logger.warn(AdventureUtil.deserialize("No processor for id " + configuration.getId()));
-                player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.transactionError()));
+                logger.warn(AdventureUtility.plain("No processor for id " + configuration.getId()));
+                player.sendMessage(AdventureUtility.deserialize(locale.prefix() + locale.transactionError()));
             }
         }
     }
@@ -326,12 +327,12 @@ public class TransactionManager {
      * @param amount The amount.
      * @return A {@link List} of {@link TagResolver.Single}.
      */
-    private @NotNull List<TagResolver.Single> createPlaceholders(
-            @NotNull Player player,
-            @NotNull EconomyHook economyHook,
-            @NotNull PlayerPointsHook playerPointsHook,
-            @NotNull CategoryConfigV4.TransactionData transactionData,
-            @NotNull PriceData priceData,
+    private @NonNull List<TagResolver.Single> createPlaceholders(
+            @NonNull Player player,
+            @NonNull EconomyHook economyHook,
+            @NonNull PlayerPointsHook playerPointsHook,
+            CategoryConfigV4.@NonNull TransactionData transactionData,
+            @NonNull PriceData priceData,
             int amount) {
         DecimalFormat decimalFormat = new DecimalFormat("#.##");
         decimalFormat.setRoundingMode(RoundingMode.CEILING);
@@ -356,10 +357,10 @@ public class TransactionManager {
      */
     public void updatePlayerPrices(
             boolean purchase,
-            @NotNull PlayerData playerData,
+            @NonNull PlayerData playerData,
             @Nullable String transactionId,
-            @NotNull CategoryConfigV4.PriceConfig priceConfig,
-            @NotNull PriceData priceData,
+            CategoryConfigV4.@NonNull PriceConfig priceConfig,
+            @NonNull PriceData priceData,
             int amount) {
         if(transactionId == null) return;
 
@@ -408,10 +409,10 @@ public class TransactionManager {
      * @param purchaseAmount The amount purchased
      * @return The {@link PriceData}.
      */
-    public @NotNull PriceData calculateBuyPrices(
-            @NotNull PlayerData playerData,
+    public @NonNull PriceData calculateBuyPrices(
+            @NonNull PlayerData playerData,
             @Nullable String transactionId,
-            @NotNull CategoryConfigV4.PriceConfig priceConfig,
+            CategoryConfigV4.@NonNull PriceConfig priceConfig,
             int purchaseAmount) {
         double buyMoney = 0.0;
         int buyPoints = 0;
@@ -487,10 +488,10 @@ public class TransactionManager {
      * @param sellAmount The amount sold.
      * @return The {@link PriceData}.
      */
-    public @NotNull PriceData calculateSellPrices(
-            @NotNull PlayerData playerData,
+    public @NonNull PriceData calculateSellPrices(
+            @NonNull PlayerData playerData,
             @Nullable String transactionId,
-            @NotNull CategoryConfigV4.PriceConfig priceConfig,
+            CategoryConfigV4.@NonNull PriceConfig priceConfig,
             int sellAmount) {
         double sellMoney = 0.0;
         int sellPoints = 0;

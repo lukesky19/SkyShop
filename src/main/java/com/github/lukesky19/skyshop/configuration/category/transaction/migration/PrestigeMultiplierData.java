@@ -20,7 +20,7 @@ package com.github.lukesky19.skyshop.configuration.category.transaction.migratio
 import com.github.lukesky19.skylib.libs.configurate.objectmapping.ConfigSerializable;
 import com.github.lukesky19.skyshop.api.configuration.TransactionConfiguration;
 import com.github.lukesky19.skyshop.util.MultiplierType;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * This record is used to migrate the prestige point multiplier data, but is not actually used.<br>

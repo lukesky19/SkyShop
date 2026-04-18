@@ -17,13 +17,13 @@
 */
 package com.github.lukesky19.skyshop.gui;
 
-import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
-import com.github.lukesky19.skylib.api.gui.GUIButton;
-import com.github.lukesky19.skylib.api.gui.GUIType;
-import com.github.lukesky19.skylib.api.gui.interfaces.IGUIManager;
-import com.github.lukesky19.skylib.api.gui.templates.ChestGUI;
-import com.github.lukesky19.skylib.api.itemstack.ItemStackBuilder;
-import com.github.lukesky19.skylib.api.itemstack.ItemStackConfig;
+import com.github.lukesky19.skylib.common.api.adventure.AdventureUtility;
+import com.github.lukesky19.skylib.paper.api.gui.GUIButton;
+import com.github.lukesky19.skylib.paper.api.gui.GUIType;
+import com.github.lukesky19.skylib.paper.api.gui.interfaces.IGUIManager;
+import com.github.lukesky19.skylib.paper.api.gui.templates.ChestGUI;
+import com.github.lukesky19.skylib.paper.api.itemstack.ItemStackBuilder;
+import com.github.lukesky19.skylib.paper.api.itemstack.ItemStackConfig;
 import com.github.lukesky19.skyshop.SkyShop;
 import com.github.lukesky19.skyshop.api.SkyShopAPI;
 import com.github.lukesky19.skyshop.api.configuration.TransactionConfiguration;
@@ -46,8 +46,8 @@ import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -59,24 +59,24 @@ import java.util.function.Consumer;
  * This class is called to create a transaction inventory for a player to buy and sell items.
  */
 public class TransactionGUI extends ChestGUI<UUID> {
-    private final @NotNull SkyShop skyShop;
-    private final @NotNull LocaleManager localeManager;
-    private final @NotNull SellAllManager sellAllManager;
-    private final @NotNull SkyShopAPI skyShopAPI;
-    private final @NotNull CategoryGUI categoryGUI;
-    private final @NotNull TransactionManager transactionManager;
+    private final @NonNull SkyShop skyShop;
+    private final @NonNull LocaleManager localeManager;
+    private final @NonNull SellAllManager sellAllManager;
+    private final @NonNull SkyShopAPI skyShopAPI;
+    private final @NonNull CategoryGUI categoryGUI;
+    private final @NonNull TransactionManager transactionManager;
 
-    private final @NotNull PlayerData playerData;
+    private final @NonNull PlayerData playerData;
 
     // Config related to the Transaction
-    private final @NotNull CategoryConfigV4.TransactionData transactionData;
+    private final CategoryConfigV4.@NonNull TransactionData transactionData;
     private final @Nullable TransactionGUIConfigV3 transactionStyleConfig;
 
     // Price config
-    private final @NotNull CategoryConfigV4.PriceConfig priceConfig;
+    private final CategoryConfigV4.@NonNull PriceConfig priceConfig;
 
     // Display item config being purchased
-    private final @NotNull ItemStackConfig displayItemConfig;
+    private final @NonNull ItemStackConfig displayItemConfig;
 
     // Page Data
     private int pageNum = 0;
@@ -98,19 +98,19 @@ public class TransactionGUI extends ChestGUI<UUID> {
      * @param priceConfig The {@link CategoryConfigV4.PriceConfig} for this transaction.
      */
     public TransactionGUI(
-            @NotNull SkyShop skyShop,
-            @NotNull IGUIManager<UUID> guiManager,
-            @NotNull Player player,
-            @NotNull PlayerData playerData,
-            @NotNull LocaleManager localeManager,
-            @NotNull SellAllManager sellAllManager,
-            @NotNull TransactionGUIConfigManager transactionStyleConfigManager,
-            @NotNull SkyShopAPI skyShopAPI,
-            @NotNull TransactionManager transactionManager,
-            @NotNull CategoryGUI categoryGUI,
-            @NotNull CategoryConfigV4.TransactionData transactionData,
-            @NotNull ItemStackConfig displayItemConfig,
-            @NotNull CategoryConfigV4.PriceConfig priceConfig) {
+            @NonNull SkyShop skyShop,
+            @NonNull IGUIManager<UUID> guiManager,
+            @NonNull Player player,
+            @NonNull PlayerData playerData,
+            @NonNull LocaleManager localeManager,
+            @NonNull SellAllManager sellAllManager,
+            @NonNull TransactionGUIConfigManager transactionStyleConfigManager,
+            @NonNull SkyShopAPI skyShopAPI,
+            @NonNull TransactionManager transactionManager,
+            @NonNull CategoryGUI categoryGUI,
+            CategoryConfigV4.@NonNull TransactionData transactionData,
+            @NonNull ItemStackConfig displayItemConfig,
+            CategoryConfigV4.@NonNull PriceConfig priceConfig) {
         super(skyShop, guiManager, player.getUniqueId(), player);
         this.playerData = playerData;
 
@@ -134,7 +134,7 @@ public class TransactionGUI extends ChestGUI<UUID> {
 
         // Validation
         if(transactionStyleConfig == null) {
-            player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.guiOpenError()));
+            player.sendMessage(AdventureUtility.deserialize(locale.prefix() + locale.guiOpenError()));
             throw new RuntimeException("No transaction style found for transaction style " + transactionData.transactionStyle());
         }
     }
@@ -145,13 +145,13 @@ public class TransactionGUI extends ChestGUI<UUID> {
      */
     public boolean create() {
         if(transactionStyleConfig == null) {
-            logger.warn(AdventureUtil.deserialize("Unable to create the InventoryView for a transaction GUI due to invalid style config for " + transactionData.transactionStyle()));
+            logger.warn(AdventureUtility.plain("Unable to create the InventoryView for a transaction GUI due to invalid style config for " + transactionData.transactionStyle()));
             return false;
         }
 
         GUIType guiType = transactionStyleConfig.guiType();
         if(guiType == null) {
-            logger.warn(AdventureUtil.deserialize("Unable to create the InventoryView for a transaction GUI due to an invalid GUIType"));
+            logger.warn(AdventureUtility.plain("Unable to create the InventoryView for a transaction GUI due to an invalid GUIType"));
             return false;
         }
 
@@ -183,13 +183,13 @@ public class TransactionGUI extends ChestGUI<UUID> {
     public boolean update() {
         // If the InventoryView was not created, log a warning and return false.
         if(inventoryView == null) {
-            logger.warn(AdventureUtil.deserialize("Unable to add GUIButton ItemStacks to the InventoryView as it was not created."));
+            logger.warn(AdventureUtility.plain("Unable to add GUIButton ItemStacks to the InventoryView as it was not created."));
             close();
             return false;
         }
 
         if(transactionStyleConfig == null) {
-            logger.warn(AdventureUtil.deserialize("Unable to update the InventoryView for a transaction GUI due to invalid style config for " + transactionData.transactionStyle()));
+            logger.warn(AdventureUtility.plain("Unable to update the InventoryView for a transaction GUI due to invalid style config for " + transactionData.transactionStyle()));
             close();
             return false;
         }
@@ -203,7 +203,7 @@ public class TransactionGUI extends ChestGUI<UUID> {
         // Check if at least 1 page is configured.
         List<TransactionGUIConfigV3.PageConfig> pages = transactionStyleConfig.pages();
         if(pages.isEmpty()) {
-            logger.error(AdventureUtil.deserialize("Unable to decorate the transaction GUI due to no pages configured."));
+            logger.error(AdventureUtility.plain("Unable to decorate the transaction GUI due to no pages configured."));
             close();
             return false;
         }
@@ -214,7 +214,7 @@ public class TransactionGUI extends ChestGUI<UUID> {
         // Check if at least 1 button is configured.
         List<TransactionGUIConfigV3.Button> entries = page.buttons();
         if(entries.isEmpty()) {
-            logger.error(AdventureUtil.deserialize("Unable to decorate the transaction GUI for page " + pageNum + " due to no buttons configured."));
+            logger.error(AdventureUtility.plain("Unable to decorate the transaction GUI for page " + pageNum + " due to no buttons configured."));
             close();
             return false;
         }
@@ -222,7 +222,7 @@ public class TransactionGUI extends ChestGUI<UUID> {
         LocaleV5 locale = localeManager.getConfiguration();
         for(int buttonNum = 0; buttonNum < page.buttons().size(); buttonNum++) {
             TransactionGUIConfigV3.Button buttonConfig = page.buttons().get(buttonNum);
-            @Nullable ButtonType buttonType = buttonConfig.buttonType();
+            ButtonType buttonType = buttonConfig.buttonType();
 
             // Handle the creation of buttons by button type.
             switch(buttonType) {
@@ -250,9 +250,9 @@ public class TransactionGUI extends ChestGUI<UUID> {
 
                 case DUMMY -> createButton(buttonType, buttonConfig, List.of(), null);
 
-                case null -> logger.warn(AdventureUtil.deserialize("Unable to add a button due to an invalid button type. Button Num: " + buttonNum));
+                case null -> logger.warn(AdventureUtility.plain("Unable to add a button due to an invalid button type. Button Num: " + buttonNum));
 
-                default -> logger.warn(AdventureUtil.deserialize("Unsupported ButtonType in the transaction GUI for " + buttonNum + " on page " + pageNum + " and style " + transactionData.transactionStyle() + "."));
+                default -> logger.warn(AdventureUtility.plain("Unsupported ButtonType in the transaction GUI for " + buttonNum + " on page " + pageNum + " and style " + transactionData.transactionStyle() + "."));
             }
         }
 
@@ -264,7 +264,7 @@ public class TransactionGUI extends ChestGUI<UUID> {
      * @param inventoryCloseEvent InventoryCloseEvent
      */
     @Override
-    public void handleClose(@NotNull InventoryCloseEvent inventoryCloseEvent) {
+    public void handleClose(@NonNull InventoryCloseEvent inventoryCloseEvent) {
         if(inventoryCloseEvent.getReason().equals(InventoryCloseEvent.Reason.UNLOADED) || inventoryCloseEvent.getReason().equals(InventoryCloseEvent.Reason.OPEN_NEW)) return;
 
         guiManager.removeOpenGUI(uuid);
@@ -277,37 +277,37 @@ public class TransactionGUI extends ChestGUI<UUID> {
      * @param inventoryDragEvent An {@link InventoryDragEvent}.
      */
     @Override
-    public void handleBottomDrag(@NotNull InventoryDragEvent inventoryDragEvent) {}
+    public void handleBottomDrag(@NonNull InventoryDragEvent inventoryDragEvent) {}
 
     /**
      * Handle when any part of the inventory is dragged. Does nothing.
      * @param inventoryDragEvent An {@link InventoryDragEvent}.
      */
     @Override
-    public void handleGlobalDrag(@NotNull InventoryDragEvent inventoryDragEvent) {}
+    public void handleGlobalDrag(@NonNull InventoryDragEvent inventoryDragEvent) {}
 
     /**
      * Handle when the bottom part of the inventory is clicked. Does nothing.
      * @param inventoryClickEvent An {@link InventoryClickEvent}.
      */
     @Override
-    public void handleBottomClick(@NotNull InventoryClickEvent inventoryClickEvent) {}
+    public void handleBottomClick(@NonNull InventoryClickEvent inventoryClickEvent) {}
 
     /**
      * Handle when any part of the inventory is clicked. Does nothing.
      * @param inventoryClickEvent An {@link InventoryClickEvent}.
      */
     @Override
-    public void handleGlobalClick(@NotNull InventoryClickEvent inventoryClickEvent) {}
+    public void handleGlobalClick(@NonNull InventoryClickEvent inventoryClickEvent) {}
 
     /**
      * Create and add filler buttons.
      * @param guiSize The size of the GUI.
      * @param buttonConfig The {@link TransactionGUIConfigV3.Button} config.
      */
-    private void createFilterButton(int guiSize, @NotNull TransactionGUIConfigV3.Button buttonConfig) {
+    private void createFilterButton(int guiSize, TransactionGUIConfigV3.@NonNull Button buttonConfig) {
         // Get the ItemStackConfig
-        com.github.lukesky19.skylib.api.itemstack.ItemStackConfig itemConfig = buttonConfig.displayItem();
+        ItemStackConfig itemConfig = buttonConfig.displayItem();
 
         // Create the ItemStackBuilder and pass the ItemStackConfig.
         ItemStackBuilder itemStackBuilder = new ItemStackBuilder(logger);
@@ -334,18 +334,18 @@ public class TransactionGUI extends ChestGUI<UUID> {
      * @param buttonType The {@link ButtonType}
      */
     private void createPreviousPageButton(
-            @NotNull TransactionGUIConfigV3.Button buttonConfig,
+            TransactionGUIConfigV3.@NonNull Button buttonConfig,
             int buttonNum,
-            @NotNull ButtonType buttonType) {
+            @NonNull ButtonType buttonType) {
         // Only display the previous page button if the page number is greater than or equal to 1
         if(pageNum >= 1) {
             // Check if the slot is not configured and send a warning.
             if(buttonConfig.slot() == null) {
-                logger.warn(AdventureUtil.deserialize("Unable to add a previous page button due to a null slot. Button Num: " + buttonNum + " and type: " + buttonType));
+                logger.warn(AdventureUtility.plain("Unable to add a previous page button due to a null slot. Button Num: " + buttonNum + " and type: " + buttonType));
                 return;
             }
 
-            createButton(buttonType, buttonConfig, List.of(), inventoryClickEvent -> {
+            createButton(buttonType, buttonConfig, List.of(), _ -> {
                 pageNum = pageNum - 1;
                 update();
             });
@@ -360,19 +360,19 @@ public class TransactionGUI extends ChestGUI<UUID> {
      * @param buttonType The {@link ButtonType}
      */
     private void createNextPageButton(
-            @NotNull TransactionGUIConfigV3.Button buttonConfig,
+            TransactionGUIConfigV3.@NonNull Button buttonConfig,
             int pageSize,
             int buttonNum,
-            @NotNull ButtonType buttonType) {
+            @NonNull ButtonType buttonType) {
         // Only display the next page button if another page is configured after the current
         if(pageNum < (pageSize - 1)) {
             // Check if the slot is not configured and send a warning.
             if(buttonConfig.slot() == null) {
-                logger.warn(AdventureUtil.deserialize("Unable to add a next page button due to a null slot. Button Num: " + buttonNum + " and type: " + buttonType));
+                logger.warn(AdventureUtility.plain("Unable to add a next page button due to a null slot. Button Num: " + buttonNum + " and type: " + buttonType));
                 return;
             }
 
-            createButton(buttonType, buttonConfig, List.of(), inventoryClickEvent -> {
+            createButton(buttonType, buttonConfig, List.of(), _ -> {
                 pageNum = pageNum + 1;
                 update();
             });
@@ -386,16 +386,16 @@ public class TransactionGUI extends ChestGUI<UUID> {
      * @param buttonType The {@link ButtonType}
      */
     private void createExitButton(
-            @NotNull TransactionGUIConfigV3.Button buttonConfig,
+            TransactionGUIConfigV3.@NonNull Button buttonConfig,
             int buttonNum,
-            @NotNull ButtonType buttonType) {
+            @NonNull ButtonType buttonType) {
         // Check if the slot is not configured and send a warning.
         if(buttonConfig.slot() == null) {
-            logger.warn(AdventureUtil.deserialize("Unable to add a button due to a null slot. Button Num: " + buttonNum + " and type: " + buttonType));
+            logger.warn(AdventureUtility.plain("Unable to add a button due to a null slot. Button Num: " + buttonNum + " and type: " + buttonType));
             return;
         }
 
-        createButton(buttonType, buttonConfig, List.of(), inventoryClickEvent -> close());
+        createButton(buttonType, buttonConfig, List.of(), _ -> close());
     }
 
     /**
@@ -405,16 +405,16 @@ public class TransactionGUI extends ChestGUI<UUID> {
      * @param buttonType The {@link ButtonType}
      */
     private void createSellAllButton(
-            @NotNull TransactionGUIConfigV3.Button buttonConfig,
+            TransactionGUIConfigV3.@NonNull Button buttonConfig,
             int buttonNum,
-            @NotNull ButtonType buttonType) {
+            @NonNull ButtonType buttonType) {
         // Check if the slot is not configured and send a warning.
         if(buttonConfig.slot() == null) {
-            logger.warn(AdventureUtil.deserialize("Unable to add a button due to a null slot. Button Num: " + buttonNum + " and type: " + buttonType));
+            logger.warn(AdventureUtility.plain("Unable to add a button due to a null slot. Button Num: " + buttonNum + " and type: " + buttonType));
             return;
         }
 
-        createButton(buttonType, buttonConfig, List.of(), inventoryClickEvent -> {
+        createButton(buttonType, buttonConfig, List.of(), _ -> {
             for(TransactionConfiguration data : transactionData.transactionList()) {
                 if(!(data instanceof ItemConfiguration itemConfiguration)) continue;
 
@@ -436,21 +436,21 @@ public class TransactionGUI extends ChestGUI<UUID> {
      * @param buttonType The {@link ButtonType}
      */
     private void createSellGUIButton(
-            @NotNull LocaleV5 locale,
-            @NotNull TransactionGUIConfigV3.Button buttonConfig,
+            @NonNull LocaleV5 locale,
+            TransactionGUIConfigV3.@NonNull Button buttonConfig,
             int buttonNum,
-            @NotNull ButtonType buttonType) {
+            @NonNull ButtonType buttonType) {
         // Check if the slot is not configured and send a warning.
         if(buttonConfig.slot() == null) {
-            logger.warn(AdventureUtil.deserialize("Unable to add a button due to a null slot. Button Num: " + buttonNum + " and type: " + buttonType));
+            logger.warn(AdventureUtility.plain("Unable to add a button due to a null slot. Button Num: " + buttonNum + " and type: " + buttonType));
             return;
         }
 
-        createButton(buttonType, buttonConfig, List.of(), inventoryClickEvent -> {
+        createButton(buttonType, buttonConfig, List.of(), _ -> {
             SellAllGUIConfigV3 sellAllGuiConfig = sellAllManager.getConfiguration();
             if(sellAllGuiConfig == null) {
-                logger.error(AdventureUtil.deserialize("Unable to open sellall GUI for player " + player.getName() + " due to invalid sellall config."));
-                player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.guiOpenError()));
+                logger.error(AdventureUtility.plain("Unable to open sellall GUI for player " + player.getName() + " due to invalid sellall config."));
+                player.sendMessage(AdventureUtility.deserialize(locale.prefix() + locale.guiOpenError()));
                 close();
                 return;
             }
@@ -458,24 +458,24 @@ public class TransactionGUI extends ChestGUI<UUID> {
 
             boolean creationResult = sellAllGUI.create();
             if(!creationResult) {
-                logger.error(AdventureUtil.deserialize("Unable to create the InventoryView for the sellall GUI for player " + player.getName() + " due to a configuration error."));
-                player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.guiOpenError()));
+                logger.error(AdventureUtility.plain("Unable to create the InventoryView for the sellall GUI for player " + player.getName() + " due to a configuration error."));
+                player.sendMessage(AdventureUtility.deserialize(locale.prefix() + locale.guiOpenError()));
                 close();
                 return;
             }
 
             boolean updateResult = sellAllGUI.update();
             if(!updateResult) {
-                logger.error(AdventureUtil.deserialize("Unable to decorate the sellall GUI for player " + player.getName() + " due to a configuration error."));
-                player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.guiOpenError()));
+                logger.error(AdventureUtility.plain("Unable to decorate the sellall GUI for player " + player.getName() + " due to a configuration error."));
+                player.sendMessage(AdventureUtility.deserialize(locale.prefix() + locale.guiOpenError()));
                 close();
                 return;
             }
 
             boolean openResult = sellAllGUI.open();
             if(!openResult) {
-                logger.error(AdventureUtil.deserialize("Unable to open the sellall GUI for player " + player.getName() + " due to a configuration error."));
-                player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.guiOpenError()));
+                logger.error(AdventureUtility.plain("Unable to open the sellall GUI for player " + player.getName() + " due to a configuration error."));
+                player.sendMessage(AdventureUtility.deserialize(locale.prefix() + locale.guiOpenError()));
                 close();
             }
         });
@@ -488,24 +488,24 @@ public class TransactionGUI extends ChestGUI<UUID> {
      * @param buttonType The {@link ButtonType}
      */
     private void createBuyButton(
-            @NotNull TransactionGUIConfigV3.Button buttonConfig,
+            TransactionGUIConfigV3.@NonNull Button buttonConfig,
             int buttonNum,
-            @NotNull ButtonType buttonType) {
+            @NonNull ButtonType buttonType) {
         if(priceConfig.buyMoney() <= 0.0 && priceConfig.buyPoints() <= 0) return;
 
         // Check if the slot is not configured and send a warning.
         if(buttonConfig.slot() == null) {
-            logger.warn(AdventureUtil.deserialize("Unable to add a buy button due to a null slot. Button Num: " + buttonNum + " and type: " + buttonType));
+            logger.warn(AdventureUtility.plain("Unable to add a buy button due to a null slot. Button Num: " + buttonNum + " and type: " + buttonType));
             return;
         }
 
         if(buttonConfig.transactionAmount() == null || buttonConfig.transactionAmount() <= 0) {
-            logger.warn(AdventureUtil.deserialize("Unable to add a buy button due to an invalid transaction amount."));
+            logger.warn(AdventureUtility.plain("Unable to add a buy button due to an invalid transaction amount."));
             return;
         }
 
         if(transactionData.transactionList().isEmpty()) {
-            logger.warn(AdventureUtil.deserialize("Unable to add a buy button because the transaction configuration list is empty."));
+            logger.warn(AdventureUtility.plain("Unable to add a buy button because the transaction configuration list is empty."));
             return;
         }
 
@@ -524,7 +524,7 @@ public class TransactionGUI extends ChestGUI<UUID> {
         itemStackPlaceholders.add(Placeholder.parsed("buy_points", String.valueOf(priceData.points())));
         itemStackPlaceholders.add(Placeholder.parsed("amount", String.valueOf(purchaseAmount)));
 
-        createButton(buttonType, buttonConfig, itemStackPlaceholders, inventoryClickEvent ->
+        createButton(buttonType, buttonConfig, itemStackPlaceholders, _ ->
                 transactionManager.buy(player, playerData, this, transactionData, priceConfig, priceData, purchaseAmount));
     }
 
@@ -535,25 +535,25 @@ public class TransactionGUI extends ChestGUI<UUID> {
      * @param buttonType The {@link ButtonType}
      */
     private void createSellButton(
-            @NotNull TransactionGUIConfigV3.Button buttonConfig,
+            TransactionGUIConfigV3.@NonNull Button buttonConfig,
             int buttonNum,
-            @NotNull ButtonType buttonType) {
+            @NonNull ButtonType buttonType) {
         if(priceConfig.sellMoney() <= 0.0 && priceConfig.sellPoints() <= 0) return;
 
         // Check if the slot is not configured and send a warning.
         if(buttonConfig.slot() == null) {
-            logger.warn(AdventureUtil.deserialize("Unable to add a sell button due to a null slot. Button Num: " + buttonNum + " and type: " + buttonType));
+            logger.warn(AdventureUtility.plain("Unable to add a sell button due to a null slot. Button Num: " + buttonNum + " and type: " + buttonType));
             return;
         }
 
         // Check if the transaction amount is valid
         if(buttonConfig.transactionAmount() == null || buttonConfig.transactionAmount() <= 0) {
-            logger.warn(AdventureUtil.deserialize("Unable to add a sell button due to an invalid transaction amount."));
+            logger.warn(AdventureUtility.plain("Unable to add a sell button due to an invalid transaction amount."));
             return;
         }
 
         if(transactionData.transactionList().isEmpty()) {
-            logger.warn(AdventureUtil.deserialize("Unable to add a buy button because the transaction configuration list is empty."));
+            logger.warn(AdventureUtility.plain("Unable to add a buy button because the transaction configuration list is empty."));
             return;
         }
 
@@ -569,7 +569,7 @@ public class TransactionGUI extends ChestGUI<UUID> {
         itemStackPlaceholders.add(Placeholder.parsed("sell_points", String.valueOf(priceData.points())));
         itemStackPlaceholders.add(Placeholder.parsed("amount", String.valueOf(sellAmount)));
 
-        createButton(buttonType, buttonConfig, itemStackPlaceholders, inventoryClickEvent ->
+        createButton(buttonType, buttonConfig, itemStackPlaceholders, _ ->
                 transactionManager.sell(player, playerData, this, transactionData, priceConfig, priceData, sellAmount));
     }
 
@@ -581,12 +581,12 @@ public class TransactionGUI extends ChestGUI<UUID> {
      * @param action A {@link Consumer} consuming an {@link InventoryClickEvent} that is used when the button is clicked.
      */
     private void createButton(
-            @NotNull ButtonType buttonType,
-            @NotNull TransactionGUIConfigV3.Button buttonConfig,
-            @NotNull List<TagResolver.Single> placeholders,
+            @NonNull ButtonType buttonType,
+            TransactionGUIConfigV3.@NonNull Button buttonConfig,
+            @NonNull List<TagResolver.Single> placeholders,
             @Nullable Consumer<InventoryClickEvent> action) {
         if(buttonConfig.slot() == null) {
-            logger.warn(AdventureUtil.deserialize("Unable to add a button due to a null slot. ButtonType: " + buttonType));
+            logger.warn(AdventureUtility.plain("Unable to add a button due to a null slot. ButtonType: " + buttonType));
             return;
         }
 

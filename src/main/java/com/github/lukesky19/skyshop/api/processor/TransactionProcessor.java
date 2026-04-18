@@ -20,7 +20,7 @@ package com.github.lukesky19.skyshop.api.processor;
 import com.github.lukesky19.skyshop.api.configuration.TransactionConfiguration;
 import com.github.lukesky19.skyshop.api.result.TransactionResult;
 import org.bukkit.entity.Player;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 /**
  * This interface can be used to create a processor that is used to process a {@link TransactionConfiguration}.
@@ -34,9 +34,9 @@ public interface TransactionProcessor {
      * @param amount The amount being purchased.
      * @return A {@link TransactionResult}.
      */
-    @NotNull TransactionResult canBuy(
-            @NotNull Player player,
-            @NotNull TransactionConfiguration configuration,
+    @NonNull TransactionResult canBuy(
+            @NonNull Player player,
+            @NonNull TransactionConfiguration configuration,
             int amount);
 
     /**
@@ -46,9 +46,9 @@ public interface TransactionProcessor {
      * @param amount The amount being sold.
      * @return A {@link TransactionResult}.
      */
-    @NotNull TransactionResult canSell(
-            @NotNull Player player,
-            @NotNull TransactionConfiguration configuration,
+    @NonNull TransactionResult canSell(
+            @NonNull Player player,
+            @NonNull TransactionConfiguration configuration,
             int amount);
 
     /**
@@ -58,9 +58,9 @@ public interface TransactionProcessor {
      * @param amount The amount being purchased.
      * @return A {@link TransactionResult}.
      */
-    @NotNull TransactionResult buy(
-            @NotNull Player player,
-            @NotNull TransactionConfiguration configuration,
+    @NonNull TransactionResult buy(
+            @NonNull Player player,
+            @NonNull TransactionConfiguration configuration,
             int amount);
 
     /**
@@ -70,8 +70,8 @@ public interface TransactionProcessor {
      * @param amount The amount being sold.
      * @return A {@link TransactionResult}.
      */
-    @NotNull TransactionResult sell(
-            @NotNull Player player,
-            @NotNull TransactionConfiguration configuration,
+    @NonNull TransactionResult sell(
+            @NonNull Player player,
+            @NonNull TransactionConfiguration configuration,
             int amount);
 }

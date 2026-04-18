@@ -22,19 +22,19 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 /**
  * This class listens for when a player joins and loads player data.
  */
 public class PlayerJoinListener implements Listener {
-    private final @NotNull PlayerDataManager playerDataManager;
+    private final @NonNull PlayerDataManager playerDataManager;
 
     /**
      * Constructor
      * @param playerDataManager A {@link PlayerDataManager} instance.
      */
-    public PlayerJoinListener(@NotNull PlayerDataManager playerDataManager) {
+    public PlayerJoinListener(@NonNull PlayerDataManager playerDataManager) {
         this.playerDataManager = playerDataManager;
     }
 

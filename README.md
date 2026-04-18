@@ -53,7 +53,13 @@
 ## FAQ
 Q: What versions does this plugin support?
 
-A: 1.21.4, 1.21.5, 1.21.6, 1.21.7, 1.21.8, 1.21.9, 1.21.10, and 1.21.11.
+A: 1.21.4, 1.21.5, 1.21.6, 1.21.7, 1.21.8, 1.21.9, 1.21.10, 1.21.11, 26.1, 26.1.1, and 26.1.2.
+Note: Java 25 is required even on versions older than 26.1.
+
+Q: I get the following error: "SkyShop has been compiled by a more recent version of the Java Runtime
+(class file version 69.0), this version of the Java Runtime only recognizes class file versions up to 65.0"
+
+A: SkyShop is compiled using Java 25 as part of it's support of 26.1 and beyond. SkyShop still works on older version as long as Java 25 is used.
 
 Q: Are there any plans to support any other versions?
 

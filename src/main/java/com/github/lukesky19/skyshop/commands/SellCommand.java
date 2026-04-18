@@ -25,19 +25,19 @@ import io.papermc.paper.command.brigadier.Commands;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 /**
  * This class is used to create the sell command used to view the sell items the player's inventory.
  */
 public class SellCommand {
-    private final @NotNull SkyShopAPI skyShopAPI;
+    private final @NonNull SkyShopAPI skyShopAPI;
 
     /**
      * Constructor
      * @param skyShopAPI A {@link SkyShopAPI} instance.
      */
-    public SellCommand(@NotNull SkyShopAPI skyShopAPI) {
+    public SellCommand(@NonNull SkyShopAPI skyShopAPI) {
         this.skyShopAPI = skyShopAPI;
     }
 
@@ -45,7 +45,7 @@ public class SellCommand {
      * Builds a {@link LiteralCommandNode} of type {@link CommandSourceStack} for the sell command.
      * @return A {@link LiteralCommandNode} of type {@link CommandSourceStack} representing the sell command.
      */
-    public @NotNull LiteralCommandNode<CommandSourceStack> createCommand() {
+    public @NonNull LiteralCommandNode<CommandSourceStack> createCommand() {
         LiteralArgumentBuilder<CommandSourceStack> builder = Commands.literal("sell")
             .requires(ctx -> ctx.getSender() instanceof Player && ctx.getSender().hasPermission("skyshop.commands.sell"));
 

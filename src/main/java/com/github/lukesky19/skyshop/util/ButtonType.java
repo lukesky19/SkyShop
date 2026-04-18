@@ -23,7 +23,7 @@ import com.github.lukesky19.skyshop.gui.TransactionGUI;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * This enum is used for different actions a GUIButton can do.

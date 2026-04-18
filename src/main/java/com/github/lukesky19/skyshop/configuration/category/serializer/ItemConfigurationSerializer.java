@@ -20,7 +20,7 @@ package com.github.lukesky19.skyshop.configuration.category.serializer;
 import com.github.lukesky19.skylib.libs.configurate.ConfigurationNode;
 import com.github.lukesky19.skyshop.api.serializer.ConfigurationSerializer;
 import com.github.lukesky19.skyshop.configuration.category.transaction.ItemConfiguration;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 /**
  * Serializes/deserializes {@link ItemConfiguration}.
@@ -34,5 +34,5 @@ public class ItemConfigurationSerializer extends ConfigurationSerializer<ItemCon
     }
 
     @Override
-    public void migrate(@NotNull ConfigurationNode root) {}
+    public void migrate(@NonNull ConfigurationNode root) {}
 }

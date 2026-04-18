@@ -17,11 +17,11 @@
 */
 package com.github.lukesky19.skyshop;
 
-import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
-import com.github.lukesky19.skylib.api.common.abstracts.SkyPlugin;
-import com.github.lukesky19.skylib.api.gui.impl.UUIDGUIListener;
-import com.github.lukesky19.skylib.api.gui.impl.UUIDGUIManager;
+import com.github.lukesky19.skylib.common.api.adventure.AdventureUtility;
 import com.github.lukesky19.skylib.libs.bstats.bukkit.Metrics;
+import com.github.lukesky19.skylib.paper.api.gui.impl.UUIDGUIListener;
+import com.github.lukesky19.skylib.paper.api.gui.impl.UUIDGUIManager;
+import com.github.lukesky19.skylib.paper.api.plugin.SkyPlugin;
 import com.github.lukesky19.skyshop.api.SkyShopAPI;
 import com.github.lukesky19.skyshop.commands.SellCommand;
 import com.github.lukesky19.skyshop.commands.SkyShopCommand;
@@ -56,7 +56,6 @@ import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.ServicePriority;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Objects;
@@ -157,7 +156,7 @@ public final class SkyShop extends SkyPlugin {
             reload();
 
             // Get the plugin's settings and whether or not statistics should be tracked.
-            @Nullable SettingsV4 settings = settingsManager.getConfiguration();
+            SettingsV4 settings = settingsManager.getConfiguration();
             boolean statistics = Objects.requireNonNullElse(settings != null ? settings.statistics() : null, false);
 
             // If statistics are to be tracked, setup statistics manager and stats task.
@@ -189,10 +188,8 @@ public final class SkyShop extends SkyPlugin {
             CompletableFuture<Void> playerDataFuture = playerDataManager.unloadPlayerData();
             playerDataFuture.join();
 
-            playerDataFuture.thenAccept(v -> {
-                logger.info(AdventureUtil.deserialize("Player Data saved."));
-            }).exceptionally(ex -> {
-                logger.warn(AdventureUtil.deserialize("Failed to save player data on plugin disable. Data loss will occur."));
+            playerDataFuture.thenAccept(v -> logger.info(AdventureUtility.plain("Player Data saved."))).exceptionally(ex -> {
+                logger.warn(AdventureUtility.plain("Failed to save player data on plugin disable. Data loss will occur."));
                 return null;
             });
         }
@@ -207,10 +204,10 @@ public final class SkyShop extends SkyPlugin {
                 if(finalResult) {
                     databaseManager.handlePluginDisable();
                 } else {
-                    logger.warn(AdventureUtil.deserialize("Failed to save stats on plugin disable. Data loss will occur."));
+                    logger.warn(AdventureUtility.plain("Failed to save stats on plugin disable. Data loss will occur."));
                 }
             }).exceptionally(ex -> {
-                logger.warn(AdventureUtil.deserialize("Failed to save stats on plugin disable. Data loss will occur."));
+                logger.warn(AdventureUtility.plain("Failed to save stats on plugin disable. Data loss will occur."));
                 return null;
             });
         }
@@ -245,14 +242,14 @@ public final class SkyShop extends SkyPlugin {
         if (skyLib != null) {
             String version = skyLib.getPluginMeta().getVersion();
             String[] splitVersion = version.split("\\.");
-            int second = Integer.parseInt(splitVersion[1]);
+            int second = Integer.parseInt(splitVersion[0]);
 
-            if(second >= 5) {
+            if(second >= 2) {
                 return true;
             }
         }
 
-        this.getComponentLogger().error(AdventureUtil.deserialize("SkyLib Version 1.5.0.0 or newer is required to run this plugin."));
+        this.getComponentLogger().error(AdventureUtility.plain("SkyLib Version 2.0.0.0 or newer is required to run this plugin."));
         this.getServer().getPluginManager().disablePlugin(this);
         return false;
     }

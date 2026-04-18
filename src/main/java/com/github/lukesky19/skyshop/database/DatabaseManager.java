@@ -17,25 +17,25 @@
 */
 package com.github.lukesky19.skyshop.database;
 
-import com.github.lukesky19.skylib.api.database.AbstractDatabaseManager;
+import com.github.lukesky19.skylib.common.api.database.AbstractDatabaseManager;
 import com.github.lukesky19.skyshop.SkyShop;
 import com.github.lukesky19.skyshop.database.table.PlayerDataTable;
 import com.github.lukesky19.skyshop.database.table.StatsTable;
 import com.github.lukesky19.skyshop.database.table.VersionsTable;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 /**
  * This class manages access to database tables, in this case just {@link StatsTable}.
  */
 public class DatabaseManager extends AbstractDatabaseManager {
-    private final @NotNull StatsTable statsTable;
-    private final @NotNull PlayerDataTable playerDataTable;
+    private final @NonNull StatsTable statsTable;
+    private final @NonNull PlayerDataTable playerDataTable;
 
     /**
      * Get the {@link StatsTable} table.
      * @return A {@link StatsTable}
      */
-    public @NotNull StatsTable getStatsTable() {
+    public @NonNull StatsTable getStatsTable() {
         return statsTable;
     }
 
@@ -43,7 +43,7 @@ public class DatabaseManager extends AbstractDatabaseManager {
      * Get the {@link PlayerDataTable} table.
      * @return A {@link PlayerDataTable}
      */
-    public @NotNull PlayerDataTable getPlayerDataTable() {
+    public @NonNull PlayerDataTable getPlayerDataTable() {
         return playerDataTable;
     }
 
@@ -54,7 +54,7 @@ public class DatabaseManager extends AbstractDatabaseManager {
      * @param connectionManager A {@link ConnectionManager} instance.
      * @param queueManager A {@link QueueManager} instance.
      */
-    public DatabaseManager(@NotNull SkyShop skyShop, @NotNull ConnectionManager connectionManager, @NotNull QueueManager queueManager) {
+    public DatabaseManager(@NonNull SkyShop skyShop, @NonNull ConnectionManager connectionManager, @NonNull QueueManager queueManager) {
         super(connectionManager, queueManager);
 
         VersionsTable versionsTable = new VersionsTable(queueManager);

@@ -17,9 +17,9 @@
 */
 package com.github.lukesky19.skyshop.commands.arguments;
 
-import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
-import com.github.lukesky19.skylib.api.gui.GUIType;
-import com.github.lukesky19.skylib.api.gui.impl.UUIDGUIManager;
+import com.github.lukesky19.skylib.common.api.adventure.AdventureUtility;
+import com.github.lukesky19.skylib.paper.api.gui.GUIType;
+import com.github.lukesky19.skylib.paper.api.gui.impl.UUIDGUIManager;
 import com.github.lukesky19.skyshop.SkyShop;
 import com.github.lukesky19.skyshop.configuration.locale.LocaleManager;
 import com.github.lukesky19.skyshop.configuration.locale.data.LocaleV5;
@@ -30,8 +30,8 @@ import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import org.bukkit.entity.Player;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.util.List;
 
@@ -39,9 +39,9 @@ import java.util.List;
  * This class is used to create the stats command used to view shop stats.
  */
 public class StatsCommand {
-    private final @NotNull SkyShop skyShop;
-    private final @NotNull LocaleManager localeManager;
-    private final @NotNull UUIDGUIManager guiManager;
+    private final @NonNull SkyShop skyShop;
+    private final @NonNull LocaleManager localeManager;
+    private final @NonNull UUIDGUIManager guiManager;
     private final @Nullable StatsManager statsManager;
 
     /**
@@ -51,7 +51,7 @@ public class StatsCommand {
      * @param guiManager  A {@link UUIDGUIManager} instance.
      * @param statsManager A {@link StatsManager} instance.
      */
-    public StatsCommand(@NotNull SkyShop skyShop, @NotNull LocaleManager localeManager, @NotNull UUIDGUIManager guiManager, @Nullable StatsManager statsManager) {
+    public StatsCommand(@NonNull SkyShop skyShop, @NonNull LocaleManager localeManager, @NonNull UUIDGUIManager guiManager, @Nullable StatsManager statsManager) {
         this.skyShop = skyShop;
         this.localeManager = localeManager;
         this.guiManager = guiManager;
@@ -71,7 +71,7 @@ public class StatsCommand {
                 ComponentLogger logger = skyShop.getComponentLogger();
 
                 if(statsManager == null) {
-                    player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.statsDisabledGuiError()));
+                    player.sendMessage(AdventureUtility.deserialize(locale.prefix() + locale.statsDisabledGuiError()));
                     return 0;
                 }
 
@@ -79,22 +79,22 @@ public class StatsCommand {
 
                 boolean creationResult = statsGUI.create(GUIType.CHEST_54, "<yellow><bold>Transaction Stats</bold></yellow>", List.of());
                 if(!creationResult) {
-                    logger.error(AdventureUtil.deserialize("Unable to create the InventoryView for the stats GUI for player " + player.getName() + " due to a configuration error."));
-                    player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.guiOpenError()));
+                    logger.error(AdventureUtility.plain("Unable to create the InventoryView for the stats GUI for player " + player.getName() + " due to a configuration error."));
+                    player.sendMessage(AdventureUtility.deserialize(locale.prefix() + locale.guiOpenError()));
                     return 0;
                 }
 
                 boolean updateResult = statsGUI.update();
                 if(!updateResult) {
-                    logger.error(AdventureUtil.deserialize("Unable to decorate the stats GUI for player " + player.getName() + " due to a configuration error."));
-                    player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.guiOpenError()));
+                    logger.error(AdventureUtility.plain("Unable to decorate the stats GUI for player " + player.getName() + " due to a configuration error."));
+                    player.sendMessage(AdventureUtility.deserialize(locale.prefix() + locale.guiOpenError()));
                     return 0;
                 }
 
                 boolean openResult = statsGUI.open();
                 if(!openResult) {
-                    logger.error(AdventureUtil.deserialize("Unable to open the stats GUI for player " + player.getName() + " due to a configuration error."));
-                    player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.guiOpenError()));
+                    logger.error(AdventureUtility.plain("Unable to open the stats GUI for player " + player.getName() + " due to a configuration error."));
+                    player.sendMessage(AdventureUtility.deserialize(locale.prefix() + locale.guiOpenError()));
                     return 0;
                 }
 

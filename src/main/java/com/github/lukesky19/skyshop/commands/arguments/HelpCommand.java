@@ -17,7 +17,8 @@
 */
 package com.github.lukesky19.skyshop.commands.arguments;
 
-import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
+import com.github.lukesky19.skylib.common.api.adventure.AdventureUtility;
+import com.github.lukesky19.skylib.paper.api.adventure.PaperAdventureUtility;
 import com.github.lukesky19.skyshop.SkyShop;
 import com.github.lukesky19.skyshop.configuration.locale.LocaleManager;
 import com.github.lukesky19.skyshop.configuration.locale.data.LocaleV5;
@@ -25,21 +26,21 @@ import com.mojang.brigadier.tree.LiteralCommandNode;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import org.bukkit.entity.Player;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 /**
  * This class is used to create the help command used to view the help message.
  */
 public class HelpCommand {
-    private final @NotNull SkyShop skyShop;
-    private final @NotNull LocaleManager localeManager;
+    private final @NonNull SkyShop skyShop;
+    private final @NonNull LocaleManager localeManager;
 
     /**
      * Constructor
      * @param skyShop A {@link SkyShop} instance.
      * @param localeManager A {@link LocaleManager} instance.
      */
-    public HelpCommand(@NotNull SkyShop skyShop, @NotNull LocaleManager localeManager) {
+    public HelpCommand(@NonNull SkyShop skyShop, @NonNull LocaleManager localeManager) {
         this.skyShop = skyShop;
         this.localeManager = localeManager;
     }
@@ -56,11 +57,11 @@ public class HelpCommand {
 
                     if(ctx.getSource().getSender() instanceof Player player) {
                         for(String msg : locale.help()) {
-                            player.sendMessage(AdventureUtil.deserialize(player, msg));
+                            player.sendMessage(PaperAdventureUtility.deserialize(player, msg));
                         }
                     } else {
                         for(String msg : locale.help()) {
-                            skyShop.getComponentLogger().info(AdventureUtil.deserialize(msg));
+                            skyShop.getComponentLogger().info(AdventureUtility.deserialize(msg));
                         }
                     }
 

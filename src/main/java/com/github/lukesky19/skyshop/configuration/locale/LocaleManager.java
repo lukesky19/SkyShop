@@ -17,8 +17,8 @@
 */
 package com.github.lukesky19.skyshop.configuration.locale;
 
-import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
-import com.github.lukesky19.skylib.api.configurate.ConfigurationUtility;
+import com.github.lukesky19.skylib.common.api.adventure.AdventureUtility;
+import com.github.lukesky19.skylib.common.api.configuration.abstracts.SimpleConfigManager;
 import com.github.lukesky19.skylib.libs.configurate.ConfigurateException;
 import com.github.lukesky19.skylib.libs.configurate.ConfigurationNode;
 import com.github.lukesky19.skylib.libs.configurate.serialize.SerializationException;
@@ -27,10 +27,8 @@ import com.github.lukesky19.skyshop.SkyShop;
 import com.github.lukesky19.skyshop.configuration.locale.data.*;
 import com.github.lukesky19.skyshop.configuration.settings.SettingsManager;
 import com.github.lukesky19.skyshop.configuration.settings.data.SettingsV4;
-import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -39,15 +37,13 @@ import java.util.List;
 /**
  * This class manages everything related to handling the plugin's locale configuration.
  */
-public class LocaleManager {
-    private final @NotNull SkyShop skyShop;
-    private final @NotNull ComponentLogger logger;
-    private final @NotNull SettingsManager settingsManager;
+public class LocaleManager extends SimpleConfigManager<LocaleV5> {
+    private final @NonNull SettingsManager settingsManager;
 
     /**
      * The plugin's default locale. Used when the locale configuration is invalid.
      */
-    private final @NotNull LocaleV5 DEFAULT_LOCALE = new LocaleV5(
+    private final @NonNull LocaleV5 DEFAULT_LOCALE = new LocaleV5(
             5,
             "<aqua><bold>SkyShop</bold></aqua><gray> ▪ </gray>",
             List.of("<aqua>SkyShop is developed by <white><bold>lukeskywlker19</bold></white>.</aqua>",
@@ -99,9 +95,9 @@ public class LocaleManager {
      * @param skyShop A {@link SkyShop} instance.
      * @param settingsManager A {@link SettingsManager} instance.
      */
-    public LocaleManager(@NotNull SkyShop skyShop, @NotNull SettingsManager settingsManager) {
-        this.skyShop = skyShop;
-        this.logger = skyShop.getComponentLogger();
+    public LocaleManager(@NonNull SkyShop skyShop, @NonNull SettingsManager settingsManager) {
+        super(skyShop, LocaleV5.class);
+
         this.settingsManager = settingsManager;
     }
 
@@ -109,7 +105,7 @@ public class LocaleManager {
      * Gets the plugin's locale if not null or the default locale otherwise.
      * @return The plugin's locale if not null or the default locale otherwise.
      */
-    public @NotNull LocaleV5 getConfiguration() {
+    public @NonNull LocaleV5 getConfiguration() {
         if(configuration == null) return DEFAULT_LOCALE;
         return configuration;
     }
@@ -118,44 +114,42 @@ public class LocaleManager {
      * Load the locale configuration.
      */
     public void loadConfiguration() {
+        configuration = null;
+
+        saveDefaultConfiguration();
+
         SettingsV4 settings = settingsManager.getConfiguration();
         if(settings == null) {
-            logger.warn(AdventureUtil.deserialize("Failed to load plugin's locale due to plugin settings being null."));
+            logger.warn(AdventureUtility.plain("Failed to load plugin's locale due to plugin settings being null."));
             return;
         }
         if(settings.locale() == null) {
-            logger.warn(AdventureUtil.deserialize("Failed to load plugin's locale to use in settings.yml is null."));
+            logger.warn(AdventureUtility.plain("Failed to load plugin's locale to use in settings.yml is null."));
             return;
         }
 
         String localeString = settings.locale();
-        Path configurationPath = Path.of(skyShop.getDataFolder() + File.separator + "locale" + File.separator + (localeString + ".yml"));
+        Path configurationPath = Path.of(plugin.getDirectoryFile() + File.separator + "locale" + File.separator + (localeString + ".yml"));
 
-        configuration = null;
-
-        if(!configurationPath.toFile().exists()) {
-            saveBundledConfig();
-        }
-
-        YamlConfigurationLoader loader = ConfigurationUtility.getYamlConfigurationLoader(configurationPath);
+        YamlConfigurationLoader loader = createLoader(configurationPath);
         try {
             ConfigurationNode root = loader.load();
             int version = getVersion(root);
 
-            @Nullable LocaleV5 locale;
+            LocaleV5 locale;
             switch(version) {
                 case 5 -> {
                     locale = root.get(LocaleV5.class);
                     if(locale == null) {
-                        logger.warn(AdventureUtil.deserialize("Failed to load version 5 file " + (localeString + ".yml") + ". Class name: " + this.getClass().getName()));
+                        logger.warn(AdventureUtility.plain("Failed to load version 5 file " + (localeString + ".yml") + ". Class name: " + this.getClass().getName()));
                         return;
                     }
                 }
 
                 case 4 -> {
-                    @Nullable LocaleV4 localeV4 = root.get(LocaleV4.class);
+                    LocaleV4 localeV4 = root.get(LocaleV4.class);
                     if(localeV4 == null) {
-                        logger.warn(AdventureUtil.deserialize("Failed to load version 4 file " + (localeString + ".yml") + ". Class name: " + this.getClass().getName()));
+                        logger.warn(AdventureUtility.plain("Failed to load version 4 file " + (localeString + ".yml") + ". Class name: " + this.getClass().getName()));
                         return;
                     }
 
@@ -197,9 +191,9 @@ public class LocaleManager {
                 }
 
                 case 3 -> {
-                    @Nullable LocaleV3 localeV3 = root.get(LocaleV3.class);
+                    LocaleV3 localeV3 = root.get(LocaleV3.class);
                     if(localeV3 == null) {
-                        logger.warn(AdventureUtil.deserialize("Failed to load version 3 file " + (localeString + ".yml") + ". Class name: " + this.getClass().getName()));
+                        logger.warn(AdventureUtility.plain("Failed to load version 3 file " + (localeString + ".yml") + ". Class name: " + this.getClass().getName()));
                         return;
                     }
 
@@ -241,9 +235,9 @@ public class LocaleManager {
                 }
 
                 case 2 -> {
-                    @Nullable LocaleV2 localeV2 = root.get(LocaleV2.class);
+                    LocaleV2 localeV2 = root.get(LocaleV2.class);
                     if(localeV2 == null) {
-                        logger.warn(AdventureUtil.deserialize("Failed to load version 2 file " + (localeString + ".yml") + ". Class name: " + this.getClass().getName()));
+                        logger.warn(AdventureUtility.plain("Failed to load version 2 file " + (localeString + ".yml") + ". Class name: " + this.getClass().getName()));
                         return;
                     }
 
@@ -297,9 +291,9 @@ public class LocaleManager {
                 }
 
                 case 1 -> {
-                    @Nullable LocaleV1 localeV1 = root.get(LocaleV1.class);
+                    LocaleV1 localeV1 = root.get(LocaleV1.class);
                     if(localeV1 == null) {
-                        logger.warn(AdventureUtil.deserialize("Failed to load version 1 file " + (localeString + ".yml") + ". Class name: " + this.getClass().getName()));
+                        logger.warn(AdventureUtility.plain("Failed to load version 1 file " + (localeString + ".yml") + ". Class name: " + this.getClass().getName()));
                         return;
                     }
 
@@ -341,30 +335,36 @@ public class LocaleManager {
                 }
 
                 default -> {
-                    logger.warn(AdventureUtil.deserialize("Failed to load configuration file " + (localeString + ".yml") + " due to an unsupported config version. Version: " + version + " Class name: " + this.getClass().getName()));
+                    logger.warn(AdventureUtility.plain("Failed to load configuration file " + (localeString + ".yml") + " due to an unsupported config version. Version: " + version + " Class name: " + this.getClass().getName()));
                     return;
                 }
             }
 
             // Check if the configuration is invalid
             if(!validateConfiguration(locale)) {
-                logger.warn(AdventureUtil.deserialize("Configuration validation failed for file " + (localeString + ".yml") + ". Class name: " + this.getClass().getName()));
+                logger.warn(AdventureUtility.plain("Configuration validation failed for file " + (localeString + ".yml") + ". Class name: " + this.getClass().getName()));
                 return;
             }
 
             this.configuration = locale;
         } catch (ConfigurateException configurateException) {
-            logger.error(AdventureUtil.deserialize("Failed to load configuration. Error: " + configurateException.getMessage()));
+            logger.error(AdventureUtility.plain("Failed to load configuration. Error: " + configurateException.getMessage()));
         }
+    }
+
+    @Override
+    public @Nullable LocaleV5 migrateConfiguration(@NonNull LocaleV5 localeV5) {
+        return localeV5;
     }
 
     /**
      * Save the default bundled locale configuration files.
      */
-    public void saveBundledConfig() {
-        Path path = Path.of(skyShop.getDataFolder() + File.separator + "locale" + File.separator + "en_US.yml");
+    @Override
+    public void saveDefaultConfiguration() {
+        Path path = Path.of(plugin.getDirectoryFile() + File.separator + "locale" + File.separator + "en_US.yml");
         if(!path.toFile().exists()) {
-            skyShop.saveResource("locale" + File.separator + "en_US.yml", false);
+            plugin.saveResource("locale" + File.separator + "en_US.yml", false);
         }
     }
 
@@ -373,9 +373,9 @@ public class LocaleManager {
      * @param configurationPath The path to save to.
      * @param configuration The configuration.
      */
-    public void saveConfiguration(@NotNull Path configurationPath, @NonNull LocaleV5 configuration) {
+    public void saveConfiguration(@NonNull Path configurationPath, @NonNull LocaleV5 configuration) {
         try {
-            YamlConfigurationLoader loader = ConfigurationUtility.getYamlConfigurationLoader(configurationPath);
+            YamlConfigurationLoader loader = createLoader(configurationPath);
 
             ConfigurationNode node = loader.createNode();
 
@@ -383,7 +383,7 @@ public class LocaleManager {
 
             loader.save(node);
         } catch (ConfigurateException configurateException) {
-            logger.error(AdventureUtil.deserialize("Failed to save locale configuration. Error: " + configurateException.getMessage()));
+            logger.error(AdventureUtility.plain("Failed to save locale configuration. Error: " + configurateException.getMessage()));
         }
     }
 
@@ -439,7 +439,7 @@ public class LocaleManager {
                 || configuration.buttonNoPermission() == null) {
             this.configuration = null;
 
-            logger.warn(AdventureUtil.deserialize("Your locale configuration contains an invalid message. The default locale will be used."));
+            logger.warn(AdventureUtility.plain("Your locale configuration contains an invalid message. The default locale will be used."));
             return false;
         }
 
@@ -451,12 +451,12 @@ public class LocaleManager {
      * @param root The root {@link ConfigurationNode}.
      * @return The config version.
      */
-    private int getVersion(@NotNull ConfigurationNode root) {
+    private int getVersion(@NonNull ConfigurationNode root) {
         ConfigurationNode versionNode = root.node("version");
         int version = versionNode.getInt();
 
         ConfigurationNode legacyVersionNode = root.node("config-version");
-        @Nullable String legacyVersion = legacyVersionNode.virtual() ? null : legacyVersionNode.getString();
+        String legacyVersion = legacyVersionNode.virtual() ? null : legacyVersionNode.getString();
         if(legacyVersion != null) {
             try {
                 switch (legacyVersion) {
@@ -481,7 +481,7 @@ public class LocaleManager {
                     }
                 }
             } catch (SerializationException e) {
-                logger.warn(AdventureUtil.deserialize("Failed to convert String-based version to numeric version"));
+                logger.warn(AdventureUtility.plain("Failed to convert String-based version to numeric version"));
                 version = 0;
             }
         }

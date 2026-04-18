@@ -19,8 +19,8 @@ package com.github.lukesky19.skyshop.configuration.category.transaction;
 
 import com.github.lukesky19.skylib.libs.configurate.objectmapping.ConfigSerializable;
 import com.github.lukesky19.skyshop.api.configuration.TransactionConfiguration;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.util.List;
 
@@ -35,8 +35,8 @@ import java.util.List;
 public record CommandConfiguration(
         int version,
         @Nullable String id,
-        @NotNull List<String> buyCommands,
-        @NotNull List<String> sellCommands) implements TransactionConfiguration {
+        @NonNull List<String> buyCommands,
+        @NonNull List<String> sellCommands) implements TransactionConfiguration {
     @Override
     public int getVersion() {
         return version;

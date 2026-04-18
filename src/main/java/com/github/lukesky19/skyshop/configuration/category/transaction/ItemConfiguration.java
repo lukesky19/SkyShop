@@ -17,12 +17,12 @@
 */
 package com.github.lukesky19.skyshop.configuration.category.transaction;
 
-import com.github.lukesky19.skylib.api.itemstack.ItemStackConfig;
 import com.github.lukesky19.skylib.libs.configurate.objectmapping.ConfigSerializable;
+import com.github.lukesky19.skylib.paper.api.itemstack.ItemStackConfig;
 import com.github.lukesky19.skyshop.api.configuration.TransactionConfiguration;
 import org.bukkit.inventory.ItemStack;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 /**
  * The configuration to buy/sell {@link ItemStack}s.
@@ -35,7 +35,7 @@ import org.jetbrains.annotations.Nullable;
 public record ItemConfiguration(
         int version,
         @Nullable String id,
-        @NotNull ItemStackConfig transactionItem,
+        @NonNull ItemStackConfig transactionItem,
         boolean cacheSellPrice) implements TransactionConfiguration {
     @Override
     public int getVersion() {

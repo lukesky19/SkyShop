@@ -17,14 +17,14 @@
 */
 package com.github.lukesky19.skyshop.configuration.sellall.data;
 
-import com.github.lukesky19.skylib.api.gui.GUIType;
-import com.github.lukesky19.skylib.api.itemstack.ItemStackConfig;
 import com.github.lukesky19.skylib.libs.configurate.objectmapping.ConfigSerializable;
+import com.github.lukesky19.skylib.paper.api.gui.GUIType;
+import com.github.lukesky19.skylib.paper.api.itemstack.ItemStackConfig;
 import com.github.lukesky19.skyshop.gui.SellAllGUI;
 import com.github.lukesky19.skyshop.util.ButtonType;
 import org.bukkit.inventory.ItemStack;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.util.List;
 
@@ -40,7 +40,7 @@ public record SellAllGUIConfigV3(
         int version,
         @Nullable GUIType guiType,
         @Nullable String guiName,
-        @NotNull List<@NotNull Button> buttons) {
+        @NonNull List<@NonNull Button> buttons) {
     /**
      * This record contains the configuration to create buttons to be displayed.
      * @param buttonType The {@link ButtonType}.
@@ -51,5 +51,5 @@ public record SellAllGUIConfigV3(
     public record Button(
             @Nullable ButtonType buttonType,
             @Nullable Integer slot,
-            @NotNull ItemStackConfig displayItem) {}
+            @NonNull ItemStackConfig displayItem) {}
 }

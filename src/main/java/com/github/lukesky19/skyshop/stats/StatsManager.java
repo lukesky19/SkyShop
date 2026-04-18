@@ -17,13 +17,13 @@
 */
 package com.github.lukesky19.skyshop.stats;
 
-import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
-import com.github.lukesky19.skylib.api.format.FormatUtil;
+import com.github.lukesky19.skylib.common.api.adventure.AdventureUtility;
+import com.github.lukesky19.skylib.paper.api.format.FormatUtil;
 import com.github.lukesky19.skyshop.database.DatabaseManager;
 import com.github.lukesky19.skyshop.database.table.StatsTable;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import org.bukkit.inventory.ItemType;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import java.util.HashMap;
 import java.util.List;
@@ -35,9 +35,9 @@ import java.util.concurrent.CompletableFuture;
  * This class manages statistics for the amount an {@link ItemType} has been purchased or sold.
  */
 public class StatsManager {
-    private final @NotNull ComponentLogger logger;
-    private final @NotNull DatabaseManager databaseManager;
-    private final @NotNull Map<ItemType, TransactionStats> statsMap = new HashMap<>();
+    private final @NonNull ComponentLogger logger;
+    private final @NonNull DatabaseManager databaseManager;
+    private final @NonNull Map<ItemType, TransactionStats> statsMap = new HashMap<>();
 
     /**
      * Default Constructor
@@ -53,7 +53,7 @@ public class StatsManager {
      * @param logger The plugin's {@link ComponentLogger}.
      * @param databaseManager A {@link DatabaseManager} instance.
      */
-    public StatsManager(@NotNull ComponentLogger logger, @NotNull DatabaseManager databaseManager) {
+    public StatsManager(@NonNull ComponentLogger logger, @NonNull DatabaseManager databaseManager) {
         this.logger = logger;
         this.databaseManager = databaseManager;
     }
@@ -62,7 +62,7 @@ public class StatsManager {
      * Get the {@link Map} mapping {@link ItemType}s to {@link TransactionStats}.
      * @return A {@link Map} mapping {@link ItemType}s to {@link TransactionStats}
      */
-    public @NotNull Map<ItemType, TransactionStats> getStatsMap() {
+    public @NonNull Map<ItemType, TransactionStats> getStatsMap() {
         return statsMap;
     }
 
@@ -82,7 +82,7 @@ public class StatsManager {
      * Saves all stats from the database.
      * @return A {@link CompletableFuture} containing a {@link List} of {@link Boolean}s. The list will contain false if any data failed to save.
      */
-    public @NotNull CompletableFuture<@NotNull List<@NotNull Boolean>> saveStats() {
+    public @NonNull CompletableFuture<@NonNull List<@NonNull Boolean>> saveStats() {
         StatsTable statsTable = databaseManager.getStatsTable();
 
         return statsTable.saveStats(statsMap);
@@ -94,7 +94,7 @@ public class StatsManager {
      * @return An {@link Optional} containing {@link TransactionStats}.
      * If no stats exist for the {@link ItemType}, the {@link Optional} will be empty.
      */
-    public @NotNull Optional<TransactionStats> getTransactionStats(@NotNull ItemType itemType) {
+    public @NonNull Optional<TransactionStats> getTransactionStats(@NonNull ItemType itemType) {
         return Optional.ofNullable(statsMap.get(itemType));
     }
 
@@ -103,9 +103,9 @@ public class StatsManager {
      * @param itemType The {@link ItemType}
      * @param incrementAmount The amount of items purchased.
      */
-    public void incrementAmountPurchased(@NotNull ItemType itemType, long incrementAmount) {
+    public void incrementAmountPurchased(@NonNull ItemType itemType, long incrementAmount) {
         if(incrementAmount <= 0) {
-            logger.warn(AdventureUtil.deserialize("Unable to increment the amount purchased for " + FormatUtil.formatItemTypeName(itemType) + ". The increment amount must be greater than 0."));
+            logger.warn(AdventureUtility.plain("Unable to increment the amount purchased for " + FormatUtil.formatItemTypeName(itemType) + ". The increment amount must be greater than 0."));
             return;
         }
 
@@ -127,9 +127,9 @@ public class StatsManager {
      * @param itemType The {@link ItemType}
      * @param incrementAmount The amount of items sold.
      */
-    public void incrementAmountSold(@NotNull ItemType itemType, long incrementAmount) {
+    public void incrementAmountSold(@NonNull ItemType itemType, long incrementAmount) {
         if(incrementAmount <= 0) {
-            logger.warn(AdventureUtil.deserialize("Unable to increment the amount sold for " + FormatUtil.formatItemTypeName(itemType) + ". The increment amount must be greater than 0."));
+            logger.warn(AdventureUtility.plain("Unable to increment the amount sold for " + FormatUtil.formatItemTypeName(itemType) + ". The increment amount must be greater than 0."));
             return;
         }
 

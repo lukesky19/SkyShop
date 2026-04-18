@@ -17,7 +17,7 @@
 */
 package com.github.lukesky19.skyshop.listener;
 
-import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
+import com.github.lukesky19.skylib.common.api.adventure.AdventureUtility;
 import com.github.lukesky19.skyshop.SkyShop;
 import com.github.lukesky19.skyshop.player.PlayerDataManager;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
@@ -26,21 +26,21 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 /**
  * This class listens for when a player quits and then saves and unloads their player data.
  */
 public class PlayerQuitListener implements Listener {
-    private final @NotNull ComponentLogger logger;
-    private final @NotNull PlayerDataManager playerDataManager;
+    private final @NonNull ComponentLogger logger;
+    private final @NonNull PlayerDataManager playerDataManager;
 
     /**
      * Constructor
      * @param skyShop A {@link SkyShop} instance.
      * @param playerDataManager A {@link PlayerDataManager} instance.
      */
-    public PlayerQuitListener(@NotNull SkyShop skyShop, @NotNull PlayerDataManager playerDataManager) {
+    public PlayerQuitListener(@NonNull SkyShop skyShop, @NonNull PlayerDataManager playerDataManager) {
         this.logger = skyShop.getComponentLogger();
         this.playerDataManager = playerDataManager;
     }
@@ -53,10 +53,10 @@ public class PlayerQuitListener implements Listener {
     public void onPlayerQuit(PlayerQuitEvent playerQuitEvent) {
         Player player = playerQuitEvent.getPlayer();
 
-        playerDataManager.unloadPlayerData(player.getUniqueId()).thenAccept(v ->
-                logger.info(AdventureUtil.deserialize("Saved player data for player " + player.getName())))
+        playerDataManager.unloadPlayerData(player.getUniqueId()).thenAccept(_ ->
+                logger.info(AdventureUtility.plain("Saved player data for player " + player.getName())))
                 .exceptionally(ex -> {
-                    logger.warn(AdventureUtil.deserialize("Failed to save player data for player " + player.getName() + ". Error: " + ex.getMessage()));
+                    logger.warn(AdventureUtility.plain("Failed to save player data for player " + player.getName() + ". Error: " + ex.getMessage()));
                     return null;
                 });
     }

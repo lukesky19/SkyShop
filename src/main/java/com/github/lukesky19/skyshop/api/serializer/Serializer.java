@@ -20,8 +20,8 @@ package com.github.lukesky19.skyshop.api.serializer;
 import com.github.lukesky19.skylib.libs.configurate.ConfigurationNode;
 import com.github.lukesky19.skylib.libs.configurate.serialize.SerializationException;
 import com.github.lukesky19.skyshop.api.configuration.TransactionConfiguration;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 /**
  * This interface can be used to create a serializer to serialize/deserialize {@link TransactionConfiguration}.
@@ -34,18 +34,18 @@ public interface Serializer {
      * @param root The root {@link ConfigurationNode}.
      * @throws SerializationException If serialization fails.
      */
-    void serialize(@Nullable TransactionConfiguration data, @NotNull ConfigurationNode root) throws SerializationException;
+    void serialize(@Nullable TransactionConfiguration data, @NonNull ConfigurationNode root) throws SerializationException;
 
     /**
      * Deserialize the {@link TransactionConfiguration}.
      * @param root The root {@link ConfigurationNode}.
      * @return The {@link TransactionConfiguration} or null.
      */
-    @Nullable TransactionConfiguration deserialize(@NotNull ConfigurationNode root);
+    @Nullable TransactionConfiguration deserialize(@NonNull ConfigurationNode root);
 
     /**
      * Migrate the configuration.
      * @param root The root {@link ConfigurationNode}.
      */
-    void migrate(@NotNull ConfigurationNode root);
+    void migrate(@NonNull ConfigurationNode root);
 }

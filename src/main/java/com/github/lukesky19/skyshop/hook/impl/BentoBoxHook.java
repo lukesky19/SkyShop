@@ -17,11 +17,11 @@
 */
 package com.github.lukesky19.skyshop.hook.impl;
 
+import com.github.lukesky19.skylib.common.api.integration.Hook;
 import com.github.lukesky19.skyshop.SkyShop;
-import com.github.lukesky19.skyshop.hook.Hook;
 import org.bukkit.entity.Player;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import world.bentobox.bentobox.BentoBox;
 import world.bentobox.bentobox.api.events.island.IslandEvent;
 import world.bentobox.bentobox.database.objects.Island;
@@ -33,14 +33,14 @@ import java.util.UUID;
  * This class manages interfacing with the BentoBox plugin.
  */
 public class BentoBoxHook implements Hook {
-    private final @NotNull SkyShop skyShop;
+    private final @NonNull SkyShop skyShop;
     private @Nullable IslandsManager islandsManager;
 
     /**
      * Constructor
      * @param skyShop A {@link SkyShop} instance.
      */
-    public BentoBoxHook(@NotNull SkyShop skyShop) {
+    public BentoBoxHook(@NonNull SkyShop skyShop) {
         this.skyShop = skyShop;
 
         initialize();
@@ -71,7 +71,7 @@ public class BentoBoxHook implements Hook {
      * @param player The {@link Player}.
      * @return An {@link Island} or null.
      */
-    public @Nullable Island getIsland(@NotNull Player player) {
+    public @Nullable Island getIsland(@NonNull Player player) {
         if(islandsManager == null) return null;
 
         return islandsManager.getIsland(player.getWorld(), player.getUniqueId());
@@ -84,7 +84,7 @@ public class BentoBoxHook implements Hook {
      * @param islandSize The island size to add.
      * @param maxSize The maximum size an island can be.
      */
-    public void addIslandSize(@NotNull UUID playerId, @NotNull Island island, int islandSize, int maxSize) {
+    public void addIslandSize(@NonNull UUID playerId, @NonNull Island island, int islandSize, int maxSize) {
         int oldRange = island.getProtectionRange();
         int newRange = Math.min(maxSize, island.getProtectionRange() + islandSize);
 
@@ -108,7 +108,7 @@ public class BentoBoxHook implements Hook {
      * @param island The island to remove the island size from.
      * @param islandSize The island size to remove.
      */
-    public void removeIslandSize(@NotNull UUID playerId, @NotNull Island island, int islandSize) {
+    public void removeIslandSize(@NonNull UUID playerId, @NonNull Island island, int islandSize) {
         int oldRange = island.getProtectionRange();
         int newRange = Math.min(1, island.getProtectionRange() - islandSize);
 
@@ -130,9 +130,9 @@ public class BentoBoxHook implements Hook {
      * @param islandSize The island size to set.
      * @param maxSize The maximum size an island can be.
      */
-    public void setIslandSize(@NotNull UUID playerId, @NotNull Island island, int islandSize, int maxSize) {
+    public void setIslandSize(@NonNull UUID playerId, @NonNull Island island, int islandSize, int maxSize) {
         int oldRange = island.getProtectionRange();
-        int newRange = Math.max(1, Math.min(maxSize, islandSize));
+        int newRange = Math.clamp(maxSize, 1, islandSize);
 
         // Set the island range
         island.setProtectionRange(newRange);

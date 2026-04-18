@@ -17,8 +17,8 @@
 */
 package com.github.lukesky19.skyshop.commands.arguments;
 
-import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
-import com.github.lukesky19.skylib.api.gui.impl.UUIDGUIManager;
+import com.github.lukesky19.skylib.common.api.adventure.AdventureUtility;
+import com.github.lukesky19.skylib.paper.api.gui.impl.UUIDGUIManager;
 import com.github.lukesky19.skyshop.SkyShop;
 import com.github.lukesky19.skyshop.api.SkyShopAPI;
 import com.github.lukesky19.skyshop.configuration.category.CategoryConfigManager;
@@ -40,25 +40,25 @@ import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import org.bukkit.entity.Player;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 /**
  * This class is used to create the open command used to open specific shop categories.
  */
 public class OpenCommand {
-    private final @NotNull SkyShop skyShop;
-    private final @NotNull LocaleManager localeManager;
-    private final @NotNull CategoryConfigManager categoryConfigManager;
-    private final @NotNull TransactionGUIConfigManager transactionStyleConfigManager;
-    private final @NotNull RegistryManager registryManager;
-    private final @NotNull SellAllManager sellAllManager;
+    private final @NonNull SkyShop skyShop;
+    private final @NonNull LocaleManager localeManager;
+    private final @NonNull CategoryConfigManager categoryConfigManager;
+    private final @NonNull TransactionGUIConfigManager transactionStyleConfigManager;
+    private final @NonNull RegistryManager registryManager;
+    private final @NonNull SellAllManager sellAllManager;
     private final @Nullable StatsManager statsManager;
-    private final @NotNull HookManager hookManager;
-    private final @NotNull PlayerDataManager playerDataManager;
-    private final @NotNull TransactionManager transactionManager;
-    private final @NotNull UUIDGUIManager guiManager;
-    private final @NotNull SkyShopAPI skyShopAPI;
+    private final @NonNull HookManager hookManager;
+    private final @NonNull PlayerDataManager playerDataManager;
+    private final @NonNull TransactionManager transactionManager;
+    private final @NonNull UUIDGUIManager guiManager;
+    private final @NonNull SkyShopAPI skyShopAPI;
 
     /**
      * Constructor
@@ -76,18 +76,18 @@ public class OpenCommand {
      * @param skyShopAPI A {@link SkyShopAPI} instance.
      */
     public OpenCommand(
-            @NotNull SkyShop skyShop,
-            @NotNull UUIDGUIManager guiManager,
-            @NotNull LocaleManager localeManager,
-            @NotNull CategoryConfigManager categoryConfigManager,
-            @NotNull TransactionGUIConfigManager transactionStyleConfigManager,
-            @NotNull RegistryManager registryManager,
-            @NotNull SellAllManager sellAllManager,
+            @NonNull SkyShop skyShop,
+            @NonNull UUIDGUIManager guiManager,
+            @NonNull LocaleManager localeManager,
+            @NonNull CategoryConfigManager categoryConfigManager,
+            @NonNull TransactionGUIConfigManager transactionStyleConfigManager,
+            @NonNull RegistryManager registryManager,
+            @NonNull SellAllManager sellAllManager,
             @Nullable StatsManager statsManager,
-            @NotNull HookManager hookManager,
-            @NotNull PlayerDataManager playerDataManager,
-            @NotNull TransactionManager transactionManager,
-            @NotNull SkyShopAPI skyShopAPI) {
+            @NonNull HookManager hookManager,
+            @NonNull PlayerDataManager playerDataManager,
+            @NonNull TransactionManager transactionManager,
+            @NonNull SkyShopAPI skyShopAPI) {
         this.skyShop = skyShop;
         this.localeManager = localeManager;
         this.categoryConfigManager = categoryConfigManager;
@@ -106,11 +106,11 @@ public class OpenCommand {
      * Builds a {@link LiteralCommandNode} of type {@link CommandSourceStack} for the open command argument.
      * @return A {@link LiteralCommandNode} of type {@link CommandSourceStack} representing the open command argument.
      */
-    public @NotNull LiteralCommandNode<CommandSourceStack> createCommand() {
+    public @NonNull LiteralCommandNode<CommandSourceStack> createCommand() {
         return Commands.literal("open")
                 .requires(ctx -> ctx.getSender().hasPermission("skyshop.commands.skyshop.open") && ctx.getSender() instanceof Player)
                 .then(Commands.argument("category", StringArgumentType.word())
-                    .suggests((context, suggestionsProvider) -> {
+                    .suggests((_, suggestionsProvider) -> {
                         categoryConfigManager.getCategoryIds().forEach(suggestionsProvider::suggest);
                         return suggestionsProvider.buildFuture();
                     })
@@ -120,23 +120,23 @@ public class OpenCommand {
                         Player player = (Player) ctx.getSource().getSender();
                         String categoryId = ctx.getArgument("category", String.class);
 
-                        @Nullable PlayerData playerData = playerDataManager.getPlayerData(player.getUniqueId());
+                        PlayerData playerData = playerDataManager.getPlayerData(player.getUniqueId());
                         if(playerData == null) {
-                            logger.error(AdventureUtil.deserialize("Unable to open the category GUI for the category id " + categoryId + " for player " + player.getName() + " due to invalid player data."));
-                            player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.guiOpenError()));
+                            logger.error(AdventureUtility.plain("Unable to open the category GUI for the category id " + categoryId + " for player " + player.getName() + " due to invalid player data."));
+                            player.sendMessage(AdventureUtility.deserialize(locale.prefix() + locale.guiOpenError()));
                             return 0;
                         }
 
-                        @Nullable CategoryConfigV4 categoryConfig = categoryConfigManager.getConfiguration(categoryId);
+                        CategoryConfigV4 categoryConfig = categoryConfigManager.getConfiguration(categoryId);
                         if(categoryConfig == null) {
-                            logger.error(AdventureUtil.deserialize("Unable to open the category GUI for the category id " + categoryId + " for player " + player.getName() + " due to a configuration error."));
-                            player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.guiOpenError()));
+                            logger.error(AdventureUtility.plain("Unable to open the category GUI for the category id " + categoryId + " for player " + player.getName() + " due to a configuration error."));
+                            player.sendMessage(AdventureUtility.deserialize(locale.prefix() + locale.guiOpenError()));
                             return 0;
                         }
 
                         if(categoryConfig.permission() != null) {
                             if(!player.hasPermission(categoryConfig.permission())) {
-                                player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.categoryNoPermission()));
+                                player.sendMessage(AdventureUtility.deserialize(locale.prefix() + locale.categoryNoPermission()));
                                 return 0;
                             }
                         }
@@ -145,22 +145,22 @@ public class OpenCommand {
 
                         boolean creationResult = categoryGUI.create();
                         if(!creationResult) {
-                            logger.error(AdventureUtil.deserialize("Unable to create the InventoryView for the category GUI for the category id " + categoryId + " for player " + player.getName() + " due to a configuration error."));
-                            player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.guiOpenError()));
+                            logger.error(AdventureUtility.plain("Unable to create the InventoryView for the category GUI for the category id " + categoryId + " for player " + player.getName() + " due to a configuration error."));
+                            player.sendMessage(AdventureUtility.deserialize(locale.prefix() + locale.guiOpenError()));
                             return 0;
                         }
 
                         boolean updateResult = categoryGUI.update();
                         if(!updateResult) {
-                            logger.error(AdventureUtil.deserialize("Unable to decorate the category GUI for the category id " + categoryId + " for player " + player.getName() + " due to a configuration error."));
-                            player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.guiOpenError()));
+                            logger.error(AdventureUtility.plain("Unable to decorate the category GUI for the category id " + categoryId + " for player " + player.getName() + " due to a configuration error."));
+                            player.sendMessage(AdventureUtility.deserialize(locale.prefix() + locale.guiOpenError()));
                             return 0;
                         }
 
                         boolean openResult = categoryGUI.open();
                         if(!openResult) {
-                            logger.error(AdventureUtil.deserialize("Unable to open the category GUI for the category id " + categoryId + " for player " + player.getName() + " due to a configuration error."));
-                            player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.guiOpenError()));
+                            logger.error(AdventureUtility.plain("Unable to open the category GUI for the category id " + categoryId + " for player " + player.getName() + " due to a configuration error."));
+                            player.sendMessage(AdventureUtility.deserialize(locale.prefix() + locale.guiOpenError()));
                             return 0;
                         }
 

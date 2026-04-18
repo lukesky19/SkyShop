@@ -17,14 +17,13 @@
 */
 package com.github.lukesky19.skyshop.gui;
 
-import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
-import com.github.lukesky19.skylib.api.gui.GUIButton;
-import com.github.lukesky19.skylib.api.gui.GUIType;
-import com.github.lukesky19.skylib.api.gui.impl.UUIDGUIManager;
-import com.github.lukesky19.skylib.api.gui.interfaces.IGUIManager;
-import com.github.lukesky19.skylib.api.gui.templates.ChestGUI;
-import com.github.lukesky19.skylib.api.itemstack.ItemStackBuilder;
-import com.github.lukesky19.skylib.api.itemstack.ItemStackConfig;
+import com.github.lukesky19.skylib.common.api.adventure.AdventureUtility;
+import com.github.lukesky19.skylib.paper.api.gui.GUIButton;
+import com.github.lukesky19.skylib.paper.api.gui.GUIType;
+import com.github.lukesky19.skylib.paper.api.gui.interfaces.IGUIManager;
+import com.github.lukesky19.skylib.paper.api.gui.templates.ChestGUI;
+import com.github.lukesky19.skylib.paper.api.itemstack.ItemStackBuilder;
+import com.github.lukesky19.skylib.paper.api.itemstack.ItemStackConfig;
 import com.github.lukesky19.skyshop.SkyShop;
 import com.github.lukesky19.skyshop.api.SkyShopAPI;
 import com.github.lukesky19.skyshop.configuration.sellall.data.SellAllGUIConfigV3;
@@ -36,7 +35,7 @@ import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import java.util.List;
 import java.util.Objects;
@@ -47,24 +46,24 @@ import java.util.UUID;
  * This class is called to create a sellall gui for a player to sell items.
 */
 public class SellAllGUI extends ChestGUI<UUID> {
-    private final @NotNull IGUIManager<UUID> guiManager;
-    private final @NotNull SkyShopAPI skyShopAPI;
-    private final @NotNull SellAllGUIConfigV3 sellAllConfig;
+    private final @NonNull IGUIManager<UUID> guiManager;
+    private final @NonNull SkyShopAPI skyShopAPI;
+    private final @NonNull SellAllGUIConfigV3 sellAllConfig;
 
     /**
      * Constructor
      * @param skyShop A {@link SkyShop} instance.
-     * @param guiManager A {@link UUIDGUIManager} instance.
+     * @param guiManager An {@link IGUIManager} instance.
      * @param sellAllConfig The {@link SellAllGUIConfigV3} to create the GUI with.
      * @param skyShopAPI A {@link SkyShopAPI} instance.
      * @param player The {@link Player} who opened the GUI.
      */
     public SellAllGUI(
-            @NotNull SkyShop skyShop,
-            @NotNull IGUIManager<UUID> guiManager,
-            @NotNull SellAllGUIConfigV3 sellAllConfig,
-            @NotNull SkyShopAPI skyShopAPI,
-            @NotNull Player player) {
+            @NonNull SkyShop skyShop,
+            @NonNull IGUIManager<UUID> guiManager,
+            @NonNull SellAllGUIConfigV3 sellAllConfig,
+            @NonNull SkyShopAPI skyShopAPI,
+            @NonNull Player player) {
         super(skyShop, guiManager, player.getUniqueId(), player);
 
         this.guiManager = guiManager;
@@ -79,7 +78,7 @@ public class SellAllGUI extends ChestGUI<UUID> {
     public boolean create() {
         GUIType guiType = sellAllConfig.guiType();
         if(guiType == null) {
-            logger.warn(AdventureUtil.deserialize("Unable to create the InventoryView for a ShopGUI due to an invalid GUIType"));
+            logger.warn(AdventureUtility.plain("Unable to create the InventoryView for a ShopGUI due to an invalid GUIType"));
             return false;
         }
 
@@ -95,7 +94,7 @@ public class SellAllGUI extends ChestGUI<UUID> {
     public boolean update() {
         // If the InventoryView was not created, log a warning and return false.
         if (inventoryView == null) {
-            logger.warn(AdventureUtil.deserialize("Unable to add GUIButton ItemStacks to the InventoryView as it was not created."));
+            logger.warn(AdventureUtility.plain("Unable to add GUIButton ItemStacks to the InventoryView as it was not created."));
             return false;
         }
 
@@ -109,13 +108,13 @@ public class SellAllGUI extends ChestGUI<UUID> {
 
             // Check if the button type is null and send a warning if so, then skipping to the next button.
             if(buttonType == null) {
-                logger.warn(AdventureUtil.deserialize("Unable to add a button due to an invalid button type. Button Num: " + buttonNum));
+                logger.warn(AdventureUtility.plain("Unable to add a button due to an invalid button type. Button Num: " + buttonNum));
                 continue;
             }
 
             // Check if the slot is not configured and send a warning.
             if(buttonConfig.slot() == null) {
-                logger.warn(AdventureUtil.deserialize("Unable to add a button due to a null slot. Button Num: " + buttonNum + " and type: " + buttonType));
+                logger.warn(AdventureUtility.plain("Unable to add a button due to a null slot. Button Num: " + buttonNum + " and type: " + buttonType));
                 continue;
             }
 
@@ -133,7 +132,7 @@ public class SellAllGUI extends ChestGUI<UUID> {
                     optionalItemStack.ifPresent(itemStack -> {
                         GUIButton.Builder guiButtonBuilder = new GUIButton.Builder();
                         guiButtonBuilder.setItemStack(itemStack);
-                        guiButtonBuilder.setAction(event -> close());
+                        guiButtonBuilder.setAction(_ -> close());
 
                         setButton(buttonConfig.slot(), guiButtonBuilder.build());
                     });
@@ -157,7 +156,7 @@ public class SellAllGUI extends ChestGUI<UUID> {
                     });
                 }
 
-                default -> logger.warn(AdventureUtil.deserialize("Unsupported ButtonType in the sellall GUI for " + buttonNum + " and button type " + buttonType + "."));
+                default -> logger.warn(AdventureUtility.plain("Unsupported ButtonType in the sellall GUI for " + buttonNum + " and button type " + buttonType + "."));
             }
         }
 
@@ -194,7 +193,7 @@ public class SellAllGUI extends ChestGUI<UUID> {
      * @param inventoryCloseEvent The InventoryCloseEvent
      */
     @Override
-    public void handleClose(@NotNull InventoryCloseEvent inventoryCloseEvent) {
+    public void handleClose(@NonNull InventoryCloseEvent inventoryCloseEvent) {
         if(inventoryCloseEvent.getReason().equals(InventoryCloseEvent.Reason.UNLOADED)) return;
 
         // Stop tracking the GUI as being open
@@ -208,21 +207,21 @@ public class SellAllGUI extends ChestGUI<UUID> {
     }
 
     @Override
-    public void handleTopDrag(@NotNull InventoryDragEvent inventoryDragEvent) {}
+    public void handleTopDrag(@NonNull InventoryDragEvent inventoryDragEvent) {}
 
     @Override
-    public void handleBottomDrag(@NotNull InventoryDragEvent inventoryDragEvent) {}
+    public void handleBottomDrag(@NonNull InventoryDragEvent inventoryDragEvent) {}
 
     @Override
-    public void handleGlobalDrag(@NotNull InventoryDragEvent inventoryDragEvent) {}
+    public void handleGlobalDrag(@NonNull InventoryDragEvent inventoryDragEvent) {}
 
     @Override
-    public void handleBottomClick(@NotNull InventoryClickEvent inventoryClickEvent) {}
+    public void handleBottomClick(@NonNull InventoryClickEvent inventoryClickEvent) {}
 
     @Override
-    public void handleGlobalClick(@NotNull InventoryClickEvent inventoryClickEvent) {}
+    public void handleGlobalClick(@NonNull InventoryClickEvent inventoryClickEvent) {}
 
-    private void sellItemsInGUI(@NotNull Inventory inventory) {
+    private void sellItemsInGUI(@NonNull Inventory inventory) {
         // Remove any buttons so that they aren't sold or given to the player.
         clearButtons();
 

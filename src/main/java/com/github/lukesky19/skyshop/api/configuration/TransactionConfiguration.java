@@ -17,7 +17,7 @@
 */
 package com.github.lukesky19.skyshop.api.configuration;
 
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * This interface can be used to create a configuration class that stores the data processed once a transaction occurs.

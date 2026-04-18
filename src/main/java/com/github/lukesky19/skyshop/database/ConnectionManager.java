@@ -17,12 +17,13 @@
 */
 package com.github.lukesky19.skyshop.database;
 
-import com.github.lukesky19.skylib.api.database.connection.AbstractConnectionManager;
+import com.github.lukesky19.skylib.common.api.database.connection.AbstractConnectionManager;
+import com.github.lukesky19.skylib.common.api.plugin.ISkyPlugin;
 import com.github.lukesky19.skylib.libs.hikaricp.HikariConfig;
 import com.github.lukesky19.skylib.libs.hikaricp.HikariDataSource;
 import com.github.lukesky19.skyshop.SkyShop;
 import org.bukkit.plugin.Plugin;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import java.io.File;
 
@@ -34,7 +35,7 @@ public class ConnectionManager extends AbstractConnectionManager {
      * Constructor
      * @param skyShop A {@link SkyShop} instance.
      */
-    public ConnectionManager(@NotNull SkyShop skyShop) {
+    public ConnectionManager(@NonNull SkyShop skyShop) {
         super(skyShop);
     }
 
@@ -44,9 +45,9 @@ public class ConnectionManager extends AbstractConnectionManager {
      * @return A {@link HikariDataSource} object.
      */
     @Override
-    protected @NotNull HikariDataSource createHikariDataSource(@NotNull Plugin plugin) {
+    protected @NonNull HikariDataSource createHikariDataSource(@NonNull ISkyPlugin plugin) {
         HikariConfig config = new HikariConfig();
-        config.setJdbcUrl("jdbc:sqlite:" +  plugin.getDataFolder().getAbsolutePath() + File.separator + "database.db");
+        config.setJdbcUrl("jdbc:sqlite:" +  plugin.getDirectoryFile().getAbsolutePath() + File.separator + "database.db");
         config.setAutoCommit(true);
         return new HikariDataSource(config);
     }

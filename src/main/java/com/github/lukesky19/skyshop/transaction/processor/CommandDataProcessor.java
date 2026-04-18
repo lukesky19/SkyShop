@@ -17,7 +17,7 @@
 */
 package com.github.lukesky19.skyshop.transaction.processor;
 
-import com.github.lukesky19.skylib.api.placeholderapi.PlaceholderAPIUtil;
+import com.github.lukesky19.skylib.paper.api.placeholderapi.PlaceholderAPIUtil;
 import com.github.lukesky19.skyshop.SkyShop;
 import com.github.lukesky19.skyshop.api.configuration.TransactionConfiguration;
 import com.github.lukesky19.skyshop.api.event.CommandPrePurchaseEvent;
@@ -28,7 +28,7 @@ import com.github.lukesky19.skyshop.configuration.category.transaction.CommandCo
 import org.bukkit.Server;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import java.util.List;
 
@@ -36,13 +36,13 @@ import java.util.List;
  * Processes the {@link CommandConfiguration} transaction configuration.
  */
 public class CommandDataProcessor implements TransactionProcessor {
-    private final @NotNull SkyShop skyShop;
+    private final @NonNull SkyShop skyShop;
 
     /**
      * Constructor
      * @param skyShop A {@link SkyShop} instance.
      */
-    public CommandDataProcessor(@NotNull SkyShop skyShop) {
+    public CommandDataProcessor(@NonNull SkyShop skyShop) {
         this.skyShop = skyShop;
     }
 
@@ -55,7 +55,7 @@ public class CommandDataProcessor implements TransactionProcessor {
      * @return A {@link TransactionResult}.
      */
     @Override
-    public @NotNull TransactionResult canBuy(@NotNull Player player, @NotNull TransactionConfiguration configuration, int amount) {
+    public @NonNull TransactionResult canBuy(@NonNull Player player, @NonNull TransactionConfiguration configuration, int amount) {
         if(!(configuration instanceof CommandConfiguration commandConfiguration)) return new TransactionResult("Wrong Type", true, true, false);
         if(commandConfiguration.buyCommands().isEmpty()) return new TransactionResult("Not Configured", false, false, false);
 
@@ -81,7 +81,7 @@ public class CommandDataProcessor implements TransactionProcessor {
      * @return A {@link TransactionResult}.
      */
     @Override
-    public @NotNull TransactionResult canSell(@NotNull Player player, @NotNull TransactionConfiguration configuration, int amount) {
+    public @NonNull TransactionResult canSell(@NonNull Player player, @NonNull TransactionConfiguration configuration, int amount) {
         if(!(configuration instanceof CommandConfiguration commandConfiguration)) return new TransactionResult("Wrong Type", true, true, false);
         if(commandConfiguration.sellCommands().isEmpty()) return new TransactionResult("Not Configured", false, false, false);
 
@@ -109,7 +109,7 @@ public class CommandDataProcessor implements TransactionProcessor {
      * @return A {@link TransactionResult}.
      */
     @Override
-    public @NotNull TransactionResult buy(@NotNull Player player, @NotNull TransactionConfiguration configuration, int amount) {
+    public @NonNull TransactionResult buy(@NonNull Player player, @NonNull TransactionConfiguration configuration, int amount) {
         if(!(configuration instanceof CommandConfiguration commandConfiguration)) return new TransactionResult("Wrong Type", true, true, false);
         if(commandConfiguration.buyCommands().isEmpty()) return new TransactionResult("Not Configured", false, false, false);
 
@@ -139,7 +139,7 @@ public class CommandDataProcessor implements TransactionProcessor {
      * @return A {@link TransactionResult}.
      */
     @Override
-    public @NotNull TransactionResult sell(@NotNull Player player, @NotNull TransactionConfiguration configuration, int amount) {
+    public @NonNull TransactionResult sell(@NonNull Player player, @NonNull TransactionConfiguration configuration, int amount) {
         if(!(configuration instanceof CommandConfiguration commandConfiguration)) return new TransactionResult("Wrong Type", true, true, false);
         if(commandConfiguration.sellCommands().isEmpty()) return new TransactionResult("Not Configured", false, false, false);
 

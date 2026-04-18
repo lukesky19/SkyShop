@@ -20,8 +20,8 @@ package com.github.lukesky19.skyshop.configuration.legacy.shop;
 import com.github.lukesky19.skylib.libs.configurate.objectmapping.ConfigSerializable;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.util.List;
 import java.util.Map;
@@ -33,7 +33,7 @@ import java.util.Map;
  */
 @Deprecated(since = "2.0.0.0")
 @ConfigSerializable
-public record ShopConfigV1(@NotNull Map<String, ShopPage> pages) {
+public record ShopConfigV1(@NonNull Map<String, ShopPage> pages) {
     /**
      * This record contains the configuration for a page.
      * @param size The GUI size.
@@ -44,7 +44,7 @@ public record ShopConfigV1(@NotNull Map<String, ShopPage> pages) {
     public record ShopPage(
             @Nullable Integer size,
             @Nullable String name,
-            @NotNull Map<String, ShopEntry> entries) {}
+            @NonNull Map<String, ShopEntry> entries) {}
     /**
      * This record contains the configuration for a button.
      * @param type The button type.
@@ -57,9 +57,9 @@ public record ShopConfigV1(@NotNull Map<String, ShopPage> pages) {
     public record ShopEntry(
             @Nullable String type,
             @Nullable Integer slot,
-            @NotNull Item item,
-            @NotNull Prices prices,
-            @NotNull Commands commands) {}
+            @NonNull Item item,
+            @NonNull Prices prices,
+            @NonNull Commands commands) {}
     /**
      * This record contains the configuration used to create an {@link ItemStack}.
      * @param material The {@link Material} name.

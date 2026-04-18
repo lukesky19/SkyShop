@@ -19,8 +19,8 @@ package com.github.lukesky19.skyshop.prices;
 
 import com.github.lukesky19.skyshop.configuration.category.data.CategoryConfigV4;
 import org.bukkit.inventory.ItemType;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 /**
  * This record stores the transaction id and {@link CategoryConfigV4.PriceConfig} for a given {@link ItemType}.
@@ -32,5 +32,5 @@ import org.jetbrains.annotations.Nullable;
 public record PriceCache(
         @Nullable String categoryPermission,
         @Nullable String transactionPermission,
-        @NotNull String transactionId,
-        @NotNull CategoryConfigV4.PriceConfig priceConfig) {}
+        @NonNull String transactionId,
+        CategoryConfigV4.@NonNull PriceConfig priceConfig) {}

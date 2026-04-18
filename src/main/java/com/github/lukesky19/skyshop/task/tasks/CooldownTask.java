@@ -1,10 +1,27 @@
+/*
+    SkyShop is a GUI shop plugin with sell commands, a sell GUI, nested categories, page support, and error checking.
+    Copyright (C) 2024 lukeskywlker19
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as published
+    by the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
 package com.github.lukesky19.skyshop.task.tasks;
 
-import com.github.lukesky19.skylib.api.gui.impl.UUIDGUIManager;
+import com.github.lukesky19.skylib.paper.api.gui.impl.UUIDGUIManager;
 import com.github.lukesky19.skyshop.player.PlayerDataManager;
 import com.github.lukesky19.skyshop.player.data.PlayerModifiers;
 import org.bukkit.scheduler.BukkitRunnable;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import java.util.UUID;
 
@@ -12,15 +29,15 @@ import java.util.UUID;
  * This class decrements cooldowns for player price modifiers and recalculates the player price modifiers.
  */
 public class CooldownTask extends BukkitRunnable {
-    private final @NotNull PlayerDataManager playerDataManager;
-    private final @NotNull UUIDGUIManager guiManager;
+    private final @NonNull PlayerDataManager playerDataManager;
+    private final @NonNull UUIDGUIManager guiManager;
 
     /**
      * Constructor
      * @param playerDataManager A {@link PlayerDataManager} instance.
      * @param guiManager A {@link UUIDGUIManager} instance.
      */
-    public CooldownTask(@NotNull PlayerDataManager playerDataManager, @NotNull UUIDGUIManager guiManager) {
+    public CooldownTask(@NonNull PlayerDataManager playerDataManager, @NonNull UUIDGUIManager guiManager) {
         this.playerDataManager = playerDataManager;
         this.guiManager = guiManager;
     }
@@ -40,7 +57,7 @@ public class CooldownTask extends BukkitRunnable {
      * @param playerId The player's {@link UUID}.
      * @param playerPrices The {@link PlayerModifiers}.
      */
-    private void decrementCooldown(@NotNull UUID playerId, @NotNull PlayerModifiers playerPrices) {
+    private void decrementCooldown(@NonNull UUID playerId, @NonNull PlayerModifiers playerPrices) {
         if(playerPrices.getBuyCooldownSeconds() <= 0 && playerPrices.getSellCooldownSeconds() <= 0) return;
         boolean updateGUIs = false;
 

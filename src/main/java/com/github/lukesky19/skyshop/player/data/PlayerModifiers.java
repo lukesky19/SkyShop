@@ -20,7 +20,7 @@ package com.github.lukesky19.skyshop.player.data;
 import com.github.lukesky19.skyshop.player.countdown.Cooldown;
 import com.github.lukesky19.skyshop.player.modifier.DoubleModifier;
 import com.github.lukesky19.skyshop.player.modifier.IntegerModifier;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import java.io.Serializable;
 
@@ -31,34 +31,34 @@ public class PlayerModifiers implements Serializable {
     /**
      * The transaction id the modifiers are for.
      */
-    private final @NotNull String id;
+    private final @NonNull String id;
 
     /**
      * The modifier for buying with money.
      */
-    private final @NotNull DoubleModifier buyMoneyModifier = new DoubleModifier();
+    private final @NonNull DoubleModifier buyMoneyModifier = new DoubleModifier();
     /**
      * The modifier for buying with points.
      */
-    private final @NotNull IntegerModifier buyPointsModifier = new IntegerModifier();
+    private final @NonNull IntegerModifier buyPointsModifier = new IntegerModifier();
 
     /**
      * The modifier for selling with money.
      */
-    private final @NotNull DoubleModifier sellMoneyModifier = new DoubleModifier();
+    private final @NonNull DoubleModifier sellMoneyModifier = new DoubleModifier();
     /**
      * The modifier for selling with points.
      */
-    private final @NotNull IntegerModifier sellPointsModifier = new IntegerModifier();
+    private final @NonNull IntegerModifier sellPointsModifier = new IntegerModifier();
 
     /**
      * The cooldown for buy modifiers.
      */
-    private final @NotNull Cooldown buyCooldown = new Cooldown();
+    private final @NonNull Cooldown buyCooldown = new Cooldown();
     /**
      * The cooldown for sell modifiers.
      */
-    private final @NotNull Cooldown sellCooldown = new Cooldown();
+    private final @NonNull Cooldown sellCooldown = new Cooldown();
 
     /**
      * The purchase count for the transaction id.
@@ -73,7 +73,7 @@ public class PlayerModifiers implements Serializable {
      * Constructor
      * @param id The transaction id this modifier is tied to.
      */
-    public PlayerModifiers(@NotNull String id) {
+    public PlayerModifiers(@NonNull String id) {
         this.id = id.toLowerCase();
     }
 
@@ -81,7 +81,7 @@ public class PlayerModifiers implements Serializable {
      * Get the transaction id this modifier is tied to.
      * @return The transaction id this modifier is tied to.
      */
-    public @NotNull String getId() {
+    public @NonNull String getId() {
         return id;
     }
 

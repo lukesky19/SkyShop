@@ -5,7 +5,7 @@ import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 import org.bukkit.inventory.ItemStack;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 /**
  * This event is called before an {@link ItemStack} is purchased.
@@ -14,15 +14,15 @@ import org.jetbrains.annotations.NotNull;
 public class ItemPrePurchaseEvent extends Event implements Cancellable {
     private static final HandlerList HANDLERS = new HandlerList();
     private boolean isCancelled = false;
-    private final @NotNull Player player;
-    private final @NotNull ItemStack itemStack;
+    private final @NonNull Player player;
+    private final @NonNull ItemStack itemStack;
 
     /**
      * Constructor
      * @param player The {@link Player} purchasing the item.
      * @param itemStack The {@link ItemStack} being purchased.
      */
-    public ItemPrePurchaseEvent(@NotNull Player player, @NotNull ItemStack itemStack) {
+    public ItemPrePurchaseEvent(@NonNull Player player, @NonNull ItemStack itemStack) {
         this.player = player;
         this.itemStack = itemStack;
     }
@@ -31,7 +31,7 @@ public class ItemPrePurchaseEvent extends Event implements Cancellable {
      * Get the {@link Player} making the purchase.
      * @return The {@link Player} making the purchase.
      */
-    public @NotNull Player getPlayer() {
+    public @NonNull Player getPlayer() {
         return player;
     }
 
@@ -39,7 +39,7 @@ public class ItemPrePurchaseEvent extends Event implements Cancellable {
      * Get the {@link ItemStack} that is being purchased.
      * @return The {@link ItemStack} that is being purchased.
      */
-    public @NotNull ItemStack getItemStack() {
+    public @NonNull ItemStack getItemStack() {
         return itemStack;
     }
 
@@ -47,7 +47,7 @@ public class ItemPrePurchaseEvent extends Event implements Cancellable {
      * Get the {@link HandlerList} for this event.
      * @return A {@link HandlerList}.
      */
-    public static @NotNull HandlerList getHandlerList() {
+    public static @NonNull HandlerList getHandlerList() {
         return HANDLERS;
     }
 
@@ -56,7 +56,7 @@ public class ItemPrePurchaseEvent extends Event implements Cancellable {
      * @return A {@link HandlerList}.
      */
     @Override
-    public @NotNull HandlerList getHandlers() {
+    public @NonNull HandlerList getHandlers() {
         return HANDLERS;
     }
 

@@ -17,16 +17,16 @@
 */
 package com.github.lukesky19.skyshop.database.table;
 
-import com.github.lukesky19.skylib.api.database.parameter.Parameter;
-import com.github.lukesky19.skylib.api.database.parameter.impl.LongParameter;
-import com.github.lukesky19.skylib.api.database.parameter.impl.NamespacedKeyParameter;
-import com.github.lukesky19.skylib.api.registry.RegistryUtil;
+import com.github.lukesky19.skylib.common.api.database.parameter.Parameter;
+import com.github.lukesky19.skylib.common.api.database.parameter.impl.LongParameter;
+import com.github.lukesky19.skylib.paper.api.database.parameter.NamespacedKeyParameter;
+import com.github.lukesky19.skylib.paper.api.registry.RegistryUtil;
 import com.github.lukesky19.skyshop.SkyShop;
 import com.github.lukesky19.skyshop.database.QueueManager;
 import com.github.lukesky19.skyshop.stats.TransactionStats;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import org.bukkit.inventory.ItemType;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import java.sql.SQLException;
 import java.util.*;
@@ -36,10 +36,10 @@ import java.util.concurrent.CompletableFuture;
  * This table manages the creation, saving, and loading of transaction statistics for {@link ItemType}s.
  */
 public class StatsTable {
-    private final @NotNull SkyShop skyShop;
-    private final @NotNull QueueManager queueManager;
-    private final @NotNull VersionsTable versionsTable;
-    private final @NotNull String tableName = "stats";
+    private final @NonNull SkyShop skyShop;
+    private final @NonNull QueueManager queueManager;
+    private final @NonNull VersionsTable versionsTable;
+    private final @NonNull String tableName = "stats";
 
     /**
      * Constructor
@@ -47,7 +47,7 @@ public class StatsTable {
      * @param queueManager A {@link QueueManager} instance.
      * @param versionsTable A {@link VersionsTable} instance.
      */
-    public StatsTable(@NotNull SkyShop skyShop, @NotNull QueueManager queueManager, @NotNull VersionsTable versionsTable) {
+    public StatsTable(@NonNull SkyShop skyShop, @NonNull QueueManager queueManager, @NonNull VersionsTable versionsTable) {
         this.skyShop = skyShop;
         this.queueManager = queueManager;
         this.versionsTable = versionsTable;
@@ -65,7 +65,7 @@ public class StatsTable {
         String indexCreationSql = "CREATE INDEX IF NOT EXISTS idx_item_types ON " + tableName + "(item_type);";
 
         queueManager.queueBulkWriteTransaction(List.of(tableCreationSql, indexCreationSql))
-                .thenCompose(v -> versionsTable.updateVersion(tableName, 1));
+                .thenCompose(_ -> versionsTable.updateVersion(tableName, 1));
     }
 
     /**
@@ -73,7 +73,7 @@ public class StatsTable {
      * @param stats A {@link Map} mapping an {@link ItemType} to {@link TransactionStats}.
      * @return A {@link CompletableFuture} containing a {@link List} of {@link Boolean} where true if successful, otherwise false for each entry in the provided Map.
      */
-    public @NotNull CompletableFuture<@NotNull List<@NotNull Boolean>> saveStats(@NotNull Map<ItemType, TransactionStats> stats) {
+    public @NonNull CompletableFuture<@NonNull List<@NonNull Boolean>> saveStats(@NonNull Map<ItemType, TransactionStats> stats) {
         String updateSql = "INSERT INTO " + tableName + " (item_type, buy, sell, last_updated) VALUES (?, ?, ?, ?) ON CONFLICT (item_type) DO UPDATE SET buy = ?, sell = ?, last_updated = ? WHERE last_updated < ?";
         Map<String, List<Parameter<?>>> sqlStatementsAndParameters = new HashMap<>();
 
@@ -105,14 +105,14 @@ public class StatsTable {
      * Loads all stats stored in the database.
      * @return A {@link CompletableFuture} containing a {@link Map} mapping {@link ItemType} to {@link TransactionStats}.
      */
-    public @NotNull CompletableFuture<@NotNull Map<@NotNull ItemType, @NotNull TransactionStats>> loadStats() {
+    public @NonNull CompletableFuture<@NonNull Map<@NonNull ItemType, @NonNull TransactionStats>> loadStats() {
         String selectSql = "SELECT item_type, buy, sell FROM " + tableName + " WHERE last_updated < ?";
 
         LongParameter timestampParameter = new LongParameter(System.currentTimeMillis());
 
         return queueManager.queueReadTransaction(selectSql, List.of(timestampParameter), resultSet -> {
             ComponentLogger logger = skyShop.getComponentLogger();
-            Map<@NotNull ItemType, @NotNull TransactionStats> transactionStatsMap = new HashMap<>();
+            Map<@NonNull ItemType, @NonNull TransactionStats> transactionStatsMap = new HashMap<>();
 
             try {
                 while(resultSet.next()) {

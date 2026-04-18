@@ -18,7 +18,7 @@
 package com.github.lukesky19.skyshop.configuration.settings.data;
 
 import com.github.lukesky19.skylib.libs.configurate.objectmapping.ConfigSerializable;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * The version 2 format of the locale configuration for migration purposes only.

@@ -17,8 +17,8 @@
 */
 package com.github.lukesky19.skyshop.configuration.transaction;
 
-import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
-import com.github.lukesky19.skylib.api.configurate.ConfigurationUtility;
+import com.github.lukesky19.skylib.common.api.adventure.AdventureUtility;
+import com.github.lukesky19.skylib.common.api.configuration.abstracts.KeyValueConfigManager;
 import com.github.lukesky19.skylib.libs.configurate.ConfigurateException;
 import com.github.lukesky19.skylib.libs.configurate.ConfigurationNode;
 import com.github.lukesky19.skylib.libs.configurate.serialize.SerializationException;
@@ -27,34 +27,26 @@ import com.github.lukesky19.skyshop.SkyShop;
 import com.github.lukesky19.skyshop.configuration.transaction.data.TransactionGUIConfigV1;
 import com.github.lukesky19.skyshop.configuration.transaction.data.TransactionGUIConfigV2;
 import com.github.lukesky19.skyshop.configuration.transaction.data.TransactionGUIConfigV3;
-import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.stream.Stream;
 
 /**
  * This class manages everything related to handling the plugin's transaction GUI config files.
  */
-public class TransactionGUIConfigManager {
-    private final @NotNull SkyShop skyShop;
-    private final @NotNull ComponentLogger logger;
-    private final @NotNull Map<String, TransactionGUIConfigV3> transactionConfigurations = new HashMap<>();
+public class TransactionGUIConfigManager extends KeyValueConfigManager<String, TransactionGUIConfigV3> {
 
     /**
      * Constructor
      * @param skyShop A {@link SkyShop instance}
      */
-    public TransactionGUIConfigManager(@NotNull SkyShop skyShop) {
-        this.skyShop = skyShop;
-        this.logger = skyShop.getComponentLogger();
+    public TransactionGUIConfigManager(@NonNull SkyShop skyShop) {
+        super(skyShop);
     }
 
     /**
@@ -64,18 +56,18 @@ public class TransactionGUIConfigManager {
      */
     public @Nullable TransactionGUIConfigV3 getTransactionConfig(@Nullable String transactionStyle) {
         if(transactionStyle == null) return null;
-        return transactionConfigurations.get(transactionStyle);
+        return getConfiguration(transactionStyle);
     }
 
     /**
      * Load all transaction gui configuration files in SkyShop/category
      */
     public void loadConfigurations() {
-        transactionConfigurations.clear();
+        dataMap.clear();
 
-        saveBundledConfig();
+        saveDefaultConfiguration();
 
-        Path categoryPath = Path.of(skyShop.getDataFolder() + File.separator + "transaction_styles");
+        Path categoryPath = Path.of(plugin.getDirectoryFile() + File.separator + "transaction_styles");
 
         try(Stream<Path> stream = Files.walk(categoryPath)) {
             stream.filter(path -> !path.toFile().isDirectory()).forEach(path -> {
@@ -84,7 +76,7 @@ public class TransactionGUIConfigManager {
                 loadConfiguration(identifier, path);
             });
         } catch (IOException e) {
-            logger.error(AdventureUtil.deserialize("Failed to load transaction GUI configuration files. " + e.getMessage()));
+            logger.error(AdventureUtility.plain("Failed to load transaction GUI configuration files. " + e.getMessage()));
         }
     }
 
@@ -93,19 +85,19 @@ public class TransactionGUIConfigManager {
      * @param identifier The config version identifier.
      * @param configurationPath The configuration path.
      */
-    public void loadConfiguration(@NotNull String identifier, @NotNull Path configurationPath) {
-        YamlConfigurationLoader loader = ConfigurationUtility.getYamlConfigurationLoader(configurationPath);
+    public void loadConfiguration(@NonNull String identifier, @NonNull Path configurationPath) {
+        YamlConfigurationLoader loader = createLoader(configurationPath);
 
         try {
             ConfigurationNode root = loader.load();
             int version = getVersion(root);
 
-            @Nullable TransactionGUIConfigV3 transactionGUIConfig;
+            TransactionGUIConfigV3 transactionGUIConfig;
             switch(version) {
                 case 3 -> {
                     transactionGUIConfig = root.get(TransactionGUIConfigV3.class);
                     if(transactionGUIConfig == null) {
-                        logger.warn(AdventureUtil.deserialize("Failed to load version 3 configuration file " + (identifier + ".yml") + ". Class name: " + this.getClass().getName()));
+                        logger.warn(AdventureUtility.plain("Failed to load version 3 configuration file " + (identifier + ".yml") + ". Class name: " + this.getClass().getName()));
                         return;
                     }
                 }
@@ -113,7 +105,7 @@ public class TransactionGUIConfigManager {
                 case 2 -> {
                     TransactionGUIConfigV2 transactionGUIConfigV2 = root.get(TransactionGUIConfigV2.class);
                     if(transactionGUIConfigV2 == null) {
-                        logger.warn(AdventureUtil.deserialize("Failed to load version 2 configuration file " + (identifier + ".yml") + ". Class name: " + this.getClass().getName()));
+                        logger.warn(AdventureUtility.plain("Failed to load version 2 configuration file " + (identifier + ".yml") + ". Class name: " + this.getClass().getName()));
                         return;
                     }
 
@@ -133,7 +125,7 @@ public class TransactionGUIConfigManager {
                 case 1 -> {
                     TransactionGUIConfigV1 transactionGUIConfigV1 = root.get(TransactionGUIConfigV1.class);
                     if(transactionGUIConfigV1 == null) {
-                        logger.warn(AdventureUtil.deserialize("Failed to load version 1 configuration file " + (identifier + ".yml") + ". Class name: " + this.getClass().getName()));
+                        logger.warn(AdventureUtility.plain("Failed to load version 1 configuration file " + (identifier + ".yml") + ". Class name: " + this.getClass().getName()));
                         return;
                     }
 
@@ -151,20 +143,20 @@ public class TransactionGUIConfigManager {
                 }
 
                 default -> {
-                    logger.warn(AdventureUtil.deserialize("Failed to load configuration file " + (identifier + ".yml") + " due to an unsupported config version. Version: " + version + ". Class name: " + this.getClass().getName()));
+                    logger.warn(AdventureUtility.plain("Failed to load configuration file " + (identifier + ".yml") + " due to an unsupported config version. Version: " + version + ". Class name: " + this.getClass().getName()));
                     return;
                 }
             }
 
             // Check if the configuration is invalid
             if(!validateConfiguration(transactionGUIConfig)) {
-                logger.warn(AdventureUtil.deserialize("Configuration validation failed for file " + (identifier + ".yml") + ". Class name: " + this.getClass().getName()));
+                logger.warn(AdventureUtility.plain("Configuration validation failed for file " + (identifier + ".yml") + ". Class name: " + this.getClass().getName()));
                 return;
             }
 
-            transactionConfigurations.put(identifier, transactionGUIConfig);
+            dataMap.put(identifier, transactionGUIConfig);
         } catch (ConfigurateException configurateException) {
-            logger.error(AdventureUtil.deserialize("Failed to load the configuration. Error: " + configurateException.getMessage()));
+            logger.error(AdventureUtility.plain("Failed to load the configuration. Error: " + configurateException.getMessage()));
         }
     }
 
@@ -173,9 +165,9 @@ public class TransactionGUIConfigManager {
      * @param configurationPath The path to save to.
      * @param configuration The configuration.
      */
-    public void saveConfiguration(@NotNull Path configurationPath, @NonNull TransactionGUIConfigV3 configuration) {
+    public void saveConfiguration(@NonNull Path configurationPath, @NonNull TransactionGUIConfigV3 configuration) {
         try {
-            YamlConfigurationLoader loader = ConfigurationUtility.getYamlConfigurationLoader(configurationPath);
+            YamlConfigurationLoader loader = createLoader(configurationPath);
 
             ConfigurationNode node = loader.createNode();
 
@@ -183,7 +175,7 @@ public class TransactionGUIConfigManager {
 
             loader.save(node);
         } catch (ConfigurateException configurateException) {
-            logger.error(AdventureUtil.deserialize("Failed to save transaction GUI configuration. Error: " + configurateException.getMessage()));
+            logger.error(AdventureUtility.plain("Failed to save transaction GUI configuration. Error: " + configurateException.getMessage()));
         }
     }
 
@@ -199,12 +191,18 @@ public class TransactionGUIConfigManager {
     /**
      * Save the default transaction GUI configurations if they do not exist.
      */
-    private void saveBundledConfig() {
-        Path itemsStylePath = Path.of(skyShop.getDataFolder() + File.separator + "transaction_styles" + File.separator + "items.yml");
-        Path singleCommandStylePath = Path.of(skyShop.getDataFolder() + File.separator + "transaction_styles" + File.separator + "single_command.yml");
+    @Override
+    public void saveDefaultConfiguration() {
+        Path itemsStylePath = Path.of(plugin.getDirectoryFile() + File.separator + "transaction_styles" + File.separator + "items.yml");
+        Path singleCommandStylePath = Path.of(plugin.getDirectoryFile() + File.separator + "transaction_styles" + File.separator + "single_command.yml");
 
-        if(!itemsStylePath.toFile().exists()) skyShop.saveResource("transaction_styles/items.yml", false);
-        if(!singleCommandStylePath.toFile().exists()) skyShop.saveResource("transaction_styles/single_command.yml", false);
+        if(!itemsStylePath.toFile().exists()) plugin.saveResource("transaction_styles/items.yml", false);
+        if(!singleCommandStylePath.toFile().exists()) plugin.saveResource("transaction_styles/single_command.yml", false);
+    }
+
+    @Override
+    protected @Nullable TransactionGUIConfigV3 migrateConfiguration(@NonNull TransactionGUIConfigV3 transactionGUIConfigV3) {
+        return transactionGUIConfigV3;
     }
 
     /**
@@ -213,7 +211,7 @@ public class TransactionGUIConfigManager {
      * @return A {@link String} containing the file name.
      * @throws RuntimeException if the {@link Path} is not a file.
      */
-    private @NotNull String getFileNameWithoutExtension(@NotNull Path path) {
+    private @NonNull String getFileNameWithoutExtension(@NonNull Path path) {
         if(!path.toFile().isFile()) throw new RuntimeException("Path does not point to a file.");
 
         String fileName = path.getFileName().toString();
@@ -230,12 +228,12 @@ public class TransactionGUIConfigManager {
      * @param root The root {@link ConfigurationNode}.
      * @return The config version.
      */
-    private int getVersion(@NotNull ConfigurationNode root) {
+    private int getVersion(@NonNull ConfigurationNode root) {
         ConfigurationNode versionNode = root.node("version");
         int version = versionNode.getInt();
 
         ConfigurationNode legacyVersionNode = root.node("config-version");
-        @Nullable String legacyVersion = legacyVersionNode.virtual() ? null : legacyVersionNode.getString();
+        String legacyVersion = legacyVersionNode.virtual() ? null : legacyVersionNode.getString();
         if(legacyVersion != null) {
             try {
                 switch (legacyVersion) {
@@ -255,7 +253,7 @@ public class TransactionGUIConfigManager {
                     }
                 }
             } catch (SerializationException e) {
-                logger.warn(AdventureUtil.deserialize("Failed to convert String-based version to numeric version"));
+                logger.warn(AdventureUtility.plain("Failed to convert String-based version to numeric version"));
                 version = 0;
             }
         }
